@@ -1,6 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Bitcoin, TrendingUp, Settings, Globe } from "lucide-react";
+import { Bitcoin, Settings, Globe, LogOut, User } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
 
 interface HeaderProps {
   currentCurrency: string;
@@ -8,6 +10,25 @@ interface HeaderProps {
 }
 
 export default function Header({ currentCurrency, onCurrencyChange }: HeaderProps) {
+  const { user, signOut } = useAuth();
+  const { toast } = useToast();
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      toast({
+        title: "Logout realizado",
+        description: "Você foi desconectado com sucesso."
+      });
+    } catch (error) {
+      toast({
+        title: "Erro no logout",
+        description: "Ocorreu um erro ao fazer logout.",
+        variant: "destructive"
+      });
+    }
+  };
+
   return (
     <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
       <div className="container mx-auto px-4 py-4">
@@ -60,6 +81,23 @@ export default function Header({ currentCurrency, onCurrencyChange }: HeaderProp
             <Button variant="ghost" size="icon" className="text-muted-foreground">
               <Settings className="h-4 w-4" />
             </Button>
+
+            {/* User Menu */}
+            <div className="flex items-center gap-2 border-l border-border pl-3">
+              <div className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground">
+                <User className="h-4 w-4" />
+                <span className="max-w-24 truncate">{user?.email}</span>
+              </div>
+              <Button
+                onClick={handleSignOut}
+                variant="ghost"
+                size="icon"
+                className="text-muted-foreground hover:text-foreground"
+                title="Sair"
+              >
+                <LogOut className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </div>
       </div>

@@ -4,19 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Edit, Trash2, TrendingUp, TrendingDown } from "lucide-react";
-
-interface Transaction {
-  id: string;
-  type: "Comprar" | "Vender" | "Transferência";
-  price: number;
-  quantity: number;
-  totalSpent: number;
-  pricePerCoin: number;
-  market: string;
-  gainProfit: number;
-  notes: string;
-  date: string;
-}
+import { Transaction } from "@/hooks/useTransactions";
 
 interface TransactionTableProps {
   transactions: Transaction[];
@@ -103,18 +91,17 @@ export default function TransactionTable({
                     </div>
                   </TableCell>
                   <TableCell className="text-foreground">
-                    {formatCurrency(transaction.totalSpent, currency)}
+                    {formatCurrency(transaction.total_spent, currency)}
                   </TableCell>
                   <TableCell className="text-foreground">
-                    {formatCurrency(transaction.pricePerCoin, currency)}
+                    {formatCurrency(transaction.price_per_coin, currency)}
                   </TableCell>
                   <TableCell>
                     <Badge variant="secondary">{transaction.market}</Badge>
                   </TableCell>
                   <TableCell>
-                    <div className={`flex items-center gap-1 ${transaction.gainProfit >= 0 ? 'text-chart-green' : 'text-chart-red'}`}>
-                      {transaction.gainProfit >= 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-                      {transaction.gainProfit >= 0 ? '+' : ''}{formatCurrency(transaction.gainProfit, currency)}
+                    <div className="text-muted-foreground text-sm">
+                      Calculado no portfolio
                     </div>
                   </TableCell>
                   <TableCell className="text-muted-foreground max-w-32 truncate">

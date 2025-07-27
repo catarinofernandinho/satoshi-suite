@@ -1,61 +1,72 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Header from "@/components/layout/Header";
 import PortfolioStats from "@/components/portfolio/PortfolioStats";
 import TransactionTable from "@/components/portfolio/TransactionTable";
-
-// Mock data for demonstration
-const mockTransactions = [
-  {
-    id: "1",
-    type: "Comprar" as const,
-    price: 119589,
-    quantity: 0.00045006,
-    totalSpent: 53.8,
-    pricePerCoin: 119589,
-    market: "USD",
-    gainProfit: 0.75,
-    notes: "Primeira compra",
-    date: "2024-01-15"
-  },
-  {
-    id: "2",
-    type: "Comprar" as const,
-    price: 117000,
-    quantity: 0.00857,
-    totalSpent: 1002.69,
-    pricePerCoin: 117000,
-    market: "USD",
-    gainProfit: 78.32,
-    notes: "Acumulação mensal",
-    date: "2024-01-20"
-  }
-];
+import AddTransactionModal from "@/components/portfolio/AddTransactionModal";
+import { useTransactions } from "@/hooks/useTransactions";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Portfolio() {
   const [currentCurrency, setCurrentCurrency] = useState("USD");
-  const [transactions, setTransactions] = useState(mockTransactions);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [btcPrice, setBtcPrice] = useState(100000); // Default fallback price
+  const [btcPriceChange, setBtcPriceChange] = useState(0);
+  
+  const { 
+    transactions, 
+    loading, 
+    addTransaction, 
+    updateTransaction, 
+    deleteTransaction, 
+    getPortfolioStats 
+  } = useTransactions();
+  
+  const { toast } = useToast();
 
-  // Mock portfolio data
-  const portfolioData = {
-    totalValue: 1265.90,
-    btcPrice: 117909,
-    btcPriceChange: 0.6,
-    btcHoldings: 0.0107378,
-    totalGainLoss: 279.04
-  };
+  // Fetch Bitcoin price from CoinGecko
+  useEffect(() => {
+    const fetchBtcPrice = async () => {
+      try {
+        const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd,brl&include_24hr_change=true');
+        const data = await response.json();
+        
+        if (data.bitcoin) {
+          const price = currentCurrency === 'BRL' ? data.bitcoin.brl : data.bitcoin.usd;
+          setBtcPrice(price);
+          setBtcPriceChange(data.bitcoin.usd_24h_change || 0);
+        }
+      } catch (error) {
+        console.error('Failed to fetch BTC price:', error);
+        toast({
+          title: "Erro ao buscar preço do Bitcoin",
+          description: "Usando preço padrão. Verifique sua conexão.",
+          variant: "destructive"
+        });
+      }
+    };
+
+    fetchBtcPrice();
+    const interval = setInterval(fetchBtcPrice, 60000); // Update every minute
+    return () => clearInterval(interval);
+  }, [currentCurrency, toast]);
+
+  const portfolioStats = getPortfolioStats(btcPrice);
 
   const handleAddTransaction = () => {
-    console.log("Add transaction");
-    // TODO: Open add transaction modal
+    setIsAddModalOpen(true);
   };
 
   const handleEditTransaction = (id: string) => {
     console.log("Edit transaction:", id);
-    // TODO: Open edit transaction modal
+    // TODO: Implement edit functionality
+    toast({
+      title: "Funcionalidade em desenvolvimento",
+      description: "Edição de transações será implementada em breve."
+    });
   };
 
-  const handleDeleteTransaction = (id: string) => {
-    setTransactions(prev => prev.filter(t => t.id !== id));
+  const handleSubmitTransaction = async (transactionData: any) => {
+    await addTransaction(transactionData);
   };
 
   return (
@@ -71,21 +82,37 @@ export default function Portfolio() {
           <p className="text-muted-foreground">Acompanhe seus investimentos em Bitcoin em tempo real</p>
         </div>
 
-        <PortfolioStats
-          totalValue={portfolioData.totalValue}
-          btcPrice={portfolioData.btcPrice}
-          btcPriceChange={portfolioData.btcPriceChange}
-          btcHoldings={portfolioData.btcHoldings}
-          totalGainLoss={portfolioData.totalGainLoss}
-          currency={currentCurrency}
-        />
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            <span className="ml-3 text-muted-foreground">Carregando portfólio...</span>
+          </div>
+        ) : (
+          <>
+            <PortfolioStats
+              totalValue={portfolioStats.currentValue}
+              btcPrice={btcPrice}
+              btcPriceChange={btcPriceChange}
+              btcHoldings={portfolioStats.totalBtc}
+              totalGainLoss={portfolioStats.gainLoss}
+              currency={currentCurrency}
+            />
 
-        <TransactionTable
-          transactions={transactions}
+            <TransactionTable
+              transactions={transactions}
+              currency={currentCurrency}
+              onAddTransaction={handleAddTransaction}
+              onEditTransaction={handleEditTransaction}
+              onDeleteTransaction={deleteTransaction}
+            />
+          </>
+        )}
+
+        <AddTransactionModal
+          isOpen={isAddModalOpen}
+          onClose={() => setIsAddModalOpen(false)}
+          onSubmit={handleSubmitTransaction}
           currency={currentCurrency}
-          onAddTransaction={handleAddTransaction}
-          onEditTransaction={handleEditTransaction}
-          onDeleteTransaction={handleDeleteTransaction}
         />
       </main>
     </div>

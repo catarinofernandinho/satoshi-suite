@@ -111,7 +111,7 @@ export default function EditFutureModal({ future, isOpen, onClose }: EditFutureM
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Save className="h-5 w-5" />
-            Editar Contrato Futuro
+            Editar Ordem
           </DialogTitle>
         </DialogHeader>
 

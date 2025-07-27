@@ -66,12 +66,12 @@ export default function AddFutureModal({ onSuccess }: AddFutureModalProps) {
       <DialogTrigger asChild>
         <Button className="gap-2">
           <Plus className="h-4 w-4" />
-          Adicionar Futuro
+          Adicionar Ordem
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>Adicionar Novo Contrato Futuro</DialogTitle>
+          <DialogTitle>Adicionar Nova Ordem</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -189,7 +189,7 @@ export default function AddFutureModal({ onSuccess }: AddFutureModalProps) {
               Cancelar
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? "Salvando..." : "Salvar Futuro"}
+              {loading ? "Salvando..." : "Salvar Ordem"}
             </Button>
           </div>
         </form>

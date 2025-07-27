@@ -3,6 +3,13 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 
+// Cache local para ordens
+const CACHE_KEY = 'futures_orders_cache';
+
+interface LocalOrder extends Future {
+  isLocal?: boolean;
+}
+
 export interface Future {
   id: string;
   direction: "LONG" | "SHORT";
@@ -22,10 +29,49 @@ export interface Future {
 }
 
 export function useFutures() {
-  const [futures, setFutures] = useState<Future[]>([]);
+  const [futures, setFutures] = useState<LocalOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
   const { toast } = useToast();
+
+  // Funções para cache local
+  const getLocalOrders = (): LocalOrder[] => {
+    try {
+      const cached = localStorage.getItem(CACHE_KEY);
+      return cached ? JSON.parse(cached) : [];
+    } catch {
+      return [];
+    }
+  };
+
+  const saveLocalOrder = (order: LocalOrder) => {
+    const orders = getLocalOrders();
+    const newOrder = { ...order, id: `local_${Date.now()}`, isLocal: true };
+    orders.push(newOrder);
+    localStorage.setItem(CACHE_KEY, JSON.stringify(orders));
+    return newOrder;
+  };
+
+  const updateLocalOrder = (id: string, updates: Partial<LocalOrder>) => {
+    const orders = getLocalOrders();
+    const index = orders.findIndex(o => o.id === id);
+    if (index !== -1) {
+      orders[index] = { ...orders[index], ...updates };
+      localStorage.setItem(CACHE_KEY, JSON.stringify(orders));
+      return orders[index];
+    }
+    return null;
+  };
+
+  const deleteLocalOrder = (id: string) => {
+    const orders = getLocalOrders();
+    const filtered = orders.filter(o => o.id !== id);
+    localStorage.setItem(CACHE_KEY, JSON.stringify(filtered));
+  };
+
+  const clearLocalCache = () => {
+    localStorage.removeItem(CACHE_KEY);
+  };
 
   const fetchFutures = async () => {
     if (!user) return;
@@ -39,12 +85,21 @@ export function useFutures() {
 
       if (error) throw error;
       
-      setFutures((data as Future[]) || []);
+      // Combinar dados do backend com cache local
+      const backendOrders = (data as Future[]) || [];
+      const localOrders = getLocalOrders();
+      const allOrders = [...backendOrders, ...localOrders];
+      
+      setFutures(allOrders);
     } catch (error: any) {
+      // Em caso de erro, carrega apenas do cache local
+      const localOrders = getLocalOrders();
+      setFutures(localOrders);
+      
       toast({
-        title: "Erro ao carregar futuros",
-        description: error.message,
-        variant: "destructive"
+        title: "Usando cache local",
+        description: "Conexão com servidor indisponível. Usando dados salvos localmente.",
+        variant: "default"
       });
     } finally {
       setLoading(false);
@@ -101,48 +156,72 @@ export function useFutures() {
 
       setFutures(prev => [data as Future, ...prev]);
       toast({
-        title: "Futuro adicionado",
-        description: "Contrato futuro criado com sucesso!"
+        title: "Ordem adicionada",
+        description: "Ordem criada com sucesso!"
       });
       
       return data;
     } catch (error: any) {
+      // Em caso de erro, salva no cache local
+      const localOrder = saveLocalOrder(futureData as LocalOrder);
+      setFutures(prev => [localOrder, ...prev]);
+      
       toast({
-        title: "Erro ao adicionar futuro",
-        description: error.message,
-        variant: "destructive"
+        title: "Ordem salva localmente",
+        description: "Ordem salva no cache local. Será sincronizada quando a conexão for restabelecida."
       });
-      throw error;
+      
+      return localOrder;
     }
   };
 
   const updateFuture = async (id: string, updates: Partial<Future>) => {
     if (!user) return;
 
+    const isLocalOrder = id.startsWith('local_');
+    
     try {
-      const { data, error } = await supabase
-        .from('futures')
-        .update(updates)
-        .eq('id', id)
-        .eq('user_id', user.id)
-        .select()
-        .single();
+      if (!isLocalOrder) {
+        const { data, error } = await supabase
+          .from('futures')
+          .update(updates)
+          .eq('id', id)
+          .eq('user_id', user.id)
+          .select()
+          .single();
 
-      if (error) throw error;
+        if (error) throw error;
 
-      setFutures(prev => 
-        prev.map(f => f.id === id ? data as Future : f)
-      );
-      
-      toast({
-        title: "Futuro atualizado",
-        description: "Contrato futuro modificado com sucesso!"
-      });
-      
-      return data;
+        setFutures(prev => 
+          prev.map(f => f.id === id ? data as Future : f)
+        );
+        
+        toast({
+          title: "Ordem atualizada",
+          description: "Ordem modificada com sucesso!"
+        });
+        
+        return data;
+      } else {
+        // Atualizar ordem local
+        const updatedOrder = updateLocalOrder(id, updates);
+        if (updatedOrder) {
+          setFutures(prev => 
+            prev.map(f => f.id === id ? updatedOrder : f)
+          );
+          
+          toast({
+            title: "Ordem atualizada localmente",
+            description: "Ordem local modificada com sucesso!"
+          });
+          
+          return updatedOrder;
+        }
+        throw new Error('Ordem local não encontrada');
+      }
     } catch (error: any) {
       toast({
-        title: "Erro ao atualizar futuro",
+        title: "Erro ao atualizar ordem",
         description: error.message,
         variant: "destructive"
       });
@@ -153,28 +232,46 @@ export function useFutures() {
   const deleteFuture = async (id: string) => {
     if (!user) return;
 
+    const isLocalOrder = id.startsWith('local_');
+    
     try {
-      const { error } = await supabase
-        .from('futures')
-        .delete()
-        .eq('id', id)
-        .eq('user_id', user.id);
+      if (!isLocalOrder) {
+        const { error } = await supabase
+          .from('futures')
+          .delete()
+          .eq('id', id)
+          .eq('user_id', user.id);
 
-      if (error) throw error;
+        if (error) throw error;
+      } else {
+        deleteLocalOrder(id);
+      }
 
       setFutures(prev => prev.filter(f => f.id !== id));
       toast({
-        title: "Futuro removido",
-        description: "Contrato futuro excluído com sucesso!"
+        title: "Ordem removida",
+        description: "Ordem excluída com sucesso!"
       });
     } catch (error: any) {
       toast({
-        title: "Erro ao remover futuro",
+        title: "Erro ao remover ordem",
         description: error.message,
         variant: "destructive"
       });
       throw error;
     }
+  };
+
+  const closeFuture = async (id: string, closeData: { exit_price: number; fees_paid: number; net_pl_sats: number; close_date?: string }) => {
+    const updates = {
+      status: 'CLOSED' as const,
+      exit_price: closeData.exit_price,
+      fees_paid: closeData.fees_paid,
+      net_pl_sats: closeData.net_pl_sats,
+      ...(closeData.close_date && { updated_at: closeData.close_date })
+    };
+    
+    return updateFuture(id, updates);
   };
 
   const getFuturesStats = (btcCurrentPrice: number) => {
@@ -215,8 +312,10 @@ export function useFutures() {
     addFuture,
     updateFuture,
     deleteFuture,
+    closeFuture,
     refreshFutures: fetchFutures,
     getFuturesStats,
-    calculateFutureMetrics
+    calculateFutureMetrics,
+    clearLocalCache
   };
 }

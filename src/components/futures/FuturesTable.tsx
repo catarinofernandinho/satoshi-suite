@@ -3,9 +3,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { Edit, Trash2, TrendingUp, TrendingDown } from "lucide-react";
+import { Edit, Trash2, TrendingUp, TrendingDown, X } from "lucide-react";
 import { useFutures, type Future } from "@/hooks/useFutures";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import EditFutureModal from "./EditFutureModal";
+import CloseOrderModal from "./CloseOrderModal";
 
 interface FuturesTableProps {
   futures: Future[];
@@ -15,6 +17,8 @@ interface FuturesTableProps {
 export default function FuturesTable({ futures, btcCurrentPrice }: FuturesTableProps) {
   const { deleteFuture, calculateFutureMetrics } = useFutures();
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [editingOrder, setEditingOrder] = useState<Future | null>(null);
+  const [closingOrder, setClosingOrder] = useState<Future | null>(null);
 
   const handleDelete = async (id: string) => {
     setDeletingId(id);
@@ -78,8 +82,8 @@ export default function FuturesTable({ futures, btcCurrentPrice }: FuturesTableP
       <Card className="p-8 text-center">
         <div className="text-muted-foreground">
           <TrendingUp className="h-12 w-12 mx-auto mb-4 opacity-50" />
-          <h3 className="text-lg font-medium mb-2">Nenhum contrato futuro encontrado</h3>
-          <p>Adicione seu primeiro contrato futuro para começar a rastrear seus trades.</p>
+          <h3 className="text-lg font-medium mb-2">Nenhuma ordem encontrada</h3>
+          <p>Adicione sua primeira ordem para começar a rastrear seus trades.</p>
         </div>
       </Card>
     );
@@ -137,8 +141,24 @@ export default function FuturesTable({ futures, btcCurrentPrice }: FuturesTableP
                   {new Date(future.buy_date).toLocaleDateString('pt-BR')}
                 </TableCell>
                 <TableCell>
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm" className="h-8 w-8 p-0">
+                  <div className="flex gap-1">
+                    {future.status === 'OPEN' && (
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="h-8 px-2 text-red-600 hover:text-red-700"
+                        onClick={() => setClosingOrder(future)}
+                      >
+                        <X className="h-4 w-4 mr-1" />
+                        Fechar
+                      </Button>
+                    )}
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="h-8 w-8 p-0"
+                      onClick={() => setEditingOrder(future)}
+                    >
                       <Edit className="h-4 w-4" />
                     </Button>
                     <AlertDialog>
@@ -149,9 +169,9 @@ export default function FuturesTable({ futures, btcCurrentPrice }: FuturesTableP
                       </AlertDialogTrigger>
                       <AlertDialogContent>
                         <AlertDialogHeader>
-                          <AlertDialogTitle>Excluir contrato futuro</AlertDialogTitle>
+                          <AlertDialogTitle>Excluir ordem</AlertDialogTitle>
                           <AlertDialogDescription>
-                            Tem certeza que deseja excluir este contrato futuro? Esta ação não pode ser desfeita.
+                            Tem certeza que deseja excluir esta ordem? Esta ação não pode ser desfeita.
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
@@ -173,6 +193,19 @@ export default function FuturesTable({ futures, btcCurrentPrice }: FuturesTableP
           })}
         </TableBody>
       </Table>
+      
+      <EditFutureModal 
+        future={editingOrder}
+        isOpen={!!editingOrder}
+        onClose={() => setEditingOrder(null)}
+      />
+      
+      <CloseOrderModal
+        order={closingOrder}
+        isOpen={!!closingOrder}
+        onClose={() => setClosingOrder(null)}
+        btcCurrentPrice={btcCurrentPrice}
+      />
     </div>
   );
 }

@@ -14,7 +14,141 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      futures: {
+        Row: {
+          buy_date: string
+          created_at: string
+          direction: string
+          entry_price: number
+          exit_price: number | null
+          fees_paid: number | null
+          id: string
+          leverage: number
+          net_pl_sats: number | null
+          percent_fee: number | null
+          percent_gain: number | null
+          quantity_usd: number
+          status: string
+          target_price: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          buy_date?: string
+          created_at?: string
+          direction: string
+          entry_price: number
+          exit_price?: number | null
+          fees_paid?: number | null
+          id?: string
+          leverage: number
+          net_pl_sats?: number | null
+          percent_fee?: number | null
+          percent_gain?: number | null
+          quantity_usd: number
+          status?: string
+          target_price?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          buy_date?: string
+          created_at?: string
+          direction?: string
+          entry_price?: number
+          exit_price?: number | null
+          fees_paid?: number | null
+          id?: string
+          leverage?: number
+          net_pl_sats?: number | null
+          percent_fee?: number | null
+          percent_gain?: number | null
+          quantity_usd?: number
+          status?: string
+          target_price?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          display_name: string | null
+          id: string
+          preferred_currency: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          preferred_currency?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          preferred_currency?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      transactions: {
+        Row: {
+          created_at: string
+          date: string
+          fees: number | null
+          id: string
+          market: string
+          notes: string | null
+          price: number
+          price_per_coin: number
+          quantity: number
+          total_spent: number
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          date?: string
+          fees?: number | null
+          id?: string
+          market?: string
+          notes?: string | null
+          price: number
+          price_per_coin: number
+          quantity: number
+          total_spent: number
+          type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          fees?: number | null
+          id?: string
+          market?: string
+          notes?: string | null
+          price?: number
+          price_per_coin?: number
+          quantity?: number
+          total_spent?: number
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

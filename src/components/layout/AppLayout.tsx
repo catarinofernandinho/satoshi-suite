@@ -26,17 +26,10 @@ export default function AppLayout() {
   const { settings, updateSettings } = useUserSettings();
   const location = useLocation();
 
-  // Theme management
-  const [currentTheme, setCurrentTheme] = useState<'light' | 'dark'>('light');
-
+  // Force dark theme
   useEffect(() => {
-    const savedTheme = localStorage.getItem('user-theme') as 'light' | 'dark' | null;
-    const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-    const theme = savedTheme || settings?.theme === 'system' ? systemTheme : (settings?.theme as 'light' | 'dark') || 'light';
-    
-    setCurrentTheme(theme);
-    document.documentElement.classList.toggle('dark', theme === 'dark');
-  }, [settings?.theme]);
+    document.documentElement.classList.add('dark');
+  }, []);
 
   const handleCurrencyChange = async (currency: string) => {
     if (settings && currency !== settings.preferred_currency) {
@@ -106,8 +99,7 @@ export default function AppLayout() {
                 <Bitcoin className="h-6 w-6 text-primary-foreground" />
               </div>
               <div className="hidden sm:block">
-                <h1 className="text-xl font-bold text-foreground">Bitcoin SaaS</h1>
-                <p className="text-sm text-muted-foreground">Portfolio & Trading Platform</p>
+                <h1 className="text-xl font-bold text-foreground">Satoshi 10x</h1>
               </div>
             </div>
 
@@ -120,20 +112,6 @@ export default function AppLayout() {
 
             {/* Actions */}
             <div className="flex items-center gap-3">
-              {/* Currency Selector */}
-              <Select 
-                value={settings?.preferred_currency || 'USD'} 
-                onValueChange={handleCurrencyChange}
-              >
-                <SelectTrigger className="w-20 h-9 border-border bg-background">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="USD">USD</SelectItem>
-                  <SelectItem value="BRL">BRL</SelectItem>
-                </SelectContent>
-              </Select>
-              
               {/* Settings */}
               <UserSettingsModal />
 
@@ -169,7 +147,7 @@ export default function AppLayout() {
                         <Bitcoin className="h-6 w-6 text-primary-foreground" />
                       </div>
                       <div>
-                        <h2 className="font-bold">Bitcoin SaaS</h2>
+                        <h2 className="font-bold">Satoshi 10x</h2>
                         <p className="text-sm text-muted-foreground">Menu</p>
                       </div>
                     </div>

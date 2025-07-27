@@ -32,7 +32,7 @@ export default function EditFutureModal({ future, isOpen, onClose }: EditFutureM
     target_price: "",
     quantity_usd: "",
     leverage: "",
-    status: "ABERTO" as "ABERTO" | "FECHADO" | "LIQUIDADO",
+    status: "OPEN" as "OPEN" | "CLOSED" | "STOP" | "CANCELLED",
     buy_date: new Date()
   });
 
@@ -139,9 +139,10 @@ export default function EditFutureModal({ future, isOpen, onClose }: EditFutureM
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="ABERTO">ABERTO</SelectItem>
-                  <SelectItem value="FECHADO">FECHADO</SelectItem>
-                  <SelectItem value="LIQUIDADO">LIQUIDADO</SelectItem>
+                  <SelectItem value="OPEN">Aberto</SelectItem>
+                  <SelectItem value="CLOSED">Fechado</SelectItem>
+                  <SelectItem value="STOP">Stop</SelectItem>
+                  <SelectItem value="CANCELLED">Cancelado</SelectItem>
                 </SelectContent>
               </Select>
             </div>

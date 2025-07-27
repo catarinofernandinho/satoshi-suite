@@ -4,44 +4,40 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Settings, Save, User, Palette, DollarSign } from "lucide-react";
+import { Settings, Save, User, DollarSign } from "lucide-react";
 import { useUserSettings, type UserSettings } from "@/hooks/useUserSettings";
 import { useAuth } from "@/hooks/useAuth";
-import { useTheme } from "@/components/settings/ThemeProvider";
 
 export default function UserSettingsModal() {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const { settings, updateSettings } = useUserSettings();
   const { user } = useAuth();
-  const { theme, setTheme } = useTheme();
 
   const [formData, setFormData] = useState<Partial<UserSettings>>({
-    preferred_currency: 'USD',
-    theme: 'system'
+    preferred_currency: 'USD'
   });
 
   useEffect(() => {
     if (settings) {
       setFormData({
-        preferred_currency: settings.preferred_currency,
-        theme: theme
+        preferred_currency: settings.preferred_currency
       });
     }
-  }, [settings, theme]);
+  }, [settings]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      // Update theme immediately
-      if (formData.theme) {
-        setTheme(formData.theme);
-      }
-      
       await updateSettings(formData);
       setOpen(false);
+      
+      // Force page reload to apply currency changes immediately
+      setTimeout(() => {
+        window.location.reload();
+      }, 500);
     } catch (error) {
       console.error('Error updating settings:', error);
     } finally {
@@ -91,7 +87,7 @@ export default function UserSettingsModal() {
                 Moeda Preferida
               </CardTitle>
               <CardDescription>
-                Escolha a moeda padrão para exibição de valores na plataforma
+                Escolha a moeda padrão para exibição de valores na plataforma. A alteração será aplicada após recarregar a página.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -112,43 +108,6 @@ export default function UserSettingsModal() {
                     <SelectItem value="BRL">BRL - Real Brasileiro</SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Theme Settings */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Palette className="h-4 w-4" />
-                Aparência
-              </CardTitle>
-              <CardDescription>
-                Personalize a aparência da interface
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                <Label htmlFor="theme">Tema</Label>
-                <Select
-                  value={formData.theme}
-                  onValueChange={(value) => setFormData({ 
-                    ...formData, 
-                    theme: value as UserSettings['theme'] 
-                  })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecionar tema" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="light">Claro</SelectItem>
-                    <SelectItem value="dark">Escuro</SelectItem>
-                    <SelectItem value="system">Sistema</SelectItem>
-                  </SelectContent>
-                </Select>
-                <div className="text-xs text-muted-foreground mt-2">
-                  O tema será aplicado imediatamente em toda a aplicação
-                </div>
               </div>
             </CardContent>
           </Card>

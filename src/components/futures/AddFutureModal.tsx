@@ -24,7 +24,7 @@ export default function AddFutureModal({ onSuccess }: AddFutureModalProps) {
     quantity_usd: "",
     leverage: "",
     buy_date: new Date().toISOString().slice(0, 16),
-    status: "ABERTO",
+    status: "OPEN",
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -39,7 +39,7 @@ export default function AddFutureModal({ onSuccess }: AddFutureModalProps) {
         quantity_usd: parseFloat(formData.quantity_usd),
         leverage: parseFloat(formData.leverage),
         buy_date: formData.buy_date,
-        status: formData.status as "ABERTO" | "FECHADO" | "LIQUIDADO",
+        status: formData.status as "OPEN" | "CLOSED" | "STOP" | "CANCELLED",
       } as Omit<Future, 'id' | 'created_at' | 'updated_at'>);
 
       setFormData({
@@ -49,7 +49,7 @@ export default function AddFutureModal({ onSuccess }: AddFutureModalProps) {
         quantity_usd: "",
         leverage: "",
         buy_date: new Date().toISOString().slice(0, 16),
-        status: "ABERTO",
+        status: "OPEN",
       });
       
       setOpen(false);
@@ -164,9 +164,10 @@ export default function AddFutureModal({ onSuccess }: AddFutureModalProps) {
                   <SelectValue placeholder="Selecionar status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="ABERTO">ABERTO</SelectItem>
-                  <SelectItem value="FECHADO">FECHADO</SelectItem>
-                  <SelectItem value="LIQUIDADO">LIQUIDADO</SelectItem>
+                  <SelectItem value="OPEN">Aberto</SelectItem>
+                  <SelectItem value="CLOSED">Fechado</SelectItem>
+                  <SelectItem value="STOP">Stop</SelectItem>
+                  <SelectItem value="CANCELLED">Cancelado</SelectItem>
                 </SelectContent>
               </Select>
             </div>

@@ -52,12 +52,20 @@ export default function FuturesTable({ futures, btcCurrentPrice }: FuturesTableP
 
   const getStatusBadge = (status: string) => {
     const variants = {
-      'ABERTO': 'default' as const,
-      'FECHADO': 'secondary' as const,
-      'LIQUIDADO': 'destructive' as const
+      'OPEN': 'default' as const,
+      'CLOSED': 'secondary' as const,
+      'STOP': 'destructive' as const,
+      'CANCELLED': 'outline' as const
     };
     
-    return <Badge variant={variants[status as keyof typeof variants] || 'default'}>{status}</Badge>;
+    const labels = {
+      'OPEN': 'Aberto',
+      'CLOSED': 'Fechado', 
+      'STOP': 'Stop',
+      'CANCELLED': 'Cancelado'
+    };
+    
+    return <Badge variant={variants[status as keyof typeof variants] || 'default'}>{labels[status as keyof typeof labels] || status}</Badge>;
   };
 
   const getPLColor = (value: number | undefined) => {

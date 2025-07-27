@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { ThemeProvider } from "@/components/settings/ThemeProvider";
+import { CurrencyProvider } from "@/contexts/CurrencyContext";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import AppLayout from "@/components/layout/AppLayout";
 import AuthPage from "@/components/auth/AuthPage";
@@ -21,13 +22,13 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider>
       <AuthProvider>
-        <TooltipProvider>
+        <CurrencyProvider>
+          <TooltipProvider>
           <Toaster />
           <Sonner />
           <BrowserRouter>
             <Routes>
               <Route path="/auth" element={<AuthPage />} />
-              <Route path="/charts" element={<Charts />} />
               <Route
                 path="/*"
                 element={
@@ -39,12 +40,14 @@ const App = () => (
                 <Route index element={<Portfolio />} />
                 <Route path="portfolio" element={<Portfolio />} />
                 <Route path="futures" element={<Futures />} />
+                <Route path="charts" element={<Charts />} />
                 <Route path="conversor" element={<Conversor />} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
-        </TooltipProvider>
+          </TooltipProvider>
+        </CurrencyProvider>
       </AuthProvider>
     </ThemeProvider>
   </QueryClientProvider>

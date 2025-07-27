@@ -11,7 +11,7 @@ export interface Future {
   target_price?: number;
   quantity_usd: number;
   leverage: number;
-  status: "ABERTO" | "FECHADO" | "LIQUIDADO";
+  status: "OPEN" | "CLOSED" | "STOP" | "CANCELLED";
   percent_gain?: number;
   percent_fee?: number;
   fees_paid?: number;
@@ -52,7 +52,7 @@ export function useFutures() {
   };
 
   const calculateFutureMetrics = (future: Future, currentBtcPrice: number) => {
-    if (future.status === "ABERTO") {
+    if (future.status === "OPEN") {
       const days_open = Math.floor((Date.now() - new Date(future.buy_date).getTime()) / (1000 * 60 * 60 * 24));
       const fixed_fee = 0.055; // 0.055% fee
       const daily_fee = 0.0026; // 0.0026% daily funding fee
@@ -178,8 +178,8 @@ export function useFutures() {
   };
 
   const getFuturesStats = (btcCurrentPrice: number) => {
-    const openFutures = futures.filter(f => f.status === 'ABERTO');
-    const closedFutures = futures.filter(f => f.status === 'FECHADO');
+    const openFutures = futures.filter(f => f.status === 'OPEN');
+    const closedFutures = futures.filter(f => f.status === 'CLOSED');
     
     let totalUnrealizedPL = 0;
     let totalRealizedPL = 0;

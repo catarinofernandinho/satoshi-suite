@@ -6,7 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 export interface UserSettings {
   id?: string;
   user_id: string;
-  preferred_currency: 'USD' | 'BRL' | 'BTC' | 'SATS';
+  preferred_currency: 'USD' | 'BRL';
   theme: 'light' | 'dark' | 'system';
   created_at?: string;
   updated_at?: string;
@@ -14,7 +14,7 @@ export interface UserSettings {
 
 const defaultSettings: Omit<UserSettings, 'id' | 'user_id' | 'created_at' | 'updated_at'> = {
   preferred_currency: 'USD',
-  theme: 'light'
+  theme: 'system'
 };
 
 export function useUserSettings() {

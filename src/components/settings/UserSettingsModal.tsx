@@ -7,32 +7,39 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Settings, Save, User, Palette, DollarSign } from "lucide-react";
 import { useUserSettings, type UserSettings } from "@/hooks/useUserSettings";
 import { useAuth } from "@/hooks/useAuth";
+import { useTheme } from "@/components/settings/ThemeProvider";
 
 export default function UserSettingsModal() {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const { settings, updateSettings } = useUserSettings();
   const { user } = useAuth();
+  const { theme, setTheme } = useTheme();
 
   const [formData, setFormData] = useState<Partial<UserSettings>>({
     preferred_currency: 'USD',
-    theme: 'light'
+    theme: 'system'
   });
 
   useEffect(() => {
     if (settings) {
       setFormData({
         preferred_currency: settings.preferred_currency,
-        theme: settings.theme
+        theme: theme
       });
     }
-  }, [settings]);
+  }, [settings, theme]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
+      // Update theme immediately
+      if (formData.theme) {
+        setTheme(formData.theme);
+      }
+      
       await updateSettings(formData);
       setOpen(false);
     } catch (error) {
@@ -103,8 +110,6 @@ export default function UserSettingsModal() {
                   <SelectContent>
                     <SelectItem value="USD">USD - Dólar Americano</SelectItem>
                     <SelectItem value="BRL">BRL - Real Brasileiro</SelectItem>
-                    <SelectItem value="BTC">BTC - Bitcoin</SelectItem>
-                    <SelectItem value="SATS">SATS - Satoshis</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -142,7 +147,7 @@ export default function UserSettingsModal() {
                   </SelectContent>
                 </Select>
                 <div className="text-xs text-muted-foreground mt-2">
-                  Tema escuro será implementado em uma próxima atualização
+                  O tema será aplicado imediatamente em toda a aplicação
                 </div>
               </div>
             </CardContent>

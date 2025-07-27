@@ -1,16 +1,18 @@
 import { useState, useEffect } from "react";
-import Header from "@/components/layout/Header";
 import PortfolioStats from "@/components/portfolio/PortfolioStats";
 import TransactionTable from "@/components/portfolio/TransactionTable";
 import AddTransactionModal from "@/components/portfolio/AddTransactionModal";
 import { useTransactions } from "@/hooks/useTransactions";
+import { useUserSettings } from "@/hooks/useUserSettings";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Portfolio() {
-  const [currentCurrency, setCurrentCurrency] = useState("USD");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [btcPrice, setBtcPrice] = useState(100000); // Default fallback price
   const [btcPriceChange, setBtcPriceChange] = useState(0);
+  
+  const { settings } = useUserSettings();
+  const currentCurrency = settings?.preferred_currency || "USD";
   
   const { 
     transactions, 
@@ -70,51 +72,44 @@ export default function Portfolio() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header 
-        currentCurrency={currentCurrency}
-        onCurrencyChange={setCurrentCurrency}
-      />
-      
-      <main className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h2 className="text-3xl font-bold text-foreground mb-2">Portfólio Bitcoin</h2>
-          <p className="text-muted-foreground">Acompanhe seus investimentos em Bitcoin em tempo real</p>
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold text-foreground mb-2">Portfólio Bitcoin</h1>
+        <p className="text-muted-foreground">Acompanhe seus investimentos em Bitcoin em tempo real</p>
+      </div>
+
+      {loading ? (
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          <span className="ml-3 text-muted-foreground">Carregando portfólio...</span>
         </div>
+      ) : (
+        <>
+          <PortfolioStats
+            totalValue={portfolioStats.currentValue}
+            btcPrice={btcPrice}
+            btcPriceChange={btcPriceChange}
+            btcHoldings={portfolioStats.totalBtc}
+            totalGainLoss={portfolioStats.gainLoss}
+            currency={currentCurrency}
+          />
 
-        {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-            <span className="ml-3 text-muted-foreground">Carregando portfólio...</span>
-          </div>
-        ) : (
-          <>
-            <PortfolioStats
-              totalValue={portfolioStats.currentValue}
-              btcPrice={btcPrice}
-              btcPriceChange={btcPriceChange}
-              btcHoldings={portfolioStats.totalBtc}
-              totalGainLoss={portfolioStats.gainLoss}
-              currency={currentCurrency}
-            />
+          <TransactionTable
+            transactions={transactions}
+            currency={currentCurrency}
+            onAddTransaction={handleAddTransaction}
+            onEditTransaction={handleEditTransaction}
+            onDeleteTransaction={deleteTransaction}
+          />
+        </>
+      )}
 
-            <TransactionTable
-              transactions={transactions}
-              currency={currentCurrency}
-              onAddTransaction={handleAddTransaction}
-              onEditTransaction={handleEditTransaction}
-              onDeleteTransaction={deleteTransaction}
-            />
-          </>
-        )}
-
-        <AddTransactionModal
-          isOpen={isAddModalOpen}
-          onClose={() => setIsAddModalOpen(false)}
-          onSubmit={handleSubmitTransaction}
-          currency={currentCurrency}
-        />
-      </main>
+      <AddTransactionModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onSubmit={handleSubmitTransaction}
+        currency={currentCurrency}
+      />
     </div>
   );
 }

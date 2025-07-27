@@ -1,0 +1,198 @@
+import { useState } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { Plus } from "lucide-react";
+import { useFutures, type Future } from "@/hooks/useFutures";
+
+interface AddFutureModalProps {
+  onSuccess?: () => void;
+}
+
+export default function AddFutureModal({ onSuccess }: AddFutureModalProps) {
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const { addFuture } = useFutures();
+
+  const [formData, setFormData] = useState({
+    direction: "",
+    entry_price: "",
+    target_price: "",
+    quantity_usd: "",
+    leverage: "",
+    buy_date: new Date().toISOString().slice(0, 16),
+    status: "ABERTO",
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      await addFuture({
+        direction: formData.direction as "LONG" | "SHORT",
+        entry_price: parseFloat(formData.entry_price),
+        target_price: formData.target_price ? parseFloat(formData.target_price) : undefined,
+        quantity_usd: parseFloat(formData.quantity_usd),
+        leverage: parseFloat(formData.leverage),
+        buy_date: formData.buy_date,
+        status: formData.status as "ABERTO" | "FECHADO" | "LIQUIDADO",
+      } as Omit<Future, 'id' | 'created_at' | 'updated_at'>);
+
+      setFormData({
+        direction: "",
+        entry_price: "",
+        target_price: "",
+        quantity_usd: "",
+        leverage: "",
+        buy_date: new Date().toISOString().slice(0, 16),
+        status: "ABERTO",
+      });
+      
+      setOpen(false);
+      onSuccess?.();
+    } catch (error) {
+      console.error('Error adding future:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button className="gap-2">
+          <Plus className="h-4 w-4" />
+          Adicionar Futuro
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[600px]">
+        <DialogHeader>
+          <DialogTitle>Adicionar Novo Contrato Futuro</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="direction">Direção</Label>
+              <Select
+                value={formData.direction}
+                onValueChange={(value) => setFormData({ ...formData, direction: value })}
+                required
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecionar direção" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="LONG">LONG (Comprado)</SelectItem>
+                  <SelectItem value="SHORT">SHORT (Vendido)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="entry_price">Preço de Entrada (USD)</Label>
+              <Input
+                id="entry_price"
+                type="number"
+                step="0.01"
+                placeholder="95000.00"
+                value={formData.entry_price}
+                onChange={(e) => setFormData({ ...formData, entry_price: e.target.value })}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="target_price">Preço Alvo (USD)</Label>
+              <Input
+                id="target_price"
+                type="number"
+                step="0.01"
+                placeholder="100000.00"
+                value={formData.target_price}
+                onChange={(e) => setFormData({ ...formData, target_price: e.target.value })}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="quantity_usd">Quantidade (USD)</Label>
+              <Input
+                id="quantity_usd"
+                type="number"
+                step="0.01"
+                placeholder="1000.00"
+                value={formData.quantity_usd}
+                onChange={(e) => setFormData({ ...formData, quantity_usd: e.target.value })}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="leverage">Alavancagem</Label>
+              <Select
+                value={formData.leverage}
+                onValueChange={(value) => setFormData({ ...formData, leverage: value })}
+                required
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecionar alavancagem" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1">1x</SelectItem>
+                  <SelectItem value="2">2x</SelectItem>
+                  <SelectItem value="3">3x</SelectItem>
+                  <SelectItem value="5">5x</SelectItem>
+                  <SelectItem value="10">10x</SelectItem>
+                  <SelectItem value="20">20x</SelectItem>
+                  <SelectItem value="50">50x</SelectItem>
+                  <SelectItem value="100">100x</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="status">Status</Label>
+              <Select
+                value={formData.status}
+                onValueChange={(value) => setFormData({ ...formData, status: value })}
+                required
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecionar status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ABERTO">ABERTO</SelectItem>
+                  <SelectItem value="FECHADO">FECHADO</SelectItem>
+                  <SelectItem value="LIQUIDADO">LIQUIDADO</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2 md:col-span-2">
+              <Label htmlFor="buy_date">Data/Hora de Abertura</Label>
+              <Input
+                id="buy_date"
+                type="datetime-local"
+                value={formData.buy_date}
+                onChange={(e) => setFormData({ ...formData, buy_date: e.target.value })}
+                required
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4">
+            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+              Cancelar
+            </Button>
+            <Button type="submit" disabled={loading}>
+              {loading ? "Salvando..." : "Salvar Futuro"}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}

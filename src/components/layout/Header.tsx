@@ -3,6 +3,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Bitcoin, Settings, Globe, LogOut, User } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import UserSettingsModal from "@/components/settings/UserSettingsModal";
+import { useUserSettings } from "@/hooks/useUserSettings";
 
 interface HeaderProps {
   currentCurrency: string;
@@ -12,6 +14,7 @@ interface HeaderProps {
 export default function Header({ currentCurrency, onCurrencyChange }: HeaderProps) {
   const { user, signOut } = useAuth();
   const { toast } = useToast();
+  const { settings, updateSettings } = useUserSettings();
 
   const handleSignOut = async () => {
     try {
@@ -46,14 +49,14 @@ export default function Header({ currentCurrency, onCurrencyChange }: HeaderProp
 
           {/* Navigation */}
           <nav className="hidden md:flex items-center gap-6">
-            <Button variant="ghost" className="text-foreground">
-              Portfolio
+            <Button variant="ghost" className="text-foreground" asChild>
+              <a href="/portfolio">Portfolio</a>
             </Button>
-            <Button variant="ghost" className="text-muted-foreground hover:text-foreground">
-              Futuros
+            <Button variant="ghost" className="text-muted-foreground hover:text-foreground" asChild>
+              <a href="/futures">Futuros</a>
             </Button>
-            <Button variant="ghost" className="text-muted-foreground hover:text-foreground">
-              Gráficos
+            <Button variant="ghost" className="text-muted-foreground hover:text-foreground" asChild>
+              <a href="/charts">Gráficos</a>
             </Button>
             <Button variant="ghost" className="text-muted-foreground hover:text-foreground">
               Conversor
@@ -78,9 +81,7 @@ export default function Header({ currentCurrency, onCurrencyChange }: HeaderProp
               <Globe className="h-4 w-4" />
             </Button>
             
-            <Button variant="ghost" size="icon" className="text-muted-foreground">
-              <Settings className="h-4 w-4" />
-            </Button>
+            <UserSettingsModal />
 
             {/* User Menu */}
             <div className="flex items-center gap-2 border-l border-border pl-3">

@@ -7,6 +7,8 @@ import { AuthProvider } from "@/hooks/useAuth";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import AuthPage from "@/components/auth/AuthPage";
 import Portfolio from "./pages/Portfolio";
+import Futures from "./pages/Futures";
+import Charts from "./pages/Charts";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 
@@ -34,6 +36,22 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Portfolio />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/futures" 
+              element={
+                <ProtectedRoute>
+                  <Futures />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/charts" 
+              element={
+                <ProtectedRoute>
+                  <Charts />
                 </ProtectedRoute>
               } 
             />

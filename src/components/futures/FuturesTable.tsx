@@ -8,7 +8,6 @@ import { useFutures, type Future } from "@/hooks/useFutures";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import EditFutureModal from "./EditFutureModal";
 import CloseOrderModal from "./CloseOrderModal";
-import { useTimezone } from "@/contexts/TimezoneContext";
 
 interface FuturesTableProps {
   futures: Future[];
@@ -17,7 +16,6 @@ interface FuturesTableProps {
 
 export default function FuturesTable({ futures, btcCurrentPrice }: FuturesTableProps) {
   const { deleteFuture, calculateFutureMetrics } = useFutures();
-  const { formatDateTime } = useTimezone();
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [editingOrder, setEditingOrder] = useState<Future | null>(null);
   const [closingOrder, setClosingOrder] = useState<Future | null>(null);
@@ -140,7 +138,7 @@ export default function FuturesTable({ futures, btcCurrentPrice }: FuturesTableP
                   {formatCurrency(metrics.net_pl_sats, 'SATS')}
                 </TableCell>
                 <TableCell>
-                  {formatDateTime(future.buy_date, 'dd/MM/yyyy HH:mm')}
+                  {new Date(future.buy_date).toLocaleDateString('pt-BR')}
                 </TableCell>
                 <TableCell>
                   <div className="flex gap-1">

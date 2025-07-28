@@ -8,7 +8,6 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { useTimezone } from "@/contexts/TimezoneContext";
 import { cn } from "@/lib/utils";
 import { useFutures, type Future } from "@/hooks/useFutures";
 import { useToast } from "@/hooks/use-toast";
@@ -24,10 +23,9 @@ export default function CloseOrderModal({ order, isOpen, onClose, btcCurrentPric
   const [loading, setLoading] = useState(false);
   const { closeFuture } = useFutures();
   const { toast } = useToast();
-  const { getCurrentTime, convertToUTC } = useTimezone();
 
   const [formData, setFormData] = useState({
-    close_date: getCurrentTime(),
+    close_date: new Date(),
     net_pl_sats: "",
     fees_paid_sats: ""
   });
@@ -68,12 +66,12 @@ export default function CloseOrderModal({ order, isOpen, onClose, btcCurrentPric
         exit_price: exitPrice,
         fees_paid: (feesSats / 100000000) * btcCurrentPrice, // Convert sats to USD
         net_pl_sats: netPLSats,
-        close_date: convertToUTC(formData.close_date).toISOString()
+        close_date: formData.close_date.toISOString()
       });
 
       // Reset form
       setFormData({
-        close_date: getCurrentTime(),
+        close_date: new Date(),
         net_pl_sats: "",
         fees_paid_sats: ""
       });
@@ -155,7 +153,7 @@ export default function CloseOrderModal({ order, isOpen, onClose, btcCurrentPric
                 <Calendar
                   mode="single"
                   selected={formData.close_date}
-                  onSelect={(date) => setFormData(prev => ({ ...prev, close_date: date || getCurrentTime() }))}
+                  onSelect={(date) => setFormData(prev => ({ ...prev, close_date: date || new Date() }))}
                   initialFocus
                 />
               </PopoverContent>

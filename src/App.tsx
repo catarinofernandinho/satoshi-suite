@@ -6,7 +6,6 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { ThemeProvider } from "@/components/settings/ThemeProvider";
 import { CurrencyProvider } from "@/contexts/CurrencyContext";
-import { TimezoneProvider } from "@/contexts/TimezoneContext";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import AppLayout from "@/components/layout/AppLayout";
 import AuthPage from "@/components/auth/AuthPage";
@@ -24,8 +23,7 @@ const App = () => (
     <ThemeProvider>
       <AuthProvider>
         <CurrencyProvider>
-          <TimezoneProvider>
-            <TooltipProvider>
+          <TooltipProvider>
           <Toaster />
           <Sonner />
           <BrowserRouter>
@@ -48,8 +46,7 @@ const App = () => (
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
-            </TooltipProvider>
-          </TimezoneProvider>
+          </TooltipProvider>
         </CurrencyProvider>
       </AuthProvider>
     </ThemeProvider>

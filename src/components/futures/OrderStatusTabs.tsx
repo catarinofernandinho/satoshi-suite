@@ -10,8 +10,8 @@ interface OrderStatusTabsProps {
 }
 
 export default function OrderStatusTabs({ futures, activeTab, onTabChange, children }: OrderStatusTabsProps) {
-  const openOrders = futures.filter(f => f.status === 'OPEN');
-  const closedOrders = futures.filter(f => f.status === 'CLOSED');
+  const openOrders = futures.filter(f => f.status.toUpperCase() === 'OPEN');
+  const closedOrders = futures.filter(f => f.status.toUpperCase() === 'CLOSED');
   const allOrders = futures;
 
   const getFilteredOrders = (status: string) => {

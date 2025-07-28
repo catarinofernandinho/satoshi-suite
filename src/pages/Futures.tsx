@@ -1,23 +1,28 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { useFutures } from "@/hooks/useFutures";
 import FuturesStatsEnhanced from "@/components/futures/FuturesStatsEnhanced";
 import FuturesCharts from "@/components/futures/FuturesCharts";
 import FuturesTable from "@/components/futures/FuturesTable";
 import AddFutureModal from "@/components/futures/AddFutureModal";
+import SyncButton from "@/components/futures/SyncButton";
 import DateRangeFilter from "@/components/futures/DateRangeFilter";
 import OrderStatusTabs from "@/components/futures/OrderStatusTabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { subDays, format, isWithinInterval, parseISO } from "date-fns";
+import { useTimezone } from "@/contexts/TimezoneContext";
 
 export default function Futures() {
   const { futures, loading, calculateFutureMetrics } = useFutures();
+  const { getCurrentTime, convertToUserTime } = useTimezone();
   const [btcPrice, setBtcPrice] = useState(0);
   const [priceLoading, setPriceLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("all");
   const [dateRange, setDateRange] = useState({
-    from: subDays(new Date(), 30),
-    to: new Date()
+    from: subDays(getCurrentTime(), 30),
+    to: getCurrentTime()
   });
 
   const fetchBitcoinPrice = async () => {
@@ -41,7 +46,7 @@ export default function Futures() {
 
   // Filter futures by date range
   const filteredFutures = futures.filter(future => {
-    const futureDate = parseISO(future.buy_date);
+    const futureDate = convertToUserTime(future.buy_date);
     return isWithinInterval(futureDate, { start: dateRange.from, end: dateRange.to });
   });
 
@@ -101,7 +106,7 @@ export default function Futures() {
     const monthlyMap = new Map<string, number>();
     
     filteredFutures.forEach(future => {
-      const month = format(parseISO(future.buy_date), 'MMM yyyy');
+      const month = format(convertToUserTime(future.buy_date), 'MMM yyyy');
       const metrics = calculateFutureMetrics(future, btcPrice);
       const profitSats = (metrics.net_pl_sats || 0) + ((metrics.fees_paid || 0) / btcPrice * 100000000);
       
@@ -168,7 +173,10 @@ export default function Futures() {
             Análise detalhada das suas ordens de futuros com indicadores visuais e gráficos
           </p>
         </div>
-        <AddFutureModal />
+        <div className="flex gap-2">
+          <SyncButton />
+          <AddFutureModal />
+        </div>
       </div>
 
       {/* Date Range Filter */}
@@ -203,15 +211,36 @@ export default function Futures() {
       <Card>
         <CardHeader>
           <CardTitle>Ordens</CardTitle>
-          <CardDescription>
-            Operações do período selecionado ({filteredFutures.length} de {futures.length} total)
+          <CardDescription className="flex items-center justify-between">
+            <span>
+              Operações do período selecionado ({filteredFutures.length} de {futures.length} total)
+            </span>
+            {filteredFutures.length !== futures.length && (
+              <Badge variant="outline" className="ml-2">
+                Filtro ativo
+              </Badge>
+            )}
           </CardDescription>
         </CardHeader>
         <CardContent>
           {filteredFutures.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              <p>Sem operações nesse intervalo</p>
-              <p className="text-sm mt-2">Ajuste o período ou adicione novas ordens</p>
+              {futures.length === 0 ? (
+                <>
+                  <p>Nenhuma ordem criada ainda</p>
+                  <p className="text-sm mt-2">Clique em "Adicionar Ordem" para começar</p>
+                </>
+              ) : (
+                <>
+                  <p>Sem operações no período selecionado</p>
+                  <p className="text-sm mt-2">
+                    Período: {dateRange.from.toLocaleDateString('pt-BR')} até {dateRange.to.toLocaleDateString('pt-BR')}
+                  </p>
+                  <p className="text-sm mt-1">
+                    Ajuste o filtro de datas ou <Button variant="link" className="p-0 h-auto" onClick={() => setDateRange({ from: subDays(getCurrentTime(), 365), to: getCurrentTime() })}>visualize o último ano</Button>
+                  </p>
+                </>
+              )}
             </div>
           ) : (
             <OrderStatusTabs 

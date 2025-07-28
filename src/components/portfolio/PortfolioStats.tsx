@@ -7,6 +7,8 @@ interface PortfolioStatsProps {
   btcPriceChange: number;
   btcHoldings: number;
   totalGainLoss: number;
+  totalCost: number; // Novo
+  avgCostPerUnit: number; // Novo
   currency: string;
 }
 
@@ -16,6 +18,8 @@ export default function PortfolioStats({
   btcPriceChange,
   btcHoldings,
   totalGainLoss,
+  totalCost,
+  avgCostPerUnit,
   currency
 }: PortfolioStatsProps) {
   const formatCurrency = (amount: number, curr: string) => {
@@ -27,17 +31,16 @@ export default function PortfolioStats({
 
   const isPositive = totalGainLoss >= 0;
   const isPriceUp = btcPriceChange >= 0;
+  const percent = totalValue === totalGainLoss ? 0 : ((totalGainLoss / (totalValue - totalGainLoss)) * 100).toFixed(2);
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+    <div className="grid grid-cols-1 md:grid-cols-6 gap-6 mb-8">
       {/* Total Portfolio Value */}
       <Card className="p-6 card-shadow bg-gradient-card">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm text-muted-foreground mb-1">Valor Total</p>
-            <p className="text-2xl font-bold text-foreground">
-              {formatCurrency(totalValue, currency)}
-            </p>
+            <p className="text-2xl font-bold text-foreground">{formatCurrency(totalValue, currency)}</p>
           </div>
           <div className="p-3 bg-primary/10 rounded-lg">
             <Bitcoin className="h-6 w-6 text-primary" />
@@ -50,14 +53,10 @@ export default function PortfolioStats({
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm text-muted-foreground mb-1">Preço BTC</p>
-            <p className="text-2xl font-bold text-foreground">
-              {formatCurrency(btcPrice, currency)}
-            </p>
+            <p className="text-2xl font-bold text-foreground">{formatCurrency(btcPrice, currency)}</p>
             <div className={`flex items-center gap-1 mt-1 ${isPriceUp ? 'text-chart-green' : 'text-chart-red'}`}>
               {isPriceUp ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
-              <span className="text-sm font-medium">
-                {isPriceUp ? '+' : ''}{btcPriceChange.toFixed(2)}%
-              </span>
+              <span className="text-sm font-medium">{isPriceUp ? '+' : ''}{btcPriceChange.toFixed(2)}%</span>
             </div>
           </div>
         </div>
@@ -68,12 +67,28 @@ export default function PortfolioStats({
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm text-muted-foreground mb-1">Bitcoin</p>
-            <p className="text-2xl font-bold text-bitcoin">
-              {btcHoldings.toFixed(8)} BTC
-            </p>
-            <p className="text-sm text-muted-foreground mt-1">
-              {Math.floor(btcHoldings * 100000000)} sats
-            </p>
+            <p className="text-2xl font-bold text-bitcoin">{btcHoldings.toFixed(8)} BTC</p>
+            <p className="text-sm text-muted-foreground mt-1">{Math.floor(btcHoldings * 100000000)} sats</p>
+          </div>
+        </div>
+      </Card>
+
+      {/* Total Cost */}
+      <Card className="p-6 card-shadow bg-gradient-card">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm text-muted-foreground mb-1">Custo Total</p>
+            <p className="text-2xl font-bold text-foreground">{formatCurrency(totalCost, currency)}</p>
+          </div>
+        </div>
+      </Card>
+
+      {/* Avg Cost Per Unit */}
+      <Card className="p-6 card-shadow bg-gradient-card">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm text-muted-foreground mb-1">Custo Médio</p>
+            <p className="text-2xl font-bold text-foreground">{formatCurrency(avgCostPerUnit, currency)}</p>
           </div>
         </div>
       </Card>
@@ -88,9 +103,7 @@ export default function PortfolioStats({
             </p>
             <div className={`flex items-center gap-1 mt-1 ${isPositive ? 'text-chart-green' : 'text-chart-red'}`}>
               {isPositive ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
-              <span className="text-sm font-medium">
-                {((totalGainLoss / (totalValue - totalGainLoss)) * 100).toFixed(2)}%
-              </span>
+              <span className="text-sm font-medium">{percent}%</span>
             </div>
           </div>
         </div>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,13 +15,15 @@ interface AddTransactionModalProps {
   onClose: () => void;
   onSubmit: (transaction: Omit<Transaction, 'id' | 'created_at' | 'updated_at'>) => Promise<void>;
   currency: string;
+  currentBtcPrice: number; // Novo, para "Utilizar o mercado"
 }
 
 export default function AddTransactionModal({ 
   isOpen, 
   onClose, 
   onSubmit, 
-  currency 
+  currency,
+  currentBtcPrice
 }: AddTransactionModalProps) {
   const [activeTab, setActiveTab] = useState<"Comprar" | "Vender" | "Transferência">("Comprar");
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
@@ -33,9 +35,8 @@ export default function AddTransactionModal({
     totalSpent: "",
     pricePerCoin: "",
     market: currency,
-    fees: "",
-    notes: "",
-    date: new Date().toISOString().slice(0, 16) // Default to current date/time
+    feesAndNotes: "", // Unificado
+    date: new Date().toISOString().slice(0, 16)
   });
 
   const resetForm = () => {
@@ -45,8 +46,7 @@ export default function AddTransactionModal({
       totalSpent: "",
       pricePerCoin: "",
       market: currency,
-      fees: "",
-      notes: "",
+      feesAndNotes: "",
       date: new Date().toISOString().slice(0, 16)
     });
     setActiveTab("Comprar");
@@ -62,7 +62,6 @@ export default function AddTransactionModal({
     const { price, quantity, totalSpent, pricePerCoin } = formData;
     const updatedData = { ...formData };
 
-    // Auto-calculate missing values based on what's filled
     if (quantity && pricePerCoin && !totalSpent) {
       updatedData.totalSpent = (parseFloat(quantity) * parseFloat(pricePerCoin)).toString();
     } else if (totalSpent && quantity && !pricePerCoin) {
@@ -71,19 +70,25 @@ export default function AddTransactionModal({
       updatedData.quantity = (parseFloat(totalSpent) / parseFloat(pricePerCoin)).toString();
     }
 
-    // If price per coin is set, use it as the main price
-    if (pricePerCoin && !price) {
+    if (pricePerCoin === "" && !price) {
+      updatedData.pricePerCoin = currentBtcPrice.toString(); // "Utilizar o mercado"
+    } else if (pricePerCoin && !price) {
       updatedData.price = pricePerCoin;
     }
 
     setFormData(updatedData);
   };
 
+  useEffect(() => {
+    calculateMissingValues();
+  }, [currentBtcPrice]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
+      const [fees, ...notes] = formData.feesAndNotes.split('|').map(s => s.trim());
       const transactionData = {
         type: activeTab,
         price: parseFloat(formData.price || formData.pricePerCoin),
@@ -91,15 +96,20 @@ export default function AddTransactionModal({
         total_spent: parseFloat(formData.totalSpent),
         price_per_coin: parseFloat(formData.pricePerCoin || formData.price),
         market: formData.market,
-        fees: formData.fees ? parseFloat(formData.fees) : 0,
-        notes: formData.notes,
+        fees: fees ? parseFloat(fees) : 0,
+        notes: notes.join(' ') || "",
         date: formData.date
       };
+
+      if (transactionData.quantity <= 0 || transactionData.total_spent <= 0) {
+        throw new Error("Quantidade e custo devem ser positivos.");
+      }
 
       await onSubmit(transactionData);
       handleClose();
     } catch (error) {
       console.error("Error submitting transaction:", error);
+      // Adicionar toast aqui
     } finally {
       setIsLoading(false);
     }
@@ -107,7 +117,7 @@ export default function AddTransactionModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[500px] bg-card border-border">
+      <DialogContent className="sm:max-w-[90%] md:max-w-[500px] bg-card border-border">
         <DialogHeader>
           <DialogTitle className="text-foreground">Adicionar Transação</DialogTitle>
         </DialogHeader>
@@ -121,21 +131,24 @@ export default function AddTransactionModal({
             </TabsList>
 
             <TabsContent value={activeTab} className="space-y-4 mt-6">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="quantity">Quantidade (BTC)</Label>
-                  <Input
-                    id="quantity"
-                    type="number"
-                    step="0.00000001"
-                    placeholder="0.00000000"
-                    value={formData.quantity}
-                    onChange={(e) => setFormData(prev => ({ ...prev, quantity: e.target.value }))}
-                    onBlur={calculateMissingValues}
-                    required
-                  />
+                  <Label htmlFor="market">Moeda</Label>
+                  <Select value={formData.market} onValueChange={(value) => setFormData(prev => ({ ...prev, market: value }))}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione a moeda" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="USD">USD</SelectItem>
+                      <SelectItem value="BRL">BRL</SelectItem>
+                      <SelectItem value="BTC">BTC</SelectItem>
+                      <SelectItem value="SATS">SATS</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
+              </div>
 
+              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="totalSpent">Gasto Total</Label>
                   <Input
@@ -149,36 +162,39 @@ export default function AddTransactionModal({
                     required
                   />
                 </div>
+                <div className="space-y-2">
+                  <Label htmlFor="quantity">Quantidade</Label>
+                  <Input
+                    id="quantity"
+                    type="number"
+                    step="0.00000001"
+                    placeholder="0.00000000"
+                    value={formData.quantity}
+                    onChange={(e) => setFormData(prev => ({ ...prev, quantity: e.target.value }))}
+                    onBlur={calculateMissingValues}
+                    required
+                  />
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="pricePerCoin">Preço por Moeda</Label>
-                  <Input
-                    id="pricePerCoin"
-                    type="number"
-                    step="0.01"
-                    placeholder="0.00"
-                    value={formData.pricePerCoin}
-                    onChange={(e) => setFormData(prev => ({ ...prev, pricePerCoin: e.target.value }))}
-                    onBlur={calculateMissingValues}
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="market">Mercado</Label>
-                  <Select value={formData.market} onValueChange={(value) => setFormData(prev => ({ ...prev, market: value }))}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="USD">USD</SelectItem>
-                      <SelectItem value="BRL">BRL</SelectItem>
-                      <SelectItem value="BTC">BTC</SelectItem>
-                      <SelectItem value="SATS">SATS</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <div className="flex gap-2">
+                    <Input
+                      id="pricePerCoin"
+                      type="number"
+                      step="0.01"
+                      placeholder="0.00"
+                      value={formData.pricePerCoin}
+                      onChange={(e) => setFormData(prev => ({ ...prev, pricePerCoin: e.target.value }))}
+                      onBlur={calculateMissingValues}
+                      required
+                    />
+                    <Button variant="outline" onClick={() => setFormData(prev => ({ ...prev, pricePerCoin: currentBtcPrice.toString() }))}>
+                      Utilizar Mercado
+                    </Button>
+                  </div>
                 </div>
               </div>
 
@@ -193,7 +209,6 @@ export default function AddTransactionModal({
                 />
               </div>
 
-              {/* Advanced Options */}
               <Collapsible open={isAdvancedOpen} onOpenChange={setIsAdvancedOpen}>
                 <CollapsibleTrigger className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
                   <ChevronDown className={`h-4 w-4 transition-transform ${isAdvancedOpen ? 'rotate-180' : ''}`} />
@@ -201,24 +216,12 @@ export default function AddTransactionModal({
                 </CollapsibleTrigger>
                 <CollapsibleContent className="space-y-4 pt-4">
                   <div className="space-y-2">
-                    <Label htmlFor="fees">Taxas (opcional)</Label>
-                    <Input
-                      id="fees"
-                      type="number"
-                      step="0.00000001"
-                      placeholder="0.00000000"
-                      value={formData.fees}
-                      onChange={(e) => setFormData(prev => ({ ...prev, fees: e.target.value }))}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="notes">Notas (opcional)</Label>
+                    <Label htmlFor="feesAndNotes">Taxas e Notas (ex.: 5|Nota)</Label>
                     <Textarea
-                      id="notes"
-                      placeholder="Adicione observações sobre esta transação..."
-                      value={formData.notes}
-                      onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
+                      id="feesAndNotes"
+                      placeholder="Ex.: 5 USD | Compra via Binance"
+                      value={formData.feesAndNotes}
+                      onChange={(e) => setFormData(prev => ({ ...prev, feesAndNotes: e.target.value }))}
                       rows={3}
                     />
                   </div>

@@ -7,6 +7,7 @@ export interface UserSettings {
   id?: string;
   user_id: string;
   preferred_currency: 'USD' | 'BRL';
+  timezone: string;
   theme: 'light' | 'dark' | 'system';
   created_at?: string;
   updated_at?: string;
@@ -14,6 +15,7 @@ export interface UserSettings {
 
 const defaultSettings: Omit<UserSettings, 'id' | 'user_id' | 'created_at' | 'updated_at'> = {
   preferred_currency: 'USD',
+  timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
   theme: 'system'
 };
 
@@ -30,7 +32,7 @@ export function useUserSettings() {
       // First try to get existing settings
       const { data, error } = await supabase
         .from('profiles')
-        .select('preferred_currency')
+        .select('preferred_currency, timezone')
         .eq('user_id', user.id)
         .single();
 
@@ -43,6 +45,7 @@ export function useUserSettings() {
         const userSettings: UserSettings = {
           user_id: user.id,
           preferred_currency: (data.preferred_currency as UserSettings['preferred_currency']) || defaultSettings.preferred_currency,
+          timezone: data.timezone || defaultSettings.timezone,
           theme: defaultSettings.theme // We'll store theme in localStorage for now
         };
         setSettings(userSettings);
@@ -70,7 +73,8 @@ export function useUserSettings() {
         .from('profiles')
         .upsert({
           user_id: user.id,
-          preferred_currency: defaultSettings.preferred_currency
+          preferred_currency: defaultSettings.preferred_currency,
+          timezone: defaultSettings.timezone
         }, {
           onConflict: 'user_id'
         })
@@ -82,6 +86,7 @@ export function useUserSettings() {
       const userSettings: UserSettings = {
         user_id: user.id,
         preferred_currency: data.preferred_currency as UserSettings['preferred_currency'],
+        timezone: data.timezone,
         theme: defaultSettings.theme
       };
 
@@ -100,14 +105,15 @@ export function useUserSettings() {
     if (!user || !settings) return;
 
     try {
-      // Update currency preference in database
-      if (updates.preferred_currency) {
+      // Update preferences in database
+      if (updates.preferred_currency || updates.timezone) {
+        const updateData: any = { user_id: user.id };
+        if (updates.preferred_currency) updateData.preferred_currency = updates.preferred_currency;
+        if (updates.timezone) updateData.timezone = updates.timezone;
+
         const { error } = await supabase
           .from('profiles')
-          .upsert({
-            user_id: user.id,
-            preferred_currency: updates.preferred_currency
-          }, {
+          .upsert(updateData, {
             onConflict: 'user_id'
           });
 

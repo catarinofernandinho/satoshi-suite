@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Settings, Save, User, DollarSign } from "lucide-react";
+import { Settings, Save, User, DollarSign, Globe } from "lucide-react";
 import { useUserSettings, type UserSettings } from "@/hooks/useUserSettings";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -15,13 +15,15 @@ export default function UserSettingsModal() {
   const { user } = useAuth();
 
   const [formData, setFormData] = useState<Partial<UserSettings>>({
-    preferred_currency: 'USD'
+    preferred_currency: 'USD',
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
   });
 
   useEffect(() => {
     if (settings) {
       setFormData({
-        preferred_currency: settings.preferred_currency
+        preferred_currency: settings.preferred_currency,
+        timezone: settings.timezone
       });
     }
   }, [settings]);
@@ -108,6 +110,73 @@ export default function UserSettingsModal() {
                     <SelectItem value="BRL">BRL - Real Brasileiro</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Timezone Settings */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Globe className="h-4 w-4" />
+                Fuso Horário
+              </CardTitle>
+              <CardDescription>
+                Fuso horário detectado automaticamente. Todas as datas serão exibidas neste fuso.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Fuso Horário Detectado</Label>
+                  <div className="text-sm text-muted-foreground bg-muted p-3 rounded-md">
+                    {Intl.DateTimeFormat().resolvedOptions().timeZone}
+                    <br />
+                    <span className="text-xs">
+                      {new Date().toLocaleString('pt-BR', { 
+                        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                        timeZoneName: 'long'
+                      })}
+                    </span>
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="timezone">Fuso Horário Configurado</Label>
+                  <Select
+                    value={formData.timezone}
+                    onValueChange={(value) => setFormData({ 
+                      ...formData, 
+                      timezone: value 
+                    })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecionar fuso horário" />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-60">
+                      <SelectItem value="America/Sao_Paulo">🇧🇷 America/Sao_Paulo (UTC-3)</SelectItem>
+                      <SelectItem value="America/New_York">🇺🇸 America/New_York (UTC-5)</SelectItem>
+                      <SelectItem value="America/Los_Angeles">🇺🇸 America/Los_Angeles (UTC-8)</SelectItem>
+                      <SelectItem value="Europe/London">🇬🇧 Europe/London (UTC+0)</SelectItem>
+                      <SelectItem value="Europe/Paris">🇫🇷 Europe/Paris (UTC+1)</SelectItem>
+                      <SelectItem value="Asia/Tokyo">🇯🇵 Asia/Tokyo (UTC+9)</SelectItem>
+                      <SelectItem value="Asia/Shanghai">🇨🇳 Asia/Shanghai (UTC+8)</SelectItem>
+                      <SelectItem value="Asia/Hong_Kong">🇭🇰 Asia/Hong_Kong (UTC+8)</SelectItem>
+                      <SelectItem value="Australia/Sydney">🇦🇺 Australia/Sydney (UTC+10)</SelectItem>
+                      <SelectItem value="UTC">🌍 UTC (UTC+0)</SelectItem>
+                      <SelectItem value={Intl.DateTimeFormat().resolvedOptions().timeZone}>
+                        📍 {Intl.DateTimeFormat().resolvedOptions().timeZone} (Detectado)
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    Horário atual no fuso selecionado: {new Date().toLocaleString('pt-BR', { 
+                      timeZone: formData.timezone,
+                      dateStyle: 'short',
+                      timeStyle: 'medium'
+                    })}
+                  </p>
+                </div>
               </div>
             </CardContent>
           </Card>

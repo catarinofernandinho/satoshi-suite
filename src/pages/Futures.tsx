@@ -9,15 +9,17 @@ import DateRangeFilter from "@/components/futures/DateRangeFilter";
 import OrderStatusTabs from "@/components/futures/OrderStatusTabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { subDays, format, isWithinInterval, parseISO } from "date-fns";
+import { useTimezone } from "@/contexts/TimezoneContext";
 
 export default function Futures() {
   const { futures, loading, calculateFutureMetrics } = useFutures();
+  const { getCurrentTime, convertToUserTime } = useTimezone();
   const [btcPrice, setBtcPrice] = useState(0);
   const [priceLoading, setPriceLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("all");
   const [dateRange, setDateRange] = useState({
-    from: subDays(new Date(), 30),
-    to: new Date()
+    from: subDays(getCurrentTime(), 30),
+    to: getCurrentTime()
   });
 
   const fetchBitcoinPrice = async () => {
@@ -41,7 +43,7 @@ export default function Futures() {
 
   // Filter futures by date range
   const filteredFutures = futures.filter(future => {
-    const futureDate = parseISO(future.buy_date);
+    const futureDate = convertToUserTime(future.buy_date);
     return isWithinInterval(futureDate, { start: dateRange.from, end: dateRange.to });
   });
 
@@ -101,7 +103,7 @@ export default function Futures() {
     const monthlyMap = new Map<string, number>();
     
     filteredFutures.forEach(future => {
-      const month = format(parseISO(future.buy_date), 'MMM yyyy');
+      const month = format(convertToUserTime(future.buy_date), 'MMM yyyy');
       const metrics = calculateFutureMetrics(future, btcPrice);
       const profitSats = (metrics.net_pl_sats || 0) + ((metrics.fees_paid || 0) / btcPrice * 100000000);
       

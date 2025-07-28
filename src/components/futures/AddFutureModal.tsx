@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Plus } from "lucide-react";
 import { useFutures, type Future } from "@/hooks/useFutures";
+import { useTimezone } from "@/contexts/TimezoneContext";
 
 interface AddFutureModalProps {
   onSuccess?: () => void;
@@ -16,6 +17,7 @@ export default function AddFutureModal({ onSuccess }: AddFutureModalProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const { addFuture } = useFutures();
+  const { getCurrentTime, convertToUTC } = useTimezone();
 
   const [formData, setFormData] = useState({
     direction: "",
@@ -23,7 +25,7 @@ export default function AddFutureModal({ onSuccess }: AddFutureModalProps) {
     target_price: "",
     quantity_usd: "",
     leverage: "",
-    buy_date: new Date().toISOString().slice(0, 16),
+    buy_date: getCurrentTime().toISOString().slice(0, 16),
     status: "OPEN",
   });
 
@@ -38,7 +40,7 @@ export default function AddFutureModal({ onSuccess }: AddFutureModalProps) {
         target_price: formData.target_price ? parseFloat(formData.target_price) : undefined,
         quantity_usd: parseFloat(formData.quantity_usd),
         leverage: parseFloat(formData.leverage),
-        buy_date: formData.buy_date,
+        buy_date: convertToUTC(new Date(formData.buy_date)).toISOString(),
         status: formData.status as "OPEN" | "CLOSED" | "STOP" | "CANCELLED",
       } as Omit<Future, 'id' | 'created_at' | 'updated_at'>);
 
@@ -48,7 +50,7 @@ export default function AddFutureModal({ onSuccess }: AddFutureModalProps) {
         target_price: "",
         quantity_usd: "",
         leverage: "",
-        buy_date: new Date().toISOString().slice(0, 16),
+        buy_date: getCurrentTime().toISOString().slice(0, 16),
         status: "OPEN",
       });
       

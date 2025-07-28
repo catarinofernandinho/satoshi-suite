@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { validateFutureData, validateUserContext, sanitizeFutureData } from '@/utils/validation';
 
 // Cache local para ordens
 const CACHE_KEY = 'futures_orders_cache';
@@ -85,22 +86,32 @@ export function useFutures() {
 
       if (error) throw error;
       
-      // Combinar dados do backend com cache local
       const backendOrders = (data as Future[]) || [];
-      const localOrders = getLocalOrders();
-      const allOrders = [...backendOrders, ...localOrders];
       
-      setFutures(allOrders);
+      // Sincronizar ordens locais com o backend se existirem
+      await syncLocalOrdersToBackend();
+      
+      setFutures(backendOrders);
+      
+      // Limpar cache local após sincronização bem-sucedida
+      if (backendOrders.length > 0) {
+        clearLocalCache();
+      }
+      
     } catch (error: any) {
+      console.error('Error fetching futures:', error);
+      
       // Em caso de erro, carrega apenas do cache local
       const localOrders = getLocalOrders();
       setFutures(localOrders);
       
-      toast({
-        title: "Usando cache local",
-        description: "Conexão com servidor indisponível. Usando dados salvos localmente.",
-        variant: "default"
-      });
+      if (localOrders.length > 0) {
+        toast({
+          title: "Modo offline",
+          description: "Usando dados salvos localmente. Dados serão sincronizados quando a conexão for restabelecida.",
+          variant: "default"
+        });
+      }
     } finally {
       setLoading(false);
     }
@@ -137,18 +148,75 @@ export function useFutures() {
     };
   };
 
-  const addFuture = async (futureData: Omit<Future, 'id' | 'created_at' | 'updated_at'>) => {
+  // Função para sincronizar ordens locais com o backend
+  const syncLocalOrdersToBackend = async () => {
     if (!user) return;
+    
+    const localOrders = getLocalOrders();
+    for (const order of localOrders) {
+      try {
+        const { error } = await supabase
+          .from('futures')
+          .insert([{
+            ...order,
+            user_id: user.id,
+            id: undefined, // Let Supabase generate new ID
+            isLocal: undefined
+          }]);
+          
+        if (error) {
+          console.error('Error syncing local order:', error);
+        }
+      } catch (error) {
+        console.error('Error syncing local order:', error);
+      }
+    }
+  };
+
+  const addFuture = async (futureData: Omit<Future, 'id' | 'created_at' | 'updated_at'>) => {
+    if (!validateUserContext(user?.id)) {
+      toast({
+        title: "Erro de autenticação",
+        description: "Você precisa estar logado para criar ordens.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Validar e sanitizar dados
+    const sanitizedData = {
+      direction: futureData.direction,
+      entry_price: futureData.entry_price,
+      exit_price: futureData.exit_price,
+      target_price: futureData.target_price,
+      quantity_usd: futureData.quantity_usd,
+      leverage: futureData.leverage,
+      status: futureData.status,
+      buy_date: futureData.buy_date,
+      percent_gain: futureData.percent_gain,
+      percent_fee: futureData.percent_fee,
+      fees_paid: futureData.fees_paid,
+      net_pl_sats: futureData.net_pl_sats
+    };
+    
+    const validationErrors = validateFutureData(sanitizedData);
+    
+    if (validationErrors.length > 0) {
+      toast({
+        title: "Dados inválidos",
+        description: validationErrors[0],
+        variant: "destructive"
+      });
+      return;
+    }
 
     try {
       const { data, error } = await supabase
         .from('futures')
-        .insert([
-          {
-            ...futureData,
-            user_id: user.id
-          }
-        ])
+        .insert({
+          ...sanitizedData,
+          user_id: user.id
+        })
         .select()
         .single();
 
@@ -156,19 +224,22 @@ export function useFutures() {
 
       setFutures(prev => [data as Future, ...prev]);
       toast({
-        title: "Ordem adicionada",
-        description: "Ordem criada com sucesso!"
+        title: "Ordem criada",
+        description: "Ordem salva com sucesso no servidor!"
       });
       
       return data;
     } catch (error: any) {
-      // Em caso de erro, salva no cache local
-      const localOrder = saveLocalOrder(futureData as LocalOrder);
+      console.error('Error creating future:', error);
+      
+      // Fallback para cache local APENAS em caso de erro de conexão
+      const localOrder = saveLocalOrder(sanitizedData as LocalOrder);
       setFutures(prev => [localOrder, ...prev]);
       
       toast({
-        title: "Ordem salva localmente",
-        description: "Ordem salva no cache local. Será sincronizada quando a conexão for restabelecida."
+        title: "Ordem salva offline",
+        description: "Ordem salva localmente. Será sincronizada quando a conexão for restabelecida.",
+        variant: "default"
       });
       
       return localOrder;
@@ -176,7 +247,14 @@ export function useFutures() {
   };
 
   const updateFuture = async (id: string, updates: Partial<Future>) => {
-    if (!user) return;
+    if (!user) {
+      toast({
+        title: "Erro de autenticação",
+        description: "Você precisa estar logado para editar ordens.",
+        variant: "destructive"
+      });
+      return;
+    }
 
     const isLocalOrder = id.startsWith('local_');
     
@@ -203,23 +281,58 @@ export function useFutures() {
         
         return data;
       } else {
-        // Atualizar ordem local
-        const updatedOrder = updateLocalOrder(id, updates);
-        if (updatedOrder) {
-          setFutures(prev => 
-            prev.map(f => f.id === id ? updatedOrder : f)
-          );
-          
-          toast({
-            title: "Ordem atualizada localmente",
-            description: "Ordem local modificada com sucesso!"
-          });
-          
-          return updatedOrder;
+        // Para ordens locais, tentar salvar no servidor primeiro
+        try {
+          const localOrder = futures.find(f => f.id === id) as LocalOrder;
+          if (localOrder) {
+            const { data, error } = await supabase
+              .from('futures')
+              .insert([{
+                ...localOrder,
+                ...updates,
+                user_id: user.id,
+                id: undefined,
+                isLocal: undefined
+              }])
+              .select()
+              .single();
+
+            if (error) throw error;
+
+            // Remover da lista local e adicionar versão do servidor
+            setFutures(prev => 
+              prev.filter(f => f.id !== id).concat([data as Future])
+            );
+            
+            // Limpar do cache local
+            deleteLocalOrder(id);
+            
+            toast({
+              title: "Ordem sincronizada",
+              description: "Ordem local foi salva no servidor!"
+            });
+            
+            return data;
+          }
+        } catch (syncError) {
+          // Se falhar a sincronização, atualizar localmente
+          const updatedOrder = updateLocalOrder(id, updates);
+          if (updatedOrder) {
+            setFutures(prev => 
+              prev.map(f => f.id === id ? updatedOrder : f)
+            );
+            
+            toast({
+              title: "Ordem atualizada offline",
+              description: "Ordem local modificada. Será sincronizada quando possível."
+            });
+            
+            return updatedOrder;
+          }
         }
-        throw new Error('Ordem local não encontrada');
       }
     } catch (error: any) {
+      console.error('Error updating future:', error);
       toast({
         title: "Erro ao atualizar ordem",
         description: error.message,
@@ -230,7 +343,14 @@ export function useFutures() {
   };
 
   const deleteFuture = async (id: string) => {
-    if (!user) return;
+    if (!user) {
+      toast({
+        title: "Erro de autenticação", 
+        description: "Você precisa estar logado para excluir ordens.",
+        variant: "destructive"
+      });
+      return;
+    }
 
     const isLocalOrder = id.startsWith('local_');
     
@@ -253,6 +373,7 @@ export function useFutures() {
         description: "Ordem excluída com sucesso!"
       });
     } catch (error: any) {
+      console.error('Error deleting future:', error);
       toast({
         title: "Erro ao remover ordem",
         description: error.message,
@@ -316,6 +437,7 @@ export function useFutures() {
     refreshFutures: fetchFutures,
     getFuturesStats,
     calculateFutureMetrics,
-    clearLocalCache
+    clearLocalCache,
+    syncLocalOrdersToBackend
   };
 }

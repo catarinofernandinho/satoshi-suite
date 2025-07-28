@@ -54,7 +54,7 @@ export default function UserSettingsModal() {
           <Settings className="h-4 w-4" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Settings className="h-5 w-5" />
@@ -153,7 +153,7 @@ export default function UserSettingsModal() {
                     <SelectTrigger>
                       <SelectValue placeholder="Selecionar fuso horário" />
                     </SelectTrigger>
-                    <SelectContent className="max-h-60">
+                    <SelectContent className="max-h-60 overflow-y-auto">
                       <SelectItem value="America/Sao_Paulo">🇧🇷 America/Sao_Paulo (UTC-3)</SelectItem>
                       <SelectItem value="America/New_York">🇺🇸 America/New_York (UTC-5)</SelectItem>
                       <SelectItem value="America/Los_Angeles">🇺🇸 America/Los_Angeles (UTC-8)</SelectItem>
@@ -164,7 +164,7 @@ export default function UserSettingsModal() {
                       <SelectItem value="Asia/Hong_Kong">🇭🇰 Asia/Hong_Kong (UTC+8)</SelectItem>
                       <SelectItem value="Australia/Sydney">🇦🇺 Australia/Sydney (UTC+10)</SelectItem>
                       <SelectItem value="UTC">🌍 UTC (UTC+0)</SelectItem>
-                      <SelectItem value={Intl.DateTimeFormat().resolvedOptions().timeZone}>
+                      <SelectItem key="detected" value={Intl.DateTimeFormat().resolvedOptions().timeZone}>
                         📍 {Intl.DateTimeFormat().resolvedOptions().timeZone} (Detectado)
                       </SelectItem>
                     </SelectContent>

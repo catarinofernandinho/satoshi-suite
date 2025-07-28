@@ -6,8 +6,9 @@ import { useUserSettings } from "@/hooks/useUserSettings";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button"; // Adicionado
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -67,6 +68,16 @@ export default function Portfolio() {
   const avgCost = totalCost / (totalAssets || 1);
   const totalProfitLoss = portfolioStats.gainLoss || 0;
 
+  const [transactionData, setTransactionData] = useState({
+    type: "Comprar",
+    coin: "BTC",
+    totalSpent: "",
+    quantity: "",
+    pricePerCoin: "",
+    date: new Date().toISOString().slice(0, 16),
+    feesNotes: "",
+  });
+
   const handleAddTransaction = () => {
     setIsAddModalOpen(true);
   };
@@ -79,19 +90,32 @@ export default function Portfolio() {
     });
   };
 
-  const handleSubmitTransaction = async (transactionData: any) => {
+  const handleSubmitTransaction = async () => {
     try {
       await addTransaction({
         ...transactionData,
         market: currentCurrency,
+        price: transactionData.pricePerCoin === "market" ? btcPrice : parseFloat(transactionData.pricePerCoin) || btcPrice,
+        quantity: parseFloat(transactionData.quantity) || 0,
+        total_spent: parseFloat(transactionData.totalSpent) || 0,
         fees: parseFloat(transactionData.feesNotes.split("\n")[0]) || 0,
         notes: transactionData.feesNotes.split("\n").slice(1).join("\n") || "",
+        date: transactionData.date,
       });
       toast({
         title: "Sucesso",
         description: "Transação adicionada com sucesso!",
       });
       setIsAddModalOpen(false);
+      setTransactionData({
+        type: "Comprar",
+        coin: "BTC",
+        totalSpent: "",
+        quantity: "",
+        pricePerCoin: "",
+        date: new Date().toISOString().slice(0, 16),
+        feesNotes: "",
+      });
     } catch (error) {
       toast({
         title: "Erro",
@@ -194,8 +218,8 @@ export default function Portfolio() {
               <TabsTrigger value="Transferência">Transferência</TabsTrigger>
             </TabsList>
             <TabsContent value="Comprar">
-              <form onSubmit={(e) => { e.preventDefault(); handleSubmitTransaction({ type: "Comprar", price: btcPrice, quantity: "", total_spent: "", feesNotes: "" }); }} className="space-y-4 py-4">
-                <Select onValueChange={(value) => handleSubmitTransaction({ ...{ type: "Comprar", price: btcPrice, quantity: "", total_spent: "", feesNotes: "" }, coin: value })}>
+              <form onSubmit={(e) => { e.preventDefault(); handleSubmitTransaction(); }} className="space-y-4 py-4">
+                <Select onValueChange={(value) => setTransactionData({ ...transactionData, coin: value })}>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione a moeda" />
                   </SelectTrigger>
@@ -207,16 +231,18 @@ export default function Portfolio() {
                 <Input
                   type="number"
                   placeholder="Gasto Total"
-                  onChange={(e) => handleSubmitTransaction({ ...{ type: "Comprar", price: btcPrice, quantity: "", feesNotes: "" }, total_spent: e.target.value })}
+                  value={transactionData.totalSpent}
+                  onChange={(e) => setTransactionData({ ...transactionData, totalSpent: e.target.value })}
                   step="0.01"
                 />
                 <Input
                   type="number"
                   placeholder="Quantidade"
-                  onChange={(e) => handleSubmitTransaction({ ...{ type: "Comprar", price: btcPrice, total_spent: "", feesNotes: "" }, quantity: e.target.value })}
+                  value={transactionData.quantity}
+                  onChange={(e) => setTransactionData({ ...transactionData, quantity: e.target.value })}
                   step="0.00000001"
                 />
-                <Select onValueChange={(value) => handleSubmitTransaction({ ...{ type: "Comprar", quantity: "", total_spent: "", feesNotes: "" }, pricePerCoin: value })}>
+                <Select onValueChange={(value) => setTransactionData({ ...transactionData, pricePerCoin: value })}>
                   <SelectTrigger>
                     <SelectValue placeholder="Preço por Moeda" />
                   </SelectTrigger>
@@ -228,17 +254,20 @@ export default function Portfolio() {
                 <Input
                   type="number"
                   placeholder="Preço Personalizado"
-                  onChange={(e) => handleSubmitTransaction({ ...{ type: "Comprar", quantity: "", total_spent: "", feesNotes: "" }, pricePerCoin: e.target.value })}
+                  value={transactionData.pricePerCoin === "custom" ? transactionData.pricePerCoin : ""}
+                  onChange={(e) => setTransactionData({ ...transactionData, pricePerCoin: e.target.value })}
                   step="0.01"
-                  disabled={true} // Habilitar só se "custom" for selecionado
+                  disabled={transactionData.pricePerCoin !== "custom"}
                 />
                 <Input
                   type="datetime-local"
-                  onChange={(e) => handleSubmitTransaction({ ...{ type: "Comprar", price: btcPrice, quantity: "", total_spent: "", feesNotes: "" }, date: e.target.value })}
+                  value={transactionData.date}
+                  onChange={(e) => setTransactionData({ ...transactionData, date: e.target.value })}
                 />
                 <Textarea
                   placeholder="Taxas e Observações (taxa em nova linha)"
-                  onChange={(e) => handleSubmitTransaction({ ...{ type: "Comprar", price: btcPrice, quantity: "", total_spent: "" }, feesNotes: e.target.value })}
+                  value={transactionData.feesNotes}
+                  onChange={(e) => setTransactionData({ ...transactionData, feesNotes: e.target.value })}
                 />
                 <Button type="submit" className="w-full">Adicionar</Button>
               </form>

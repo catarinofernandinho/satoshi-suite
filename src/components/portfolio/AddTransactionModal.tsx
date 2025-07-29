@@ -175,8 +175,6 @@ export default function AddTransactionModal({
                     <SelectContent>
                       <SelectItem value="USD">USD</SelectItem>
                       <SelectItem value="BRL">BRL</SelectItem>
-                      <SelectItem value="BTC">BTC</SelectItem>
-                      <SelectItem value="SATS">SATS</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

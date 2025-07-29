@@ -8,10 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button"; // Adicionado
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import AddTransactionModal from "@/components/portfolio/AddTransactionModal";
 
 export default function Portfolio() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -68,16 +65,6 @@ export default function Portfolio() {
   const avgCost = totalCost / (totalAssets || 1);
   const totalProfitLoss = portfolioStats.gainLoss || 0;
 
-  const [transactionData, setTransactionData] = useState({
-    type: "Comprar",
-    coin: "BTC",
-    totalSpent: "",
-    quantity: "",
-    pricePerCoin: "",
-    date: new Date().toISOString().slice(0, 16),
-    feesNotes: "",
-  });
-
   const handleAddTransaction = () => {
     setIsAddModalOpen(true);
   };
@@ -88,41 +75,6 @@ export default function Portfolio() {
       title: "Funcionalidade em desenvolvimento",
       description: "Edição de transações será implementada em breve."
     });
-  };
-
-  const handleSubmitTransaction = async () => {
-    try {
-      await addTransaction({
-        ...transactionData,
-        market: currentCurrency,
-        price: transactionData.pricePerCoin === "market" ? btcPrice : parseFloat(transactionData.pricePerCoin) || btcPrice,
-        quantity: parseFloat(transactionData.quantity) || 0,
-        total_spent: parseFloat(transactionData.totalSpent) || 0,
-        fees: parseFloat(transactionData.feesNotes.split("\n")[0]) || 0,
-        notes: transactionData.feesNotes.split("\n").slice(1).join("\n") || "",
-        date: transactionData.date,
-      });
-      toast({
-        title: "Sucesso",
-        description: "Transação adicionada com sucesso!",
-      });
-      setIsAddModalOpen(false);
-      setTransactionData({
-        type: "Comprar",
-        coin: "BTC",
-        totalSpent: "",
-        quantity: "",
-        pricePerCoin: "",
-        date: new Date().toISOString().slice(0, 16),
-        feesNotes: "",
-      });
-    } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Falha ao adicionar transação.",
-        variant: "destructive",
-      });
-    }
   };
 
   return (
@@ -139,14 +91,14 @@ export default function Portfolio() {
         </div>
       ) : (
         <>
-          <div className="grid gap-4 md:grid-cols-5">
-            <Card className="col-span-2">
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <Card className="lg:col-span-2">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Bitcoin BTC</CardTitle>
                 <img src="/bitcoin-logo.png" alt="BTC Logo" className="h-6 w-6" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{currentCurrency === "BRL" ? "R$" : "US$"}{btcPrice.toLocaleString()}</div>
+                <div className="text-xl sm:text-2xl font-bold">{currentCurrency === "BRL" ? "R$" : "US$"}{btcPrice.toLocaleString()}</div>
                 <Badge className={btcPriceChange >= 0 ? "bg-green-500" : "bg-red-500"}>
                   {btcPriceChange >= 0 ? "+" : ""}{btcPriceChange.toFixed(2)}%
                 </Badge>
@@ -157,7 +109,7 @@ export default function Portfolio() {
                 <CardTitle className="text-sm font-medium">Valor dos Ativos</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{currentCurrency === "BRL" ? "R$" : "US$"}{assetsValue.toLocaleString()}</div>
+                <div className="text-lg sm:text-xl font-bold">{currentCurrency === "BRL" ? "R$" : "US$"}{assetsValue.toLocaleString()}</div>
               </CardContent>
             </Card>
             <Card>
@@ -165,7 +117,7 @@ export default function Portfolio() {
                 <CardTitle className="text-sm font-medium">Ativos</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{totalAssets.toFixed(8)} BTC</div>
+                <div className="text-lg sm:text-xl font-bold">{totalAssets.toFixed(8)} BTC</div>
               </CardContent>
             </Card>
             <Card>
@@ -173,23 +125,23 @@ export default function Portfolio() {
                 <CardTitle className="text-sm font-medium">Custo Total</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{currentCurrency === "BRL" ? "R$" : "US$"}{totalCost.toLocaleString()}</div>
+                <div className="text-lg sm:text-xl font-bold">{currentCurrency === "BRL" ? "R$" : "US$"}{totalCost.toLocaleString()}</div>
               </CardContent>
             </Card>
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Custo Médio por Unidade</CardTitle>
+                <CardTitle className="text-sm font-medium">Custo Médio</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{currentCurrency === "BRL" ? "R$" : "US$"}{avgCost.toLocaleString()}</div>
+                <div className="text-lg sm:text-xl font-bold">{currentCurrency === "BRL" ? "R$" : "US$"}{avgCost.toLocaleString()}</div>
               </CardContent>
             </Card>
-            <Card className="col-span-2">
+            <Card className="sm:col-span-2 lg:col-span-3 xl:col-span-2">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Total de Ganhos/Perdas</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className={totalProfitLoss >= 0 ? "text-green-500" : "text-red-500"} style={{ fontSize: "2rem", fontWeight: "bold" }}>
+                <div className={`text-xl sm:text-2xl font-bold ${totalProfitLoss >= 0 ? "text-green-500" : "text-red-500"}`}>
                   {currentCurrency === "BRL" ? "R$" : "US$"}{totalProfitLoss.toLocaleString()}
                 </div>
               </CardContent>
@@ -206,81 +158,18 @@ export default function Portfolio() {
         </>
       )}
 
-      <Sheet open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
-        <SheetContent side="right">
-          <SheetHeader>
-            <SheetTitle>Adicionar Transação</SheetTitle>
-          </SheetHeader>
-          <Tabs defaultValue="Comprar" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="Comprar">Comprar</TabsTrigger>
-              <TabsTrigger value="Vender">Vender</TabsTrigger>
-              <TabsTrigger value="Transferência">Transferência</TabsTrigger>
-            </TabsList>
-            <TabsContent value="Comprar">
-              <form onSubmit={(e) => { e.preventDefault(); handleSubmitTransaction(); }} className="space-y-4 py-4">
-                <Select onValueChange={(value) => setTransactionData({ ...transactionData, coin: value })}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione a moeda" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="BTC">BTC <img src="/bitcoin-logo.png" alt="BTC" className="h-4 w-4 inline" /></SelectItem>
-                    <SelectItem value="ETH">ETH</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Input
-                  type="number"
-                  placeholder="Gasto Total"
-                  value={transactionData.totalSpent}
-                  onChange={(e) => setTransactionData({ ...transactionData, totalSpent: e.target.value })}
-                  step="0.01"
-                />
-                <Input
-                  type="number"
-                  placeholder="Quantidade"
-                  value={transactionData.quantity}
-                  onChange={(e) => setTransactionData({ ...transactionData, quantity: e.target.value })}
-                  step="0.00000001"
-                />
-                <Select onValueChange={(value) => setTransactionData({ ...transactionData, pricePerCoin: value })}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Preço por Moeda" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="market">Utilizar o Mercado</SelectItem>
-                    <SelectItem value="custom">Personalizado</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Input
-                  type="number"
-                  placeholder="Preço Personalizado"
-                  value={transactionData.pricePerCoin === "custom" ? transactionData.pricePerCoin : ""}
-                  onChange={(e) => setTransactionData({ ...transactionData, pricePerCoin: e.target.value })}
-                  step="0.01"
-                  disabled={transactionData.pricePerCoin !== "custom"}
-                />
-                <Input
-                  type="datetime-local"
-                  value={transactionData.date}
-                  onChange={(e) => setTransactionData({ ...transactionData, date: e.target.value })}
-                />
-                <Textarea
-                  placeholder="Taxas e Observações (taxa em nova linha)"
-                  value={transactionData.feesNotes}
-                  onChange={(e) => setTransactionData({ ...transactionData, feesNotes: e.target.value })}
-                />
-                <Button type="submit" className="w-full">Adicionar</Button>
-              </form>
-            </TabsContent>
-            <TabsContent value="Vender">
-              {/* Lógica semelhante, ajustada para venda */}
-            </TabsContent>
-            <TabsContent value="Transferência">
-              {/* Lógica para transferência */}
-            </TabsContent>
-          </Tabs>
-        </SheetContent>
-      </Sheet>
+      <AddTransactionModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onSubmit={async (transaction) => {
+          await addTransaction(transaction);
+          toast({
+            title: "Sucesso",
+            description: "Transação adicionada com sucesso!"
+          });
+        }}
+        currency={currentCurrency}
+      />
     </div>
   );
 }

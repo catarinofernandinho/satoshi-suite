@@ -68,82 +68,71 @@ export default function TransactionTable({
               <TableHead className="text-muted-foreground">Tipo</TableHead>
               <TableHead className="text-muted-foreground">Preço</TableHead>
               <TableHead className="text-muted-foreground">Quantidade</TableHead>
-              <TableHead className="text-muted-foreground">Data e Hora</TableHead>
-              <TableHead className="text-muted-foreground">Taxas</TableHead>
-              <TableHead className="text-muted-foreground">Custo</TableHead>
-              <TableHead className="text-muted-foreground">Receitas</TableHead>
-              <TableHead className="text-muted-foreground">GP</TableHead>
-              <TableHead className="text-muted-foreground">Notas</TableHead>
+              <TableHead className="text-muted-foreground hidden sm:table-cell">Data</TableHead>
+              <TableHead className="text-muted-foreground hidden md:table-cell">Taxas</TableHead>
+              <TableHead className="text-muted-foreground">Total</TableHead>
+              <TableHead className="text-muted-foreground hidden lg:table-cell">Notas</TableHead>
               <TableHead className="text-muted-foreground">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {transactions.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                   Nenhuma transação encontrada. Clique em "Adicionar Transação" para começar.
                 </TableCell>
               </TableRow>
             ) : (
-              transactions.map((transaction, index) => {
-                const gp = calculateGP(transaction);
-                return (
-                  <TableRow key={transaction.id} className={getRowClass(transaction.type, index) + " border-border hover:bg-muted/20"}>
-                    <TableCell>
-                      <Badge variant="outline" className={getTypeColor(transaction.type)}>
-                        {transaction.type}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-foreground">
-                      {formatCurrency(transaction.price, currency)}
-                    </TableCell>
-                    <TableCell className="text-foreground">
-                      <div className="flex items-center gap-1">
-                        {transaction.type === "Vender" ? "-" : "+"}
-                        {transaction.quantity.toFixed(8)} BTC
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-foreground">
-                      {new Date(transaction.date).toLocaleString("en-US", { hour12: true })}
-                    </TableCell>
-                    <TableCell className="text-foreground">
-                      {formatCurrency(transaction.fees || 0, currency)}
-                    </TableCell>
-                    <TableCell className="text-foreground">
-                      {formatCurrency(transaction.total_spent, currency)}
-                    </TableCell>
-                    <TableCell className="text-foreground">
-                      {transaction.type === "Vender" ? formatCurrency(transaction.total_spent, currency) : "-"}
-                    </TableCell>
-                    <TableCell className={gp >= 0 ? "text-green-500" : "text-red-500"}>
-                      {formatCurrency(gp, currency)}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground max-w-32 truncate">
-                      {transaction.notes || "-"}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => onEditTransaction(transaction.id)}
-                          aria-label={`Editar transação ${transaction.id}`}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => onDeleteTransaction(transaction.id)}
-                          aria-label={`Deletar transação ${transaction.id}`}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                );
-              })
+              transactions.map((transaction, index) => (
+                <TableRow key={transaction.id} className={getRowClass(transaction.type, index) + " border-border hover:bg-muted/20"}>
+                  <TableCell>
+                    <Badge variant="outline" className={getTypeColor(transaction.type)}>
+                      {transaction.type}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-foreground">
+                    {formatCurrency(transaction.price_per_coin, currency)}
+                  </TableCell>
+                  <TableCell className="text-foreground">
+                    <div className="flex items-center gap-1">
+                      {transaction.type === "Vender" ? "-" : "+"}
+                      {transaction.quantity.toFixed(8)} BTC
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-foreground hidden sm:table-cell">
+                    {new Date(transaction.date).toLocaleDateString()}
+                  </TableCell>
+                  <TableCell className="text-foreground hidden md:table-cell">
+                    {formatCurrency(transaction.fees || 0, currency)}
+                  </TableCell>
+                  <TableCell className="text-foreground">
+                    {formatCurrency(transaction.total_spent, currency)}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground max-w-32 truncate hidden lg:table-cell">
+                    {transaction.notes || "-"}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onEditTransaction(transaction.id)}
+                        aria-label={`Editar transação ${transaction.id}`}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onDeleteTransaction(transaction.id)}
+                        aria-label={`Deletar transação ${transaction.id}`}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
             )}
           </TableBody>
         </Table>

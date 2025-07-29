@@ -5,7 +5,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Plus, Edit, Trash2 } from "lucide-react";
 import { Transaction } from "@/hooks/useTransactions";
-
 interface TransactionTableProps {
   transactions: Transaction[];
   currency: string;
@@ -13,42 +12,43 @@ interface TransactionTableProps {
   onEditTransaction: (id: string) => void;
   onDeleteTransaction: (id: string) => void;
 }
-
 export default function TransactionTable({
   transactions,
   currency,
   onAddTransaction,
   onEditTransaction,
-  onDeleteTransaction,
+  onDeleteTransaction
 }: TransactionTableProps) {
   const formatCurrency = (amount: number, curr: string) => {
     if (curr === "BTC") return `${amount.toFixed(8)} BTC`;
     if (curr === "SATS") return `${Math.floor(amount * 100000000)} sats`;
-    if (curr === "BRL") return `R$ ${amount.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`;
-    return `US$ ${amount.toLocaleString("en-US", { minimumFractionDigits: 2 })}`;
+    if (curr === "BRL") return `R$ ${amount.toLocaleString("pt-BR", {
+      minimumFractionDigits: 2
+    })}`;
+    return `US$ ${amount.toLocaleString("en-US", {
+      minimumFractionDigits: 2
+    })}`;
   };
-
   const getTypeColor = (type: string) => {
     switch (type) {
-      case "Comprar": return "bg-success text-success-foreground";
-      case "Vender": return "bg-destructive text-destructive-foreground";
-      default: return "bg-muted text-muted-foreground";
+      case "Comprar":
+        return "bg-success text-success-foreground";
+      case "Vender":
+        return "bg-destructive text-destructive-foreground";
+      default:
+        return "bg-muted text-muted-foreground";
     }
   };
-
   const getRowClass = (type: string, index: number) => {
     return "";
   };
-
   const calculateGP = (transaction: Transaction) => {
     if (transaction.type === "Vender") {
-      return transaction.price_per_coin - (transaction.total_spent / transaction.quantity);
+      return transaction.price_per_coin - transaction.total_spent / transaction.quantity;
     }
     return 0; // GP só calculado para vendas por enquanto
   };
-
-  return (
-    <Card className="card-shadow bg-gradient-card">
+  return <Card className="card-shadow bg-gradient-card">
       <div className="p-6 border-b border-border">
         <div className="flex items-center justify-between">
           <div>
@@ -68,7 +68,7 @@ export default function TransactionTable({
               <TableHead className="text-muted-foreground">Tipo</TableHead>
               <TableHead className="text-muted-foreground">Preço</TableHead>
               <TableHead className="text-muted-foreground">Quantidade</TableHead>
-              <TableHead className="text-muted-foreground hidden sm:table-cell">Data</TableHead>
+              <TableHead className="text-muted-foreground hidden sm:table-cell">Data Hora</TableHead>
               <TableHead className="text-muted-foreground hidden md:table-cell">Taxas</TableHead>
               <TableHead className="text-muted-foreground">Total</TableHead>
               <TableHead className="text-muted-foreground hidden lg:table-cell">Notas</TableHead>
@@ -76,15 +76,11 @@ export default function TransactionTable({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {transactions.length === 0 ? (
-              <TableRow>
+            {transactions.length === 0 ? <TableRow>
                 <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                   Nenhuma transação encontrada. Clique em "Adicionar Transação" para começar.
                 </TableCell>
-              </TableRow>
-            ) : (
-              transactions.map((transaction, index) => (
-                <TableRow key={transaction.id} className="border-border hover:bg-muted/50 transition-colors">
+              </TableRow> : transactions.map((transaction, index) => <TableRow key={transaction.id} className="border-border hover:bg-muted/50 transition-colors">
                   <TableCell>
                     <Badge variant="outline" className={getTypeColor(transaction.type)}>
                       {transaction.type}
@@ -113,30 +109,17 @@ export default function TransactionTable({
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-1">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => onEditTransaction(transaction.id)}
-                        aria-label={`Editar transação ${transaction.id}`}
-                      >
+                      <Button variant="ghost" size="sm" onClick={() => onEditTransaction(transaction.id)} aria-label={`Editar transação ${transaction.id}`}>
                         <Edit className="h-4 w-4" />
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => onDeleteTransaction(transaction.id)}
-                        aria-label={`Deletar transação ${transaction.id}`}
-                      >
+                      <Button variant="ghost" size="sm" onClick={() => onDeleteTransaction(transaction.id)} aria-label={`Deletar transação ${transaction.id}`}>
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
                   </TableCell>
-                </TableRow>
-              ))
-            )}
+                </TableRow>)}
           </TableBody>
         </Table>
       </div>
-    </Card>
-  );
+    </Card>;
 }

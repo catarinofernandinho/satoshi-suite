@@ -7,16 +7,12 @@ import BitcoinPriceChart from "@/components/charts/BitcoinPriceChart";
 import TradingViewChart from "@/components/charts/TradingViewChart";
 import CurrencyConverter from "@/components/conversor/CurrencyConverter";
 import { BarChart3, TrendingUp, Calculator, Activity } from "lucide-react";
-
 export default function Charts() {
-  return (
-    <div className="container mx-auto p-6 space-y-6">
+  return <div className="container mx-auto p-6 space-y-6">
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-foreground">Gráficos & Análises</h1>
-        <p className="text-muted-foreground">
-          Acompanhe o mercado Bitcoin com gráficos em tempo real e indicadores de sentimento
-        </p>
+        
       </div>
 
       {/* Tabs for different chart sections */}
@@ -54,6 +50,5 @@ export default function Charts() {
           <LiquidationHeatmap />
         </TabsContent>
       </Tabs>
-    </div>
-  );
+    </div>;
 }

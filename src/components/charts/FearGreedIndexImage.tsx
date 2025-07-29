@@ -1,6 +1,6 @@
 import React from "react";
 
-export default function FearGreedIndex() {
+export default function FearGreedIndexImage() {
   return (
     <div className="border rounded-xl p-6 bg-black text-white flex flex-col items-center shadow-lg">
       <h2 className="text-2xl font-bold mb-4">Índice Fear &amp; Greed</h2>

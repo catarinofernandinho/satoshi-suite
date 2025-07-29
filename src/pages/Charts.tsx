@@ -1,6 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import FearGreedIndex from "@/components/charts/FearGreedIndex";
+import FearGreedIndexImage from "@/components/charts/FearGreedIndexImage";
+import FearGreedIndexHistory from "@/components/charts/FearGreedIndexHistory";
 import LiquidationHeatmap from "@/components/charts/LiquidationHeatmap";
 import BitcoinPriceChart from "@/components/charts/BitcoinPriceChart";
 import TradingViewChart from "@/components/charts/TradingViewChart";
@@ -43,7 +44,7 @@ export default function Charts() {
         {/* Sentiment Analysis Tab */}
         <TabsContent value="sentiment" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <FearGreedIndex />
+            <FearGreedIndexImage />
             <Card>
               <CardHeader>
                 <CardTitle>Análise de Sentimento</CardTitle>
@@ -53,11 +54,7 @@ export default function Charts() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="text-center text-muted-foreground">
-                  <Activity className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>Mais indicadores de sentimento serão adicionados em breve.</p>
-                  <p className="text-sm mt-2">
-                    Sugestões: RSI Bitcoin, Volume Trading, Social Sentiment
-                  </p>
+                  <FearGreedIndexHistory />
                 </div>
               </CardContent>
             </Card>

@@ -45,19 +45,7 @@ export default function Charts() {
         <TabsContent value="sentiment" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <FearGreedIndexImage />
-            <Card>
-              <CardHeader>
-                <CardTitle>Análise de Sentimento</CardTitle>
-                <CardDescription>
-                  Indicadores adicionais de mercado
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="text-center text-muted-foreground">
-                  <FearGreedIndexHistory />
-                </div>
-              </CardContent>
-            </Card>
+            <FearGreedIndexHistory />
           </div>
         </TabsContent>
 

@@ -3,6 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import FearGreedIndexImage from "@/components/charts/FearGreedIndexImage";
 import FearGreedIndexHistory from "@/components/charts/FearGreedIndexHistory";
 import FearGreedIndexExplanation from "@/components/charts/FearGreedIndexExplanation";
+import LiquidationHeatmap from "@/components/charts/LiquidationHeatmap";
 import BitcoinPriceChart from "@/components/charts/BitcoinPriceChart";
 import TradingViewChart from "@/components/charts/TradingViewChart";
 import CurrencyConverter from "@/components/conversor/CurrencyConverter";
@@ -26,7 +27,10 @@ export default function Charts() {
             <Activity className="h-4 w-4" />
             Sentimento
           </TabsTrigger>
-  
+          <TabsTrigger value="liquidations" className="flex items-center gap-2">
+            <BarChart3 className="h-4 w-4" />
+            Liquidações
+          </TabsTrigger>
         </TabsList>
 
         {/* Price Chart Tab */}
@@ -43,6 +47,10 @@ export default function Charts() {
           <FearGreedIndexExplanation />
         </TabsContent>
 
+        {/* Liquidations Tab */}
+        <TabsContent value="liquidations" className="space-y-6">
+          <LiquidationHeatmap />
+        </TabsContent>
       </Tabs>
     </div>;
 }

@@ -2,7 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import FearGreedIndexImage from "@/components/charts/FearGreedIndexImage";
 import FearGreedIndexHistory from "@/components/charts/FearGreedIndexHistory";
-import FearGreedIndexExplanation from "@/components/charts/FearGreedIndexHistory";
+import FearGreedIndexExplanation from "@/components/charts/FearGreedIndexExplanation";
 import LiquidationHeatmap from "@/components/charts/LiquidationHeatmap";
 import BitcoinPriceChart from "@/components/charts/BitcoinPriceChart";
 import TradingViewChart from "@/components/charts/TradingViewChart";

@@ -51,16 +51,17 @@ export default function FearGreedIndexHistory() {
   };
 
   const options = {
-    responsive: true,
-    plugins: {
-      legend: { display: false },
-      tooltip: { mode: "index", intersect: false }
-    },
-    scales: {
-      y: { min: 0, max: 100, ticks: { color: "#ccc" }, grid: { color: "#333" } },
-      x: { ticks: { color: "#ccc" }, grid: { color: "#333" } }
-    }
-  };
+  responsive: true,
+  plugins: {
+    legend: { display: false },
+    tooltip: { intersect: false }
+  },
+  interaction: { mode: 'index' as const },
+  scales: {
+    y: { min: 0, max: 100, ticks: { color: "#ccc" }, grid: { color: "#333" } },
+    x: { ticks: { color: "#ccc" }, grid: { color: "#333" } }
+  }
+};
 
   // Valor atual destacado:
   const atual = data[data.length - 1];

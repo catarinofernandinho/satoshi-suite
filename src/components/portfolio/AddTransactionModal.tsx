@@ -9,24 +9,21 @@ import { Textarea } from "@/components/ui/textarea";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown } from "lucide-react";
 import { Transaction } from "@/hooks/useTransactions";
-
 interface AddTransactionModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (transaction: Omit<Transaction, 'id' | 'created_at' | 'updated_at'>) => Promise<void>;
   currency: string;
 }
-
-export default function AddTransactionModal({ 
-  isOpen, 
-  onClose, 
-  onSubmit, 
-  currency 
+export default function AddTransactionModal({
+  isOpen,
+  onClose,
+  onSubmit,
+  currency
 }: AddTransactionModalProps) {
   const [activeTab, setActiveTab] = useState<"Comprar" | "Vender" | "Transferência">("Comprar");
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  
   const [formData, setFormData] = useState({
     price: "",
     quantity: "",
@@ -37,7 +34,6 @@ export default function AddTransactionModal({
     notes: "",
     date: new Date().toISOString().slice(0, 16) // Default to current date/time
   });
-
   const resetForm = () => {
     setFormData({
       price: "",
@@ -52,15 +48,20 @@ export default function AddTransactionModal({
     setActiveTab("Comprar");
     setIsAdvancedOpen(false);
   };
-
   const handleClose = () => {
     resetForm();
     onClose();
   };
-
   const calculateMissingValues = () => {
-    const { price, quantity, totalSpent, pricePerCoin } = formData;
-    const updatedData = { ...formData };
+    const {
+      price,
+      quantity,
+      totalSpent,
+      pricePerCoin
+    } = formData;
+    const updatedData = {
+      ...formData
+    };
 
     // Auto-calculate missing values based on what's filled
     if (quantity && pricePerCoin && !totalSpent) {
@@ -75,14 +76,11 @@ export default function AddTransactionModal({
     if (pricePerCoin && !price) {
       updatedData.price = pricePerCoin;
     }
-
     setFormData(updatedData);
   };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-
     try {
       const transactionData = {
         type: activeTab,
@@ -95,7 +93,6 @@ export default function AddTransactionModal({
         notes: formData.notes,
         date: formData.date
       };
-
       await onSubmit(transactionData);
       handleClose();
     } catch (error) {
@@ -104,16 +101,14 @@ export default function AddTransactionModal({
       setIsLoading(false);
     }
   };
-
-  return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
+  return <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[500px] bg-card border-border">
         <DialogHeader>
           <DialogTitle className="text-foreground">Adicionar Transação</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as typeof activeTab)}>
+          <Tabs value={activeTab} onValueChange={value => setActiveTab(value as typeof activeTab)}>
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="Comprar">Comprar</TabsTrigger>
               <TabsTrigger value="Vender">Vender</TabsTrigger>
@@ -124,59 +119,42 @@ export default function AddTransactionModal({
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="quantity">Quantidade (BTC)</Label>
-                  <Input
-                    id="quantity"
-                    type="number"
-                    step="0.00000001"
-                    placeholder="0.00000000"
-                    value={formData.quantity}
-                    onChange={(e) => setFormData(prev => ({ ...prev, quantity: e.target.value }))}
-                    onBlur={calculateMissingValues}
-                    required
-                  />
+                  <Input id="quantity" type="number" step="0.00000001" placeholder="0.00000000" value={formData.quantity} onChange={e => setFormData(prev => ({
+                  ...prev,
+                  quantity: e.target.value
+                }))} onBlur={calculateMissingValues} required />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="totalSpent">Gasto Total</Label>
-                  <Input
-                    id="totalSpent"
-                    type="number"
-                    step="0.01"
-                    placeholder="0.00"
-                    value={formData.totalSpent}
-                    onChange={(e) => setFormData(prev => ({ ...prev, totalSpent: e.target.value }))}
-                    onBlur={calculateMissingValues}
-                    required
-                  />
+                  <Label htmlFor="totalSpent">Total Recebido</Label>
+                  <Input id="totalSpent" type="number" step="0.01" placeholder="0.00" value={formData.totalSpent} onChange={e => setFormData(prev => ({
+                  ...prev,
+                  totalSpent: e.target.value
+                }))} onBlur={calculateMissingValues} required />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="pricePerCoin">Preço por Moeda</Label>
-                  <Input
-                    id="pricePerCoin"
-                    type="number"
-                    step="0.01"
-                    placeholder="0.00"
-                    value={formData.pricePerCoin}
-                    onChange={(e) => setFormData(prev => ({ ...prev, pricePerCoin: e.target.value }))}
-                    onBlur={calculateMissingValues}
-                    required
-                  />
+                  <Input id="pricePerCoin" type="number" step="0.01" placeholder="0.00" value={formData.pricePerCoin} onChange={e => setFormData(prev => ({
+                  ...prev,
+                  pricePerCoin: e.target.value
+                }))} onBlur={calculateMissingValues} required />
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="market">Mercado</Label>
-                  <Select value={formData.market} onValueChange={(value) => setFormData(prev => ({ ...prev, market: value }))}>
+                  <Select value={formData.market} onValueChange={value => setFormData(prev => ({
+                  ...prev,
+                  market: value
+                }))}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="USD">USD</SelectItem>
                       <SelectItem value="BRL">BRL</SelectItem>
-                      <SelectItem value="BTC">BTC</SelectItem>
-                      <SelectItem value="SATS">SATS</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -184,13 +162,10 @@ export default function AddTransactionModal({
 
               <div className="space-y-2">
                 <Label htmlFor="date">Data e Hora</Label>
-                <Input
-                  id="date"
-                  type="datetime-local"
-                  value={formData.date}
-                  onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
-                  required
-                />
+                <Input id="date" type="datetime-local" value={formData.date} onChange={e => setFormData(prev => ({
+                ...prev,
+                date: e.target.value
+              }))} required />
               </div>
 
               {/* Advanced Options */}
@@ -202,25 +177,18 @@ export default function AddTransactionModal({
                 <CollapsibleContent className="space-y-4 pt-4">
                   <div className="space-y-2">
                     <Label htmlFor="fees">Taxas (opcional)</Label>
-                    <Input
-                      id="fees"
-                      type="number"
-                      step="0.00000001"
-                      placeholder="0.00000000"
-                      value={formData.fees}
-                      onChange={(e) => setFormData(prev => ({ ...prev, fees: e.target.value }))}
-                    />
+                    <Input id="fees" type="number" step="0.00000001" placeholder="0.00000000" value={formData.fees} onChange={e => setFormData(prev => ({
+                    ...prev,
+                    fees: e.target.value
+                  }))} />
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="notes">Notas (opcional)</Label>
-                    <Textarea
-                      id="notes"
-                      placeholder="Adicione observações sobre esta transação..."
-                      value={formData.notes}
-                      onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-                      rows={3}
-                    />
+                    <Textarea id="notes" placeholder="Adicione observações sobre esta transação..." value={formData.notes} onChange={e => setFormData(prev => ({
+                    ...prev,
+                    notes: e.target.value
+                  }))} rows={3} />
                   </div>
                 </CollapsibleContent>
               </Collapsible>
@@ -237,6 +205,5 @@ export default function AddTransactionModal({
           </div>
         </form>
       </DialogContent>
-    </Dialog>
-  );
+    </Dialog>;
 }

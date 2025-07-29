@@ -8,29 +8,26 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button"; // Adicionado
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-
+import AddTransactionModal from "@/components/portfolio/AddTransactionModal";
 export default function Portfolio() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [btcPrice, setBtcPrice] = useState(100000); // Default fallback price
   const [btcPriceChange, setBtcPriceChange] = useState(0);
-  
-  const { settings } = useUserSettings();
+  const {
+    settings
+  } = useUserSettings();
   const currentCurrency = settings?.preferred_currency || "USD";
-  
-  const { 
-    transactions, 
-    loading, 
-    addTransaction, 
-    updateTransaction, 
-    deleteTransaction, 
-    getPortfolioStats 
+  const {
+    transactions,
+    loading,
+    addTransaction,
+    updateTransaction,
+    deleteTransaction,
+    getPortfolioStats
   } = useTransactions();
-  
-  const { toast } = useToast();
+  const {
+    toast
+  } = useToast();
 
   // Fetch Bitcoin price from CoinGecko
   useEffect(() => {
@@ -38,7 +35,6 @@ export default function Portfolio() {
       try {
         const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd,brl&include_24hr_change=true');
         const data = await response.json();
-        
         if (data.bitcoin) {
           const price = currentCurrency === 'BRL' ? data.bitcoin.brl : data.bitcoin.usd;
           setBtcPrice(price);
@@ -53,12 +49,10 @@ export default function Portfolio() {
         });
       }
     };
-
     fetchBtcPrice();
     const interval = setInterval(fetchBtcPrice, 60000); // Update every minute
     return () => clearInterval(interval);
   }, [currentCurrency, toast]);
-
   const portfolioStats = getPortfolioStats(btcPrice);
 
   // Dashboard calculations
@@ -67,21 +61,9 @@ export default function Portfolio() {
   const totalCost = transactions.reduce((sum, t) => sum + t.total_spent, 0);
   const avgCost = totalCost / (totalAssets || 1);
   const totalProfitLoss = portfolioStats.gainLoss || 0;
-
-  const [transactionData, setTransactionData] = useState({
-    type: "Comprar",
-    coin: "BTC",
-    totalSpent: "",
-    quantity: "",
-    pricePerCoin: "",
-    date: new Date().toISOString().slice(0, 16),
-    feesNotes: "",
-  });
-
   const handleAddTransaction = () => {
     setIsAddModalOpen(true);
   };
-
   const handleEditTransaction = (id: string) => {
     console.log("Edit transaction:", id);
     toast({
@@ -89,64 +71,24 @@ export default function Portfolio() {
       description: "Edição de transações será implementada em breve."
     });
   };
-
-  const handleSubmitTransaction = async () => {
-    try {
-      await addTransaction({
-        ...transactionData,
-        market: currentCurrency,
-        price: transactionData.pricePerCoin === "market" ? btcPrice : parseFloat(transactionData.pricePerCoin) || btcPrice,
-        quantity: parseFloat(transactionData.quantity) || 0,
-        total_spent: parseFloat(transactionData.totalSpent) || 0,
-        fees: parseFloat(transactionData.feesNotes.split("\n")[0]) || 0,
-        notes: transactionData.feesNotes.split("\n").slice(1).join("\n") || "",
-        date: transactionData.date,
-      });
-      toast({
-        title: "Sucesso",
-        description: "Transação adicionada com sucesso!",
-      });
-      setIsAddModalOpen(false);
-      setTransactionData({
-        type: "Comprar",
-        coin: "BTC",
-        totalSpent: "",
-        quantity: "",
-        pricePerCoin: "",
-        date: new Date().toISOString().slice(0, 16),
-        feesNotes: "",
-      });
-    } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Falha ao adicionar transação.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  return (
-    <div className="space-y-6">
+  return <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-foreground mb-2">Portfólio Bitcoin</h1>
-        <p className="text-muted-foreground">Acompanhe seus investimentos em Bitcoin em tempo real</p>
+        
+        
       </div>
 
-      {loading ? (
-        <div className="flex items-center justify-center py-12">
+      {loading ? <div className="flex items-center justify-center py-12">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           <span className="ml-3 text-muted-foreground">Carregando portfólio...</span>
-        </div>
-      ) : (
-        <>
-          <div className="grid gap-4 md:grid-cols-5">
-            <Card className="col-span-2">
+        </div> : <>
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <Card className="lg:col-span-2">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Bitcoin BTC</CardTitle>
-                <img src="/bitcoin-logo.png" alt="BTC Logo" className="h-6 w-6" />
+                
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{currentCurrency === "BRL" ? "R$" : "US$"}{btcPrice.toLocaleString()}</div>
+                <div className="text-xl sm:text-2xl font-bold">{currentCurrency === "BRL" ? "R$" : "US$"}{btcPrice.toLocaleString()}</div>
                 <Badge className={btcPriceChange >= 0 ? "bg-green-500" : "bg-red-500"}>
                   {btcPriceChange >= 0 ? "+" : ""}{btcPriceChange.toFixed(2)}%
                 </Badge>
@@ -157,7 +99,7 @@ export default function Portfolio() {
                 <CardTitle className="text-sm font-medium">Valor dos Ativos</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{currentCurrency === "BRL" ? "R$" : "US$"}{assetsValue.toLocaleString()}</div>
+                <div className="text-lg sm:text-xl font-bold">{currentCurrency === "BRL" ? "R$" : "US$"}{assetsValue.toLocaleString()}</div>
               </CardContent>
             </Card>
             <Card>
@@ -165,7 +107,7 @@ export default function Portfolio() {
                 <CardTitle className="text-sm font-medium">Ativos</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{totalAssets.toFixed(8)} BTC</div>
+                <div className="text-lg sm:text-xl font-bold">{totalAssets.toFixed(8)} BTC</div>
               </CardContent>
             </Card>
             <Card>
@@ -173,114 +115,38 @@ export default function Portfolio() {
                 <CardTitle className="text-sm font-medium">Custo Total</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{currentCurrency === "BRL" ? "R$" : "US$"}{totalCost.toLocaleString()}</div>
+                <div className="text-lg sm:text-xl font-bold">{currentCurrency === "BRL" ? "R$" : "US$"}{totalCost.toLocaleString()}</div>
               </CardContent>
             </Card>
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Custo Médio por Unidade</CardTitle>
+                <CardTitle className="text-sm font-medium">Custo Médio</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{currentCurrency === "BRL" ? "R$" : "US$"}{avgCost.toLocaleString()}</div>
+                <div className="text-lg sm:text-xl font-bold">{currentCurrency === "BRL" ? "R$" : "US$"}{avgCost.toLocaleString()}</div>
               </CardContent>
             </Card>
-            <Card className="col-span-2">
+            <Card className="sm:col-span-2 lg:col-span-3 xl:col-span-2">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Total de Ganhos/Perdas</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className={totalProfitLoss >= 0 ? "text-green-500" : "text-red-500"} style={{ fontSize: "2rem", fontWeight: "bold" }}>
+                <div className={`text-xl sm:text-2xl font-bold ${totalProfitLoss >= 0 ? "text-green-500" : "text-red-500"}`}>
                   {currentCurrency === "BRL" ? "R$" : "US$"}{totalProfitLoss.toLocaleString()}
                 </div>
               </CardContent>
             </Card>
           </div>
 
-          <TransactionTable
-            transactions={transactions}
-            currency={currentCurrency}
-            onAddTransaction={handleAddTransaction}
-            onEditTransaction={handleEditTransaction}
-            onDeleteTransaction={deleteTransaction}
-          />
-        </>
-      )}
+          <TransactionTable transactions={transactions} currency={currentCurrency} onAddTransaction={handleAddTransaction} onEditTransaction={handleEditTransaction} onDeleteTransaction={deleteTransaction} />
+        </>}
 
-      <Sheet open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
-        <SheetContent side="right">
-          <SheetHeader>
-            <SheetTitle>Adicionar Transação</SheetTitle>
-          </SheetHeader>
-          <Tabs defaultValue="Comprar" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="Comprar">Comprar</TabsTrigger>
-              <TabsTrigger value="Vender">Vender</TabsTrigger>
-              <TabsTrigger value="Transferência">Transferência</TabsTrigger>
-            </TabsList>
-            <TabsContent value="Comprar">
-              <form onSubmit={(e) => { e.preventDefault(); handleSubmitTransaction(); }} className="space-y-4 py-4">
-                <Select onValueChange={(value) => setTransactionData({ ...transactionData, coin: value })}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione a moeda" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="BTC">BTC <img src="/bitcoin-logo.png" alt="BTC" className="h-4 w-4 inline" /></SelectItem>
-                    <SelectItem value="ETH">ETH</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Input
-                  type="number"
-                  placeholder="Gasto Total"
-                  value={transactionData.totalSpent}
-                  onChange={(e) => setTransactionData({ ...transactionData, totalSpent: e.target.value })}
-                  step="0.01"
-                />
-                <Input
-                  type="number"
-                  placeholder="Quantidade"
-                  value={transactionData.quantity}
-                  onChange={(e) => setTransactionData({ ...transactionData, quantity: e.target.value })}
-                  step="0.00000001"
-                />
-                <Select onValueChange={(value) => setTransactionData({ ...transactionData, pricePerCoin: value })}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Preço por Moeda" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="market">Utilizar o Mercado</SelectItem>
-                    <SelectItem value="custom">Personalizado</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Input
-                  type="number"
-                  placeholder="Preço Personalizado"
-                  value={transactionData.pricePerCoin === "custom" ? transactionData.pricePerCoin : ""}
-                  onChange={(e) => setTransactionData({ ...transactionData, pricePerCoin: e.target.value })}
-                  step="0.01"
-                  disabled={transactionData.pricePerCoin !== "custom"}
-                />
-                <Input
-                  type="datetime-local"
-                  value={transactionData.date}
-                  onChange={(e) => setTransactionData({ ...transactionData, date: e.target.value })}
-                />
-                <Textarea
-                  placeholder="Taxas e Observações (taxa em nova linha)"
-                  value={transactionData.feesNotes}
-                  onChange={(e) => setTransactionData({ ...transactionData, feesNotes: e.target.value })}
-                />
-                <Button type="submit" className="w-full">Adicionar</Button>
-              </form>
-            </TabsContent>
-            <TabsContent value="Vender">
-              {/* Lógica semelhante, ajustada para venda */}
-            </TabsContent>
-            <TabsContent value="Transferência">
-              {/* Lógica para transferência */}
-            </TabsContent>
-          </Tabs>
-        </SheetContent>
-      </Sheet>
-    </div>
-  );
+      <AddTransactionModal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} onSubmit={async transaction => {
+      await addTransaction(transaction);
+      toast({
+        title: "Sucesso",
+        description: "Transação adicionada com sucesso!"
+      });
+    }} currency={currentCurrency} />
+    </div>;
 }

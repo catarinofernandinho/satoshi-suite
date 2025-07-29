@@ -30,14 +30,14 @@ export default function TransactionTable({
 
   const getTypeColor = (type: string) => {
     switch (type) {
-      case "Comprar": return "bg-green-500 text-white";
-      case "Vender": return "bg-red-500 text-white";
-      default: return "bg-gray-500 text-white";
+      case "Comprar": return "bg-success text-success-foreground";
+      case "Vender": return "bg-destructive text-destructive-foreground";
+      default: return "bg-muted text-muted-foreground";
     }
   };
 
   const getRowClass = (type: string, index: number) => {
-    return index % 2 === 0 ? (type === "Comprar" ? "bg-green-50" : "bg-red-50") : "";
+    return "";
   };
 
   const calculateGP = (transaction: Transaction) => {
@@ -84,7 +84,7 @@ export default function TransactionTable({
               </TableRow>
             ) : (
               transactions.map((transaction, index) => (
-                <TableRow key={transaction.id} className={getRowClass(transaction.type, index) + " border-border hover:bg-muted/20"}>
+                <TableRow key={transaction.id} className="border-border hover:bg-muted/50 transition-colors">
                   <TableCell>
                     <Badge variant="outline" className={getTypeColor(transaction.type)}>
                       {transaction.type}

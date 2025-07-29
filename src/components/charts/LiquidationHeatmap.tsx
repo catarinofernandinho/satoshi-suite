@@ -48,7 +48,7 @@ export default function LiquidationHeatmap() {
         {/* Embedded Heatmap */}
         <div className="border rounded-lg overflow-hidden bg-gray-50">
           <iframe
-            src="https://www.coinglass.com/pro/futures/LiquidationHeatMap"
+            src="https://bitcoincounterflow.com/liquidation-heatmap/"
             width="100%"
             height="500"
             frameBorder="0"
@@ -76,7 +76,7 @@ export default function LiquidationHeatmap() {
             Dados atualizados em tempo real
           </span>
           <a 
-            href="https://www.coinglass.com/pro/futures/LiquidationHeatMap" 
+            href="https://bitcoincounterflow.com/liquidation-heatmap/" 
             target="_blank" 
             rel="noopener noreferrer"
             className="flex items-center gap-1 hover:text-foreground transition-colors"

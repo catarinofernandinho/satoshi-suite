@@ -8,11 +8,38 @@ import { Settings, Save, User, DollarSign, Globe } from "lucide-react";
 import { useUserSettings, type UserSettings } from "@/hooks/useUserSettings";
 import { useAuth } from "@/hooks/useAuth";
 
+// Country to timezone mapping
+const COUNTRIES = [
+  { code: 'BR', name: 'Brasil', timezone: 'America/Sao_Paulo', flag: '🇧🇷' },
+  { code: 'US', name: 'Estados Unidos', timezone: 'America/New_York', flag: '🇺🇸' },
+  { code: 'GB', name: 'Reino Unido', timezone: 'Europe/London', flag: '🇬🇧' },
+  { code: 'FR', name: 'França', timezone: 'Europe/Paris', flag: '🇫🇷' },
+  { code: 'DE', name: 'Alemanha', timezone: 'Europe/Berlin', flag: '🇩🇪' },
+  { code: 'JP', name: 'Japão', timezone: 'Asia/Tokyo', flag: '🇯🇵' },
+  { code: 'CN', name: 'China', timezone: 'Asia/Shanghai', flag: '🇨🇳' },
+  { code: 'AU', name: 'Austrália', timezone: 'Australia/Sydney', flag: '🇦🇺' },
+  { code: 'CA', name: 'Canadá', timezone: 'America/Toronto', flag: '🇨🇦' },
+  { code: 'IT', name: 'Itália', timezone: 'Europe/Rome', flag: '🇮🇹' },
+  { code: 'ES', name: 'Espanha', timezone: 'Europe/Madrid', flag: '🇪🇸' },
+  { code: 'MX', name: 'México', timezone: 'America/Mexico_City', flag: '🇲🇽' }
+];
+
+// Detect user's country from timezone
+function detectCountryFromTimezone(timezone: string): string {
+  const country = COUNTRIES.find(c => c.timezone === timezone);
+  return country?.code || 'BR'; // Default to Brazil
+}
+
 export default function UserSettingsModal() {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const { settings, updateSettings } = useUserSettings();
   const { user } = useAuth();
+
+  const [selectedCountry, setSelectedCountry] = useState<string>(() => {
+    const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    return detectCountryFromTimezone(detectedTimezone);
+  });
 
   const [formData, setFormData] = useState<Partial<UserSettings>>({
     preferred_currency: 'USD',
@@ -25,8 +52,20 @@ export default function UserSettingsModal() {
         preferred_currency: settings.preferred_currency,
         timezone: settings.timezone
       });
+      setSelectedCountry(detectCountryFromTimezone(settings.timezone));
     }
   }, [settings]);
+
+  const handleCountryChange = (countryCode: string) => {
+    setSelectedCountry(countryCode);
+    const country = COUNTRIES.find(c => c.code === countryCode);
+    if (country) {
+      setFormData({
+        ...formData,
+        timezone: country.timezone
+      });
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -114,69 +153,35 @@ export default function UserSettingsModal() {
             </CardContent>
           </Card>
 
-          {/* Timezone Settings */}
+          {/* Country Settings */}
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-lg flex items-center gap-2">
                 <Globe className="h-4 w-4" />
-                Fuso Horário
+                País
               </CardTitle>
               <CardDescription>
-                Fuso horário detectado automaticamente. Todas as datas serão exibidas neste fuso.
+                Selecione seu país para configurar automaticamente o fuso horário correto.
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label>Fuso Horário Detectado</Label>
-                  <div className="text-sm text-muted-foreground bg-muted p-3 rounded-md">
-                    {Intl.DateTimeFormat().resolvedOptions().timeZone}
-                    <br />
-                    <span className="text-xs">
-                      {new Date().toLocaleString('pt-BR', { 
-                        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-                        timeZoneName: 'long'
-                      })}
-                    </span>
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="timezone">Fuso Horário Configurado</Label>
-                  <Select
-                    value={formData.timezone}
-                    onValueChange={(value) => setFormData({ 
-                      ...formData, 
-                      timezone: value 
-                    })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecionar fuso horário" />
-                    </SelectTrigger>
-                    <SelectContent className="max-h-60 overflow-y-auto">
-                      <SelectItem value="America/Sao_Paulo">🇧🇷 America/Sao_Paulo (UTC-3)</SelectItem>
-                      <SelectItem value="America/New_York">🇺🇸 America/New_York (UTC-5)</SelectItem>
-                      <SelectItem value="America/Los_Angeles">🇺🇸 America/Los_Angeles (UTC-8)</SelectItem>
-                      <SelectItem value="Europe/London">🇬🇧 Europe/London (UTC+0)</SelectItem>
-                      <SelectItem value="Europe/Paris">🇫🇷 Europe/Paris (UTC+1)</SelectItem>
-                      <SelectItem value="Asia/Tokyo">🇯🇵 Asia/Tokyo (UTC+9)</SelectItem>
-                      <SelectItem value="Asia/Shanghai">🇨🇳 Asia/Shanghai (UTC+8)</SelectItem>
-                      <SelectItem value="Asia/Hong_Kong">🇭🇰 Asia/Hong_Kong (UTC+8)</SelectItem>
-                      <SelectItem value="Australia/Sydney">🇦🇺 Australia/Sydney (UTC+10)</SelectItem>
-                      <SelectItem value="UTC">🌍 UTC (UTC+0)</SelectItem>
-                      <SelectItem key="detected" value={Intl.DateTimeFormat().resolvedOptions().timeZone}>
-                        📍 {Intl.DateTimeFormat().resolvedOptions().timeZone} (Detectado)
+              <div className="space-y-2">
+                <Label htmlFor="country">País</Label>
+                <Select
+                  value={selectedCountry}
+                  onValueChange={handleCountryChange}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecionar país" />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-60 overflow-y-auto">
+                    {COUNTRIES.map((country) => (
+                      <SelectItem key={country.code} value={country.code}>
+                        {country.flag} {country.name}
                       </SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <p className="text-xs text-muted-foreground">
-                    Horário atual no fuso selecionado: {new Date().toLocaleString('pt-BR', { 
-                      timeZone: formData.timezone,
-                      dateStyle: 'short',
-                      timeStyle: 'medium'
-                    })}
-                  </p>
-                </div>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </CardContent>
           </Card>

@@ -47,6 +47,7 @@ export default function Charts() {
             <FearGreedIndexImage />
             <FearGreedIndexHistory />
           </div>
+          <FearGreedIndexExplanation />
         </TabsContent>
 
         {/* Liquidations Tab */}

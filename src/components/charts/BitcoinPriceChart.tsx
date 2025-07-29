@@ -18,7 +18,7 @@ export default function BitcoinPriceChart() {
     { value: "1W", label: "1 Semana" },
   ];
 
-  const tradingViewUrl = `https://s.tradingview.com/widgetembed/?frameElementId=tradingview_widget&symbol=${symbol}&interval=${timeframe}&hidesidetoolbar=1&symboledit=1&saveimage=1&toolbarbg=F1F3F6&studies=[]&hideideas=1&theme=Light&style=1&timezone=America%2FSao_Paulo&studies_overrides={}&overrides={}&enabled_features=[]&disabled_features=[]&locale=pt&utm_source=localhost&utm_medium=widget&utm_campaign=chart&utm_term=${symbol}`;
+  const tradingViewUrl = `https://s.tradingview.com/widgetembed/?frameElementId=tradingview_widget&symbol=${symbol}&interval=${timeframe}&hidesidetoolbar=1&symboledit=1&saveimage=1&toolbarbg=181A20&studies=[]&hideideas=1&theme=dark&style=1&timezone=America%2FSao_Paulo&studies_overrides={}&overrides={}&enabled_features=[]&disabled_features=[]&locale=pt&utm_source=localhost&utm_medium=widget&utm_campaign=chart&utm_term=${symbol}`;
 
   return (
     <Card>
@@ -60,7 +60,7 @@ export default function BitcoinPriceChart() {
       </CardHeader>
       <CardContent>
         {/* TradingView Chart Widget */}
-        <div className="border rounded-lg overflow-hidden bg-white">
+        <div className="border rounded-lg overflow-hidden bg-black">
           <iframe
             src={tradingViewUrl}
             width="100%"

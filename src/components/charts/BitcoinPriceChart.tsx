@@ -53,8 +53,11 @@ export default function BitcoinPriceChart() {
         </div>
 
         {/* Chart Info */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 text-sm px-[2px]">
-          
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 text-sm">
+          <div className="text-center p-3 bg-muted rounded-lg">
+            <div className="font-medium text-muted-foreground">Timeframe</div>
+            <div className="text-lg font-bold">{timeframes.find(tf => tf.value === timeframe)?.label}</div>
+          </div>
           <div className="text-center p-3 bg-muted rounded-lg">
             <div className="font-medium text-muted-foreground">Par</div>
             <div className="text-lg font-bold">BTC/USD</div>

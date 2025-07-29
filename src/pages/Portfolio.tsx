@@ -9,25 +9,25 @@ import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import AddTransactionModal from "@/components/portfolio/AddTransactionModal";
-
 export default function Portfolio() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [btcPrice, setBtcPrice] = useState(100000); // Default fallback price
   const [btcPriceChange, setBtcPriceChange] = useState(0);
-  
-  const { settings } = useUserSettings();
+  const {
+    settings
+  } = useUserSettings();
   const currentCurrency = settings?.preferred_currency || "USD";
-  
-  const { 
-    transactions, 
-    loading, 
-    addTransaction, 
-    updateTransaction, 
-    deleteTransaction, 
-    getPortfolioStats 
+  const {
+    transactions,
+    loading,
+    addTransaction,
+    updateTransaction,
+    deleteTransaction,
+    getPortfolioStats
   } = useTransactions();
-  
-  const { toast } = useToast();
+  const {
+    toast
+  } = useToast();
 
   // Fetch Bitcoin price from CoinGecko
   useEffect(() => {
@@ -35,7 +35,6 @@ export default function Portfolio() {
       try {
         const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd,brl&include_24hr_change=true');
         const data = await response.json();
-        
         if (data.bitcoin) {
           const price = currentCurrency === 'BRL' ? data.bitcoin.brl : data.bitcoin.usd;
           setBtcPrice(price);
@@ -50,12 +49,10 @@ export default function Portfolio() {
         });
       }
     };
-
     fetchBtcPrice();
     const interval = setInterval(fetchBtcPrice, 60000); // Update every minute
     return () => clearInterval(interval);
   }, [currentCurrency, toast]);
-
   const portfolioStats = getPortfolioStats(btcPrice);
 
   // Dashboard calculations
@@ -64,11 +61,9 @@ export default function Portfolio() {
   const totalCost = transactions.reduce((sum, t) => sum + t.total_spent, 0);
   const avgCost = totalCost / (totalAssets || 1);
   const totalProfitLoss = portfolioStats.gainLoss || 0;
-
   const handleAddTransaction = () => {
     setIsAddModalOpen(true);
   };
-
   const handleEditTransaction = (id: string) => {
     console.log("Edit transaction:", id);
     toast({
@@ -76,26 +71,21 @@ export default function Portfolio() {
       description: "Edição de transações será implementada em breve."
     });
   };
-
-  return (
-    <div className="space-y-6">
+  return <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold text-foreground mb-2">Portfólio Bitcoin</h1>
         <p className="text-muted-foreground">Acompanhe seus investimentos em Bitcoin em tempo real</p>
       </div>
 
-      {loading ? (
-        <div className="flex items-center justify-center py-12">
+      {loading ? <div className="flex items-center justify-center py-12">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           <span className="ml-3 text-muted-foreground">Carregando portfólio...</span>
-        </div>
-      ) : (
-        <>
+        </div> : <>
           <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             <Card className="lg:col-span-2">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Bitcoin BTC</CardTitle>
-                <img src="/bitcoin-logo.png" alt="BTC Logo" className="h-6 w-6" />
+                
               </CardHeader>
               <CardContent>
                 <div className="text-xl sm:text-2xl font-bold">{currentCurrency === "BRL" ? "R$" : "US$"}{btcPrice.toLocaleString()}</div>
@@ -148,28 +138,15 @@ export default function Portfolio() {
             </Card>
           </div>
 
-          <TransactionTable
-            transactions={transactions}
-            currency={currentCurrency}
-            onAddTransaction={handleAddTransaction}
-            onEditTransaction={handleEditTransaction}
-            onDeleteTransaction={deleteTransaction}
-          />
-        </>
-      )}
+          <TransactionTable transactions={transactions} currency={currentCurrency} onAddTransaction={handleAddTransaction} onEditTransaction={handleEditTransaction} onDeleteTransaction={deleteTransaction} />
+        </>}
 
-      <AddTransactionModal
-        isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
-        onSubmit={async (transaction) => {
-          await addTransaction(transaction);
-          toast({
-            title: "Sucesso",
-            description: "Transação adicionada com sucesso!"
-          });
-        }}
-        currency={currentCurrency}
-      />
-    </div>
-  );
+      <AddTransactionModal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} onSubmit={async transaction => {
+      await addTransaction(transaction);
+      toast({
+        title: "Sucesso",
+        description: "Transação adicionada com sucesso!"
+      });
+    }} currency={currentCurrency} />
+    </div>;
 }

@@ -6,7 +6,7 @@ import { useFutures } from "@/hooks/useFutures";
 import FuturesStatsEnhanced from "@/components/futures/FuturesStatsEnhanced";
 import FuturesCharts from "@/components/futures/FuturesCharts";
 import FuturesTable from "@/components/futures/FuturesTable";
-import AddFutureModal from "@/components/futures/AddFutureModal";
+import AddFutureButton from "@/components/futures/AddFutureButton";
 import SyncButton from "@/components/futures/SyncButton";
 import DateRangeFilter from "@/components/futures/DateRangeFilter";
 import OrderStatusTabs from "@/components/futures/OrderStatusTabs";
@@ -175,7 +175,7 @@ export default function Futures() {
         </div>
         <div className="flex gap-2">
           <SyncButton />
-          <AddFutureModal />
+          <AddFutureButton />
         </div>
       </div>
 

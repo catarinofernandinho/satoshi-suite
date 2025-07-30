@@ -424,8 +424,41 @@ export function useFutures() {
   };
 
   useEffect(() => {
-    fetchFutures();
+    if (user) {
+      fetchFutures();
+    } else {
+      setLoading(false);
+    }
   }, [user]);
+
+  // If user is not logged in, return empty state
+  if (!user) {
+    return {
+      futures: [],
+      loading,
+      addFuture: async () => {},
+      updateFuture: async () => {},
+      deleteFuture: async () => {},
+      closeFuture: async () => {},
+      refreshFutures: () => {},
+      getFuturesStats: () => ({
+        totalOpenPositions: 0,
+        totalClosedPositions: 0,
+        totalUnrealizedPL: 0,
+        totalRealizedPL: 0,
+        totalFeesUSD: 0,
+        totalPL: 0
+      }),
+      calculateFutureMetrics: () => ({
+        percent_gain: 0,
+        percent_fee: 0,
+        net_pl_sats: 0,
+        fees_paid: 0
+      }),
+      clearLocalCache: () => {},
+      syncLocalOrdersToBackend: async () => {}
+    };
+  }
 
   return {
     futures,

@@ -10,11 +10,17 @@ import { useFutures, type Future } from "@/hooks/useFutures";
 import { useTimezone } from "@/contexts/TimezoneContext";
 
 interface AddFutureModalProps {
+  isOpen?: boolean;
+  onClose?: () => void;
   onSuccess?: () => void;
 }
 
-export default function AddFutureModal({ onSuccess }: AddFutureModalProps) {
+export default function AddFutureModal({ isOpen, onClose, onSuccess }: AddFutureModalProps) {
   const [open, setOpen] = useState(false);
+  
+  // Use external control if provided, otherwise use internal state
+  const modalOpen = isOpen !== undefined ? isOpen : open;
+  const setModalOpen = onClose !== undefined ? onClose : setOpen;
   const [loading, setLoading] = useState(false);
   const { addFuture } = useFutures();
   const { getCurrentTime, convertToUTC } = useTimezone();
@@ -54,7 +60,7 @@ export default function AddFutureModal({ onSuccess }: AddFutureModalProps) {
         status: "OPEN",
       });
       
-      setOpen(false);
+      setModalOpen(false);
       onSuccess?.();
     } catch (error) {
       console.error('Error adding future:', error);
@@ -64,13 +70,15 @@ export default function AddFutureModal({ onSuccess }: AddFutureModalProps) {
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button className="gap-2">
-          <Plus className="h-4 w-4" />
-          Adicionar Ordem
-        </Button>
-      </DialogTrigger>
+    <Dialog open={modalOpen} onOpenChange={setModalOpen}>
+      {!isOpen && (
+        <DialogTrigger asChild>
+          <Button className="gap-2">
+            <Plus className="h-4 w-4" />
+            Adicionar Ordem
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>Adicionar Nova Ordem</DialogTitle>
@@ -187,7 +195,7 @@ export default function AddFutureModal({ onSuccess }: AddFutureModalProps) {
           </div>
 
           <div className="flex justify-end gap-3 pt-4">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+            <Button type="button" variant="outline" onClick={() => setModalOpen(false)}>
               Cancelar
             </Button>
             <Button type="submit" disabled={loading}>

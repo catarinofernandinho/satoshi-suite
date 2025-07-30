@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Edit, Trash2, ChevronLeft, ChevronRight, ArrowUpDown } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Transaction } from "@/hooks/useTransactions";
+import { useAuthIntercept } from "@/contexts/AuthInterceptContext";
 
 interface TransactionTableEnhancedProps {
   transactions: Transaction[];
@@ -29,6 +30,7 @@ export default function TransactionTableEnhanced({
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [transactionToDelete, setTransactionToDelete] = useState<string | null>(null);
+  const { requireAuth } = useAuthIntercept();
   
   const itemsPerPage = 50;
 
@@ -153,7 +155,7 @@ export default function TransactionTableEnhanced({
             <h3 className="text-lg font-semibold text-foreground">Transações</h3>
             <p className="text-sm text-muted-foreground">Histórico de compras, vendas e transferências</p>
           </div>
-          <Button onClick={onAddTransaction} variant="bitcoin" className="gap-2">
+          <Button onClick={() => requireAuth(onAddTransaction)} variant="bitcoin" className="gap-2">
             <Plus className="h-4 w-4" />
             Adicionar Transação
           </Button>

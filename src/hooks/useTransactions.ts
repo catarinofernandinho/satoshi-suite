@@ -184,8 +184,33 @@ export function useTransactions() {
   };
 
   useEffect(() => {
-    fetchTransactions();
+    if (user) {
+      fetchTransactions();
+    } else {
+      setLoading(false);
+    }
   }, [user]);
+
+  // If user is not logged in, return empty state
+  if (!user) {
+    return {
+      transactions: [],
+      loading,
+      addTransaction: async () => {},
+      updateTransaction: async () => {},
+      deleteTransaction: async () => {},
+      refreshTransactions: () => {},
+      getPortfolioStats: () => ({
+        totalBtc: 0,
+        totalCost: 0,
+        totalRevenue: 0,
+        netCost: 0,
+        currentValue: 0,
+        gainLoss: 0,
+        avgBuyPrice: 0
+      })
+    };
+  }
 
   return {
     transactions,

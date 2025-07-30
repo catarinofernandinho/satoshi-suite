@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Outlet, useLocation, Navigate } from "react-router-dom";
+import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -11,8 +11,7 @@ import {
   Menu, 
   TrendingUp, 
   BarChart3, 
-  Calculator,
-  Home
+  Calculator
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -25,6 +24,7 @@ export default function AppLayout() {
   const { toast } = useToast();
   const { settings, updateSettings } = useUserSettings();
   const location = useLocation();
+  const navigate = useNavigate();
 
   // Force dark theme
   useEffect(() => {
@@ -58,7 +58,6 @@ export default function AppLayout() {
   };
 
   const navigationItems = [
-    { href: "/", label: "Portfolio", icon: Home },
     { href: "/futures", label: "Futuros", icon: TrendingUp },
     { href: "/charts", label: "Gráficos", icon: BarChart3 },
     { href: "/conversor", label: "Conversor", icon: Calculator },
@@ -83,9 +82,6 @@ export default function AppLayout() {
     </Button>
   );
 
-  if (!user) {
-    return <Navigate to="/auth" replace />;
-  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -94,7 +90,7 @@ export default function AppLayout() {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             {/* Logo */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate('/')}>
               <div className="p-2 bg-gradient-bitcoin rounded-lg shadow-bitcoin">
                 <Bitcoin className="h-6 w-6 text-primary-foreground" />
               </div>
@@ -116,21 +112,23 @@ export default function AppLayout() {
               <UserSettingsModal />
 
               {/* User Menu - Desktop */}
-              <div className="hidden sm:flex items-center gap-2 border-l border-border pl-3">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <User className="h-4 w-4" />
-                  <span className="max-w-24 truncate">{user?.email}</span>
+              {user && (
+                <div className="hidden sm:flex items-center gap-2 border-l border-border pl-3">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <User className="h-4 w-4" />
+                    <span className="max-w-24 truncate">{user?.email}</span>
+                  </div>
+                  <Button
+                    onClick={handleSignOut}
+                    variant="ghost"
+                    size="icon"
+                    className="text-muted-foreground hover:text-foreground"
+                    title="Sair"
+                  >
+                    <LogOut className="h-4 w-4" />
+                  </Button>
                 </div>
-                <Button
-                  onClick={handleSignOut}
-                  variant="ghost"
-                  size="icon"
-                  className="text-muted-foreground hover:text-foreground"
-                  title="Sair"
-                >
-                  <LogOut className="h-4 w-4" />
-                </Button>
-              </div>
+              )}
 
               {/* Mobile Menu Trigger */}
               <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
@@ -160,20 +158,22 @@ export default function AppLayout() {
                     </nav>
 
                     {/* Mobile User Info */}
-                    <div className="mt-auto pt-6 border-t">
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
-                        <User className="h-4 w-4" />
-                        <span className="truncate">{user?.email}</span>
+                    {user && (
+                      <div className="mt-auto pt-6 border-t">
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
+                          <User className="h-4 w-4" />
+                          <span className="truncate">{user?.email}</span>
+                        </div>
+                        <Button
+                          onClick={handleSignOut}
+                          variant="outline"
+                          className="w-full"
+                        >
+                          <LogOut className="h-4 w-4 mr-2" />
+                          Sair
+                        </Button>
                       </div>
-                      <Button
-                        onClick={handleSignOut}
-                        variant="outline"
-                        className="w-full"
-                      >
-                        <LogOut className="h-4 w-4 mr-2" />
-                        Sair
-                      </Button>
-                    </div>
+                    )}
                   </div>
                 </SheetContent>
               </Sheet>

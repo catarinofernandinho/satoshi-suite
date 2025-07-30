@@ -16,6 +16,8 @@ export interface Transaction {
   date: string;
   created_at: string;
   updated_at: string;
+  transfer_type?: "entrada" | "saida";
+  revenue?: number;
 }
 
 export function useTransactions() {
@@ -145,30 +147,39 @@ export function useTransactions() {
 
   // Calculate portfolio stats from transactions
   const getPortfolioStats = (btcCurrentPrice: number) => {
-    const btcTransactions = transactions.filter(t => t.type !== 'Transferência');
-    
     let totalBtc = 0;
-    let totalSpent = 0;
+    let totalCost = 0;
+    let totalRevenue = 0;
     
-    btcTransactions.forEach(t => {
+    transactions.forEach(t => {
       if (t.type === 'Comprar') {
         totalBtc += t.quantity;
-        totalSpent += t.total_spent;
+        totalCost += t.total_spent;
       } else if (t.type === 'Vender') {
         totalBtc -= t.quantity;
-        totalSpent -= t.total_spent; // Subtract what was received from sale
+        totalRevenue += t.total_spent; // What was received from sale
+      } else if (t.type === 'Transferência') {
+        if (t.transfer_type === 'entrada') {
+          totalBtc += t.quantity;
+        } else if (t.transfer_type === 'saida') {
+          totalBtc -= t.quantity;
+        }
       }
     });
     
     const currentValue = totalBtc * btcCurrentPrice;
-    const gainLoss = currentValue - totalSpent;
+    const netCost = totalCost - totalRevenue;
+    const gainLoss = currentValue - netCost;
+    const avgBuyPrice = totalBtc > 0 ? netCost / totalBtc : 0;
     
     return {
       totalBtc,
-      totalSpent,
+      totalCost,
+      totalRevenue,
+      netCost,
       currentValue,
       gainLoss,
-      avgBuyPrice: totalSpent > 0 ? totalSpent / totalBtc : 0
+      avgBuyPrice
     };
   };
 

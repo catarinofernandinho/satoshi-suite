@@ -115,7 +115,9 @@ export type Database = {
           price: number
           price_per_coin: number
           quantity: number
+          revenue: number | null
           total_spent: number
+          transfer_type: string | null
           type: string
           updated_at: string
           user_id: string
@@ -130,7 +132,9 @@ export type Database = {
           price: number
           price_per_coin: number
           quantity: number
+          revenue?: number | null
           total_spent: number
+          transfer_type?: string | null
           type: string
           updated_at?: string
           user_id: string
@@ -145,7 +149,9 @@ export type Database = {
           price?: number
           price_per_coin?: number
           quantity?: number
+          revenue?: number | null
           total_spent?: number
+          transfer_type?: string | null
           type?: string
           updated_at?: string
           user_id?: string

@@ -31,17 +31,18 @@ const App = () => (
           <BrowserRouter>
             <Routes>
               <Route path="/auth" element={<AuthPage />} />
-              <Route
-                path="/*"
-                element={
-                  <ProtectedRoute>
-                    <AppLayout />
-                  </ProtectedRoute>
-                }
-              >
+              <Route path="/*" element={<AppLayout />}>
                 <Route index element={<Portfolio />} />
-                <Route path="portfolio" element={<Portfolio />} />
-                <Route path="futures" element={<Futures />} />
+                <Route path="portfolio" element={
+                  <ProtectedRoute>
+                    <Portfolio />
+                  </ProtectedRoute>
+                } />
+                <Route path="futures" element={
+                  <ProtectedRoute>
+                    <Futures />
+                  </ProtectedRoute>
+                } />
                 <Route path="charts" element={<Charts />} />
                 <Route path="conversor" element={<Conversor />} />
               </Route>

@@ -29,9 +29,20 @@ export default function Futures() {
     try {
       const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd');
       const data = await response.json();
-      setBtcPrice(data.bitcoin?.usd || 0);
+      const price = data.bitcoin?.usd || 0;
+      setBtcPrice(price);
+      
+      // Store last known price in localStorage
+      if (price > 0) {
+        localStorage.setItem('lastBtcPrice', price.toString());
+      }
     } catch (error) {
       console.error('Failed to fetch Bitcoin price:', error);
+      // Try to use last known price from localStorage
+      const lastPrice = localStorage.getItem('lastBtcPrice');
+      if (lastPrice) {
+        setBtcPrice(parseFloat(lastPrice));
+      }
     } finally {
       setPriceLoading(false);
     }
@@ -39,9 +50,7 @@ export default function Futures() {
 
   useEffect(() => {
     fetchBitcoinPrice();
-    // Update price every 30 seconds
-    const interval = setInterval(fetchBitcoinPrice, 30000);
-    return () => clearInterval(interval);
+    // Only fetch on page load, no intervals
   }, []);
 
   // Filter futures by date range

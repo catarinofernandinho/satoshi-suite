@@ -231,9 +231,10 @@ export default function TransactionTableEnhanced({
                     </TableCell>
                     <TableCell className="text-foreground">
                       <div className={`flex items-center gap-1 ${
-                        transaction.type === "Vender" ? "text-destructive" : "text-success"
+                        transaction.type === "Vender" || (transaction.type === "Transferência" && transaction.transfer_type === "saida") 
+                          ? "text-destructive" : "text-success"
                       }`}>
-                        {transaction.type === "Vender" ? "-" : "+"}
+                        {transaction.type === "Vender" || (transaction.type === "Transferência" && transaction.transfer_type === "saida") ? "-" : "+"}
                         {transaction.quantity.toFixed(8)}
                       </div>
                     </TableCell>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,22 +10,24 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { ChevronDown } from "lucide-react";
 import { Transaction } from "@/hooks/useTransactions";
 import { useTransactions } from "@/hooks/useTransactions";
-interface AddTransactionModalProps {
+
+interface EditTransactionModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (transaction: Omit<Transaction, 'id' | 'created_at' | 'updated_at'>) => Promise<void>;
+  onSubmit: (id: string, updates: Partial<Transaction>) => Promise<void>;
+  transaction: Transaction | null;
   currency: string;
-  editingTransaction?: Transaction | null;
   availableBtc?: number;
 }
-export default function AddTransactionModal({
+
+export default function EditTransactionModal({
   isOpen,
   onClose,
   onSubmit,
+  transaction,
   currency,
-  editingTransaction,
   availableBtc: propAvailableBtc
-}: AddTransactionModalProps) {
+}: EditTransactionModalProps) {
   const [activeTab, setActiveTab] = useState<"Comprar" | "Vender" | "Transferência">("Comprar");
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -40,9 +42,9 @@ export default function AddTransactionModal({
   const availableBtc = propAvailableBtc !== undefined ? propAvailableBtc : calculatedBtc;
   
   // Debug logs to track changes
-  console.log("AddTransactionModal - Prop BTC:", propAvailableBtc);
-  console.log("AddTransactionModal - Calculated BTC:", calculatedBtc);
-  console.log("AddTransactionModal - Final Available BTC:", availableBtc);
+  console.log("EditTransactionModal - Prop BTC:", propAvailableBtc);
+  console.log("EditTransactionModal - Calculated BTC:", calculatedBtc);
+  console.log("EditTransactionModal - Final Available BTC:", availableBtc);
   
   const [formData, setFormData] = useState({
     price: "",
@@ -52,9 +54,32 @@ export default function AddTransactionModal({
     market: currency,
     fees: "",
     notes: "",
-    date: new Date().toISOString().slice(0, 16), // Default to current date/time
+    date: new Date().toISOString().slice(0, 16),
     transferType: "entrada"
   });
+
+  // Load transaction data when modal opens
+  useEffect(() => {
+    if (transaction && isOpen) {
+      setActiveTab(transaction.type);
+      setTransferType(transaction.transfer_type || "entrada");
+      
+      const dateValue = new Date(transaction.date).toISOString().slice(0, 16);
+      
+      setFormData({
+        price: transaction.price?.toString() || "",
+        quantity: transaction.quantity?.toString() || "",
+        totalSpent: transaction.total_spent?.toString() || "",
+        pricePerCoin: transaction.price_per_coin?.toString() || "",
+        market: transaction.market || currency,
+        fees: transaction.fees?.toString() || "",
+        notes: transaction.notes || "",
+        date: dateValue,
+        transferType: transaction.transfer_type || "entrada"
+      });
+    }
+  }, [transaction, isOpen, currency]);
+
   const resetForm = () => {
     setFormData({
       price: "",
@@ -72,19 +97,15 @@ export default function AddTransactionModal({
     setQuantityUnit("BTC");
     setTransferType("entrada");
   };
+
   const handleClose = () => {
     resetForm();
     onClose();
   };
+
   const calculateMissingValues = () => {
-    const {
-      quantity,
-      totalSpent,
-      pricePerCoin
-    } = formData;
-    const updatedData = {
-      ...formData
-    };
+    const { quantity, totalSpent, pricePerCoin } = formData;
+    const updatedData = { ...formData };
 
     // Convert SATS to BTC if needed
     let quantityInBtc = parseFloat(quantity);
@@ -116,8 +137,11 @@ export default function AddTransactionModal({
       quantity: availableBtc.toString()
     }));
   };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!transaction) return;
     
     // Validation for selling more than available
     if (activeTab === "Vender" && parseFloat(formData.quantity) > availableBtc) {
@@ -127,7 +151,7 @@ export default function AddTransactionModal({
     
     setIsLoading(true);
     try {
-      let transactionData: any = {
+      let updates: any = {
         type: activeTab,
         price: parseFloat(formData.price || formData.pricePerCoin) || 0,
         quantity: parseFloat(formData.quantity),
@@ -138,29 +162,33 @@ export default function AddTransactionModal({
       };
 
       if (activeTab === "Transferência") {
-        transactionData.total_spent = 0;
-        transactionData.price_per_coin = 0;
-        transactionData.transfer_type = transferType;
+        updates.total_spent = 0;
+        updates.price_per_coin = 0;
+        updates.transfer_type = transferType;
       } else {
-        transactionData.total_spent = parseFloat(formData.totalSpent);
-        transactionData.price_per_coin = parseFloat(formData.pricePerCoin || formData.price);
+        updates.total_spent = parseFloat(formData.totalSpent);
+        updates.price_per_coin = parseFloat(formData.pricePerCoin || formData.price);
         if (activeTab === "Vender") {
-          transactionData.revenue = parseFloat(formData.totalSpent);
+          updates.revenue = parseFloat(formData.totalSpent);
         }
       }
 
-      await onSubmit(transactionData);
+      await onSubmit(transaction.id, updates);
       handleClose();
     } catch (error) {
-      console.error("Error submitting transaction:", error);
+      console.error("Error updating transaction:", error);
     } finally {
       setIsLoading(false);
     }
   };
-  return <Dialog open={isOpen} onOpenChange={handleClose}>
+
+  if (!transaction) return null;
+
+  return (
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[500px] bg-card border-border">
         <DialogHeader>
-          <DialogTitle className="text-foreground">Adicionar Transação</DialogTitle>
+          <DialogTitle className="text-foreground">Editar Transação</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -555,10 +583,11 @@ export default function AddTransactionModal({
               Cancelar
             </Button>
             <Button type="submit" variant="bitcoin" disabled={isLoading} className="flex-1">
-              {isLoading ? "Adicionando..." : "Adicionar Transação"}
+              {isLoading ? "Salvando..." : "Salvar Alterações"}
             </Button>
           </div>
         </form>
       </DialogContent>
-    </Dialog>;
+    </Dialog>
+  );
 }

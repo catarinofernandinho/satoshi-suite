@@ -14,8 +14,10 @@ import Portfolio from "./pages/Portfolio";
 import Futures from "./pages/Futures";
 import Charts from "./pages/Charts";
 import Conversor from "./pages/Conversor";
+import Profile from "./pages/Profile";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
+import ProtectedRoute from "./components/auth/ProtectedRoute";
 
 const queryClient = new QueryClient();
 
@@ -37,6 +39,11 @@ const App = () => (
                       <Route path="futures" element={<Futures />} />
                       <Route path="charts" element={<Charts />} />
                       <Route path="conversor" element={<Conversor />} />
+                      <Route path="profile" element={
+                        <ProtectedRoute>
+                          <Profile />
+                        </ProtectedRoute>
+                      } />
                     </Route>
                     <Route path="*" element={<NotFound />} />
                   </Routes>

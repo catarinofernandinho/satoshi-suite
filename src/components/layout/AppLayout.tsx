@@ -11,15 +11,20 @@ import {
   Menu, 
   TrendingUp, 
   BarChart3, 
-  Calculator
+  Calculator,
+  LogIn,
+  Briefcase
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useUserSettings } from "@/hooks/useUserSettings";
 import UserSettingsModal from "@/components/settings/UserSettingsModal";
+import AuthModal from "@/components/auth/AuthModal";
+import UserDropdown from "@/components/auth/UserDropdown";
 
 export default function AppLayout() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const { user, signOut } = useAuth();
   const { toast } = useToast();
   const { settings, updateSettings } = useUserSettings();
@@ -58,6 +63,7 @@ export default function AppLayout() {
   };
 
   const navigationItems = [
+    { href: "/", label: "Portfólio", icon: Briefcase },
     { href: "/futures", label: "Futuros", icon: TrendingUp },
     { href: "/charts", label: "Gráficos", icon: BarChart3 },
     { href: "/conversor", label: "Conversor", icon: Calculator },
@@ -111,23 +117,21 @@ export default function AppLayout() {
               {/* Settings */}
               <UserSettingsModal />
 
-              {/* User Menu - Desktop */}
-              {user && (
-                <div className="hidden sm:flex items-center gap-2 border-l border-border pl-3">
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <User className="h-4 w-4" />
-                    <span className="max-w-24 truncate">{user?.email}</span>
-                  </div>
-                  <Button
-                    onClick={handleSignOut}
-                    variant="ghost"
-                    size="icon"
-                    className="text-muted-foreground hover:text-foreground"
-                    title="Sair"
-                  >
-                    <LogOut className="h-4 w-4" />
-                  </Button>
+              {/* Auth Section */}
+              {user ? (
+                <div className="hidden sm:flex items-center gap-2">
+                  <UserDropdown />
                 </div>
+              ) : (
+                <Button 
+                  onClick={() => setIsAuthModalOpen(true)}
+                  variant="ghost" 
+                  size="sm"
+                  className="hidden sm:flex text-muted-foreground hover:text-foreground"
+                >
+                  <LogIn className="mr-2 h-4 w-4" />
+                  Entrar
+                </Button>
               )}
 
               {/* Mobile Menu Trigger */}
@@ -158,7 +162,7 @@ export default function AppLayout() {
                     </nav>
 
                     {/* Mobile User Info */}
-                    {user && (
+                    {user ? (
                       <div className="mt-auto pt-6 border-t">
                         <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
                           <User className="h-4 w-4" />
@@ -173,6 +177,20 @@ export default function AppLayout() {
                           Sair
                         </Button>
                       </div>
+                    ) : (
+                      <div className="mt-auto pt-6 border-t">
+                        <Button
+                          onClick={() => {
+                            setIsAuthModalOpen(true);
+                            setIsMobileMenuOpen(false);
+                          }}
+                          variant="outline"
+                          className="w-full"
+                        >
+                          <LogIn className="h-4 w-4 mr-2" />
+                          Entrar
+                        </Button>
+                      </div>
                     )}
                   </div>
                 </SheetContent>
@@ -181,6 +199,12 @@ export default function AppLayout() {
           </div>
         </div>
       </header>
+
+      {/* Auth Modal */}
+      <AuthModal 
+        isOpen={isAuthModalOpen} 
+        onClose={() => setIsAuthModalOpen(false)} 
+      />
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">

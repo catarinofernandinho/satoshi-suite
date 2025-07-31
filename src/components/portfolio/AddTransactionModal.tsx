@@ -17,6 +17,7 @@ interface AddTransactionModalProps {
   currency: string;
   editingTransaction?: Transaction | null;
   availableBtc?: number;
+  btcCurrentPrice?: number;
 }
 export default function AddTransactionModal({
   isOpen,
@@ -24,7 +25,8 @@ export default function AddTransactionModal({
   onSubmit,
   currency,
   editingTransaction,
-  availableBtc: propAvailableBtc
+  availableBtc: propAvailableBtc,
+  btcCurrentPrice
 }: AddTransactionModalProps) {
   const [activeTab, setActiveTab] = useState<"Comprar" | "Vender" | "Transferência">("Comprar");
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
@@ -115,6 +117,27 @@ export default function AddTransactionModal({
       ...prev,
       quantity: availableBtc.toString()
     }));
+  };
+
+  const useMarketPrice = () => {
+    if (btcCurrentPrice) {
+      const updatedData = {
+        ...formData,
+        pricePerCoin: btcCurrentPrice.toString(),
+        price: btcCurrentPrice.toString()
+      };
+      
+      // Auto-calculate total spent if quantity is filled
+      if (formData.quantity) {
+        let quantityInBtc = parseFloat(formData.quantity);
+        if (quantityUnit === "SATS") {
+          quantityInBtc = quantityInBtc / 100000000;
+        }
+        updatedData.totalSpent = (quantityInBtc * btcCurrentPrice).toString();
+      }
+      
+      setFormData(updatedData);
+    }
   };
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -241,7 +264,12 @@ export default function AddTransactionModal({
               <div className="space-y-2">
                 <Label htmlFor="pricePerCoin" className="text-sm font-medium">
                   Preço por Moeda
-                  <span className="text-xs text-muted-foreground ml-2">Utilizar o mercado</span>
+                  <span 
+                    className="text-xs text-primary ml-2 cursor-pointer hover:underline"
+                    onClick={useMarketPrice}
+                  >
+                    Utilizar o mercado
+                  </span>
                 </Label>
                 <div className="relative">
                   <Input 
@@ -410,7 +438,12 @@ export default function AddTransactionModal({
               <div className="space-y-2">
                 <Label htmlFor="pricePerCoin" className="text-sm font-medium">
                   Preço por Moeda
-                  <span className="text-xs text-muted-foreground ml-2">Utilizar o mercado</span>
+                  <span 
+                    className="text-xs text-primary ml-2 cursor-pointer hover:underline"
+                    onClick={useMarketPrice}
+                  >
+                    Utilizar o mercado
+                  </span>
                 </Label>
                 <div className="relative">
                   <Input 

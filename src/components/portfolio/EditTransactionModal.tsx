@@ -18,6 +18,7 @@ interface EditTransactionModalProps {
   transaction: Transaction | null;
   currency: string;
   availableBtc?: number;
+  btcCurrentPrice?: number;
 }
 
 export default function EditTransactionModal({
@@ -26,7 +27,8 @@ export default function EditTransactionModal({
   onSubmit,
   transaction,
   currency,
-  availableBtc: propAvailableBtc
+  availableBtc: propAvailableBtc,
+  btcCurrentPrice
 }: EditTransactionModalProps) {
   const [activeTab, setActiveTab] = useState<"Comprar" | "Vender" | "Transferência">("Comprar");
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
@@ -136,6 +138,27 @@ export default function EditTransactionModal({
       ...prev,
       quantity: availableBtc.toString()
     }));
+  };
+
+  const useMarketPrice = () => {
+    if (btcCurrentPrice) {
+      const updatedData = {
+        ...formData,
+        pricePerCoin: btcCurrentPrice.toString(),
+        price: btcCurrentPrice.toString()
+      };
+      
+      // Auto-calculate total spent if quantity is filled
+      if (formData.quantity) {
+        let quantityInBtc = parseFloat(formData.quantity);
+        if (quantityUnit === "SATS") {
+          quantityInBtc = quantityInBtc / 100000000;
+        }
+        updatedData.totalSpent = (quantityInBtc * btcCurrentPrice).toString();
+      }
+      
+      setFormData(updatedData);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -250,7 +273,15 @@ export default function EditTransactionModal({
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="pricePerCoin">Preço por Moeda</Label>
+                  <Label htmlFor="pricePerCoin" className="text-sm font-medium">
+                    Preço por Moeda
+                    <span 
+                      className="text-xs text-primary ml-2 cursor-pointer hover:underline"
+                      onClick={useMarketPrice}
+                    >
+                      Utilizar o mercado
+                    </span>
+                  </Label>
                   <Input 
                     id="pricePerCoin" 
                     type="number" 
@@ -396,7 +427,15 @@ export default function EditTransactionModal({
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="pricePerCoin">Preço por Moeda</Label>
+                  <Label htmlFor="pricePerCoin" className="text-sm font-medium">
+                    Preço por Moeda
+                    <span 
+                      className="text-xs text-primary ml-2 cursor-pointer hover:underline"
+                      onClick={useMarketPrice}
+                    >
+                      Utilizar o mercado
+                    </span>
+                  </Label>
                   <Input 
                     id="pricePerCoin" 
                     type="number" 

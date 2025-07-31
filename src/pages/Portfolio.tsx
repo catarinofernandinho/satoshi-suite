@@ -124,6 +124,7 @@ export default function Portfolio() {
         }} 
         currency={currentCurrency}
         availableBtc={portfolioStats.totalBtc}
+        btcCurrentPrice={btcPrice}
       />
 
       <EditTransactionModal
@@ -136,6 +137,7 @@ export default function Portfolio() {
         transaction={editingTransaction}
         currency={currentCurrency}
         availableBtc={portfolioStats.totalBtc}
+        btcCurrentPrice={btcPrice}
       />
     </div>;
 }

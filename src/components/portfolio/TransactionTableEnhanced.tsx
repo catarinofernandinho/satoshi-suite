@@ -7,6 +7,7 @@ import { Plus, Edit, Trash2, ChevronLeft, ChevronRight, ArrowUpDown } from "luci
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Transaction } from "@/hooks/useTransactions";
 import { useAuthIntercept } from "@/contexts/AuthInterceptContext";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 interface TransactionTableEnhancedProps {
   transactions: Transaction[];
@@ -31,16 +32,41 @@ export default function TransactionTableEnhanced({
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [transactionToDelete, setTransactionToDelete] = useState<string | null>(null);
   const { requireAuth } = useAuthIntercept();
+  const { formatCurrency: formatCurrencyWithConversion, exchangeRate } = useCurrency();
   
   const itemsPerPage = 50;
 
-  const formatCurrency = (amount: number, curr: string) => {
+  // Convert amount from transaction's original currency to user's preferred currency
+  const convertToUserCurrency = (amount: number, transactionMarket: string) => {
+    const userCurrency = currency;
+    
+    // If transaction and user currency are the same, no conversion needed
+    if (transactionMarket === userCurrency) {
+      return amount;
+    }
+    
+    // Convert between USD and BRL
+    if (transactionMarket === 'BRL' && userCurrency === 'USD') {
+      return amount / exchangeRate;
+    } else if (transactionMarket === 'USD' && userCurrency === 'BRL') {
+      return amount * exchangeRate;
+    }
+    
+    // Fallback - return original amount
+    return amount;
+  };
+
+  const formatCurrency = (amount: number, curr: string, transactionMarket?: string) => {
     if (curr === "BTC") return `${amount.toFixed(8)} BTC`;
     if (curr === "SATS") return `${Math.floor(amount * 100000000)} sats`;
-    if (curr === "BRL") return `R$ ${amount.toLocaleString("pt-BR", {
+    
+    // For fiat currencies, apply conversion if needed
+    const convertedAmount = transactionMarket ? convertToUserCurrency(amount, transactionMarket) : amount;
+    
+    if (curr === "BRL") return `R$ ${convertedAmount.toLocaleString("pt-BR", {
       minimumFractionDigits: 2
     })}`;
-    return `US$ ${amount.toLocaleString("en-US", {
+    return `US$ ${convertedAmount.toLocaleString("en-US", {
       minimumFractionDigits: 2
     })}`;
   };
@@ -73,7 +99,8 @@ export default function TransactionTableEnhanced({
   const calculateGP = (transaction: Transaction): { value: number; color: string } => {
     if (transaction.type === "Comprar") {
       const currentValue = transaction.quantity * btcCurrentPrice;
-      const gp = currentValue - transaction.total_spent;
+      const convertedTotalSpent = convertToUserCurrency(transaction.total_spent, transaction.market);
+      const gp = currentValue - convertedTotalSpent;
       return {
         value: gp,
         color: gp >= 0 ? "text-success" : "text-destructive"
@@ -81,7 +108,9 @@ export default function TransactionTableEnhanced({
     } else if (transaction.type === "Vender") {
       // For sell transactions, GP = received - (quantity * average buy price)
       // Since we don't have average buy price, we'll use the transaction's price
-      const gp = transaction.total_spent - (transaction.quantity * transaction.price_per_coin);
+      const convertedTotalSpent = convertToUserCurrency(transaction.total_spent, transaction.market);
+      const convertedPricePerCoin = convertToUserCurrency(transaction.price_per_coin, transaction.market);
+      const gp = convertedTotalSpent - (transaction.quantity * convertedPricePerCoin);
       return {
         value: gp,
         color: gp >= 0 ? "text-success" : "text-destructive"
@@ -223,11 +252,11 @@ export default function TransactionTableEnhanced({
                         {transaction.type}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-foreground">
-                      {transaction.type === "Transferência" 
-                        ? "-" 
-                        : formatCurrency(transaction.price_per_coin, currency)
-                      }
+                     <TableCell className="text-foreground">
+                       {transaction.type === "Transferência" 
+                         ? "-" 
+                         : formatCurrency(transaction.price_per_coin, currency, transaction.market)
+                       }
                     </TableCell>
                     <TableCell className="text-foreground">
                       <div className={`flex items-center gap-1 ${
@@ -241,25 +270,27 @@ export default function TransactionTableEnhanced({
                     <TableCell className="text-foreground">
                       {formatDate(transaction.date)}
                     </TableCell>
-                    <TableCell className="text-foreground">
-                      {formatCurrency(transaction.fees || 0, currency)}
+                     <TableCell className="text-foreground">
+                       {formatCurrency(transaction.fees || 0, currency, transaction.market)}
                     </TableCell>
-                    <TableCell className="text-foreground">
-                      {transaction.type === "Comprar" 
-                        ? formatCurrency(transaction.total_spent, currency)
-                        : "-"
-                      }
+                     <TableCell className="text-foreground">
+                       {transaction.type === "Comprar" 
+                         ? formatCurrency(transaction.total_spent, currency, transaction.market)
+                         : "-"
+                       }
                     </TableCell>
-                    <TableCell className="text-foreground">
+                     <TableCell className="text-foreground">
+                       {transaction.type === "Vender" 
+                         ? formatCurrency(transaction.total_spent, currency, transaction.market)
+                         : "-"
+                       }
+                    </TableCell>
+                    <TableCell className={transaction.type === "Vender" ? "text-foreground" : gp.color}>
                       {transaction.type === "Vender" 
-                        ? formatCurrency(transaction.total_spent, currency)
-                        : "-"
-                      }
-                    </TableCell>
-                    <TableCell className={gp.color}>
-                      {transaction.type === "Transferência" 
-                        ? formatCurrency(gp.value, currency)
-                        : formatCurrency(gp.value, currency)
+                        ? "-"
+                        : transaction.type === "Transferência" 
+                          ? formatCurrency(gp.value, currency)
+                          : formatCurrency(gp.value, currency)
                       }
                     </TableCell>
                     <TableCell className="text-muted-foreground max-w-32 truncate">

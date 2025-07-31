@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { RefreshCw, Copy, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 export default function CurrencyConverter() {
   const [rates, setRates] = useState({
@@ -20,6 +21,7 @@ export default function CurrencyConverter() {
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const { toast } = useToast();
+  const { formatNumber, currency } = useCurrency();
 
   const fetchRates = async () => {
     setLoading(true);
@@ -67,24 +69,24 @@ export default function CurrencyConverter() {
       case 'btc':
         newValues.btc = value;
         newValues.sats = (num * 100000000).toString();
-        newValues.usd = (num * rates.btcUsd).toFixed(2);
-        newValues.brl = (num * rates.btcUsd * rates.usdBrl).toFixed(2);
+        newValues.usd = formatNumber(num * rates.btcUsd);
+        newValues.brl = formatNumber(num * rates.btcUsd * rates.usdBrl);
         break;
       case 'sats':
         newValues.sats = value;
         newValues.btc = (num / 100000000).toFixed(8);
-        newValues.usd = ((num / 100000000) * rates.btcUsd).toFixed(2);
-        newValues.brl = ((num / 100000000) * rates.btcUsd * rates.usdBrl).toFixed(2);
+        newValues.usd = formatNumber((num / 100000000) * rates.btcUsd);
+        newValues.brl = formatNumber((num / 100000000) * rates.btcUsd * rates.usdBrl);
         break;
       case 'usd':
         newValues.usd = value;
         newValues.btc = (num / rates.btcUsd).toFixed(8);
         newValues.sats = Math.floor((num / rates.btcUsd) * 100000000).toString();
-        newValues.brl = (num * rates.usdBrl).toFixed(2);
+        newValues.brl = formatNumber(num * rates.usdBrl);
         break;
       case 'brl':
         newValues.brl = value;
-        newValues.usd = (num / rates.usdBrl).toFixed(2);
+        newValues.usd = formatNumber(num / rates.usdBrl);
         newValues.btc = (num / (rates.btcUsd * rates.usdBrl)).toFixed(8);
         newValues.sats = Math.floor((num / (rates.btcUsd * rates.usdBrl)) * 100000000).toString();
         break;
@@ -124,8 +126,8 @@ export default function CurrencyConverter() {
           <div className="text-muted-foreground">Buscando cotações atualizadas...</div>
         ) : (
           <div className="space-y-1 text-sm text-muted-foreground">
-            <div>BTC/USD: US$ {rates.btcUsd.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
-            <div>USD/BRL: R$ {rates.usdBrl.toFixed(4)}</div>
+            <div>BTC/USD: US$ {currency === 'BRL' ? rates.btcUsd.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : rates.btcUsd.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
+            <div>USD/BRL: R$ {currency === 'BRL' ? rates.usdBrl.toLocaleString('pt-BR', { minimumFractionDigits: 4 }) : rates.usdBrl.toLocaleString('en-US', { minimumFractionDigits: 4 })}</div>
           </div>
         )}
       </div>
@@ -135,7 +137,7 @@ export default function CurrencyConverter() {
         <div className="relative">
           <Input
             type="text"
-            placeholder="0,00000000"
+            placeholder={currency === 'BRL' ? "0,00000000" : "0.00000000"}
             value={values.btc}
             onChange={(e) => updateValues('btc', e.target.value)}
             className="pr-20"
@@ -171,7 +173,7 @@ export default function CurrencyConverter() {
         <div className="relative">
           <Input
             type="text"
-            placeholder="0,00"
+            placeholder={currency === 'BRL' ? "0,00" : "0.00"}
             value={values.usd}
             onChange={(e) => updateValues('usd', e.target.value)}
             className="pr-20"
@@ -189,7 +191,7 @@ export default function CurrencyConverter() {
         <div className="relative">
           <Input
             type="text"
-            placeholder="0,00"
+            placeholder={currency === 'BRL' ? "0,00" : "0.00"}
             value={values.brl}
             onChange={(e) => updateValues('brl', e.target.value)}
             className="pr-20"

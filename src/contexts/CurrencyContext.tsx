@@ -7,6 +7,7 @@ interface CurrencyContextType {
   loading: boolean;
   updateCurrency: (newCurrency: 'USD' | 'BRL') => void;
   formatCurrency: (amount: number) => string;
+  formatNumber: (amount: number) => string;
 }
 
 const CurrencyContext = createContext<CurrencyContextType | undefined>(undefined);
@@ -59,13 +60,23 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
     }).format(value);
   };
 
+  const formatNumber = (amount: number) => {
+    const currency = settings?.preferred_currency || 'USD';
+    
+    return new Intl.NumberFormat(currency === 'BRL' ? 'pt-BR' : 'en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(amount);
+  };
+
   return (
     <CurrencyContext.Provider value={{
       currency: settings?.preferred_currency || 'USD',
       exchangeRate,
       loading,
       updateCurrency,
-      formatCurrency
+      formatCurrency,
+      formatNumber
     }}>
       {children}
     </CurrencyContext.Provider>

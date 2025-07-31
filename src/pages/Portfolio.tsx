@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import AddTransactionModal from "@/components/portfolio/AddTransactionModal";
 import EditTransactionModal from "@/components/portfolio/EditTransactionModal";
 import { Transaction } from "@/hooks/useTransactions";
+import { useCurrency } from "@/contexts/CurrencyContext";
 export default function Portfolio() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -17,6 +18,7 @@ export default function Portfolio() {
     settings
   } = useUserSettings();
   const currentCurrency = settings?.preferred_currency || "USD";
+  const { exchangeRate } = useCurrency();
   const {
     transactions,
     loading,
@@ -58,7 +60,16 @@ export default function Portfolio() {
     };
     fetchBtcPrice();
   }, [currentCurrency]);
-  const portfolioStats = getPortfolioStats(btcPrice);
+  
+  const portfolioStats = getPortfolioStats(btcPrice, currentCurrency, exchangeRate);
+  
+  // Debug logs
+  console.log('=== PORTFOLIO DEBUG ===');
+  console.log('BTC Price:', btcPrice);
+  console.log('Current Currency:', currentCurrency);
+  console.log('Exchange Rate:', exchangeRate);
+  console.log('Portfolio Stats:', portfolioStats);
+  console.log('======================');
   const handleAddTransaction = () => {
     setIsAddModalOpen(true);
   };

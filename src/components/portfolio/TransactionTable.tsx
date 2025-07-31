@@ -5,6 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Plus, Edit, Trash2 } from "lucide-react";
 import { Transaction } from "@/hooks/useTransactions";
+import { useCurrency } from "@/contexts/CurrencyContext";
 interface TransactionTableProps {
   transactions: Transaction[];
   currency: string;
@@ -19,15 +20,12 @@ export default function TransactionTable({
   onEditTransaction,
   onDeleteTransaction
 }: TransactionTableProps) {
+  const { formatCurrency: formatCurrencyContext } = useCurrency();
+  
   const formatCurrency = (amount: number, curr: string) => {
     if (curr === "BTC") return `${amount.toFixed(8)} BTC`;
     if (curr === "SATS") return `${Math.floor(amount * 100000000)} sats`;
-    if (curr === "BRL") return `R$ ${amount.toLocaleString("pt-BR", {
-      minimumFractionDigits: 2
-    })}`;
-    return `US$ ${amount.toLocaleString("en-US", {
-      minimumFractionDigits: 2
-    })}`;
+    return formatCurrencyContext(amount);
   };
   const getTypeColor = (type: string) => {
     switch (type) {

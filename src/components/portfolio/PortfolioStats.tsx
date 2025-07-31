@@ -1,5 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { TrendingUp, TrendingDown, Bitcoin } from "lucide-react";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 interface PortfolioStatsProps {
   totalValue: number;
@@ -18,11 +19,12 @@ export default function PortfolioStats({
   totalGainLoss,
   currency
 }: PortfolioStatsProps) {
+  const { formatCurrency: formatCurrencyContext, formatNumber } = useCurrency();
+  
   const formatCurrency = (amount: number, curr: string) => {
     if (curr === "BTC") return `${amount.toFixed(8)} BTC`;
     if (curr === "SATS") return `${Math.floor(amount * 100000000)} sats`;
-    if (curr === "BRL") return `R$ ${amount.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`;
-    return `US$ ${amount.toLocaleString("en-US", { minimumFractionDigits: 2 })}`;
+    return formatCurrencyContext(amount);
   };
 
   const isPositive = totalGainLoss >= 0;
@@ -55,7 +57,7 @@ export default function PortfolioStats({
           <div className={`flex items-center gap-1 mt-1 ${isPriceUp ? 'text-success' : 'text-error'}`}>
             {isPriceUp ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
             <span className="text-sm font-medium">
-              {isPriceUp ? '+' : ''}{btcPriceChange.toFixed(2)}%
+              {isPriceUp ? '+' : ''}{formatNumber(btcPriceChange)}%
             </span>
           </div>
         </div>
@@ -87,7 +89,7 @@ export default function PortfolioStats({
             <div className={`flex items-center gap-1 mt-1 ${isPositive ? 'text-success' : 'text-error'}`}>
               {isPositive ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
               <span className="text-sm font-medium">
-                {((totalGainLoss / (totalValue - totalGainLoss)) * 100).toFixed(2)}%
+                {formatNumber((totalGainLoss / (totalValue - totalGainLoss)) * 100)}%
               </span>
             </div>
           </div>

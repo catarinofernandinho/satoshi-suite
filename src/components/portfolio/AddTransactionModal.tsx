@@ -10,6 +10,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { ChevronDown } from "lucide-react";
 import { Transaction } from "@/hooks/useTransactions";
 import { useTransactions } from "@/hooks/useTransactions";
+import { calculateInterlinkedValues, formatFiatValue, validateDecimalInput, normalizeDecimalInput, getInputPlaceholder } from "@/utils/numberUtils";
 interface AddTransactionModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -35,16 +36,8 @@ export default function AddTransactionModal({
   const [transferType, setTransferType] = useState<"entrada" | "saida">("entrada");
   const { getPortfolioStats, transactions } = useTransactions();
   
-  // Calculate current BTC balance for validation - use prop if provided, otherwise calculate
-  const currentBtcPrice = 100000;
-  const portfolioStats = getPortfolioStats(currentBtcPrice);
-  const calculatedBtc = portfolioStats.totalBtc || 0;
-  const availableBtc = propAvailableBtc !== undefined ? propAvailableBtc : calculatedBtc;
-  
-  // Debug logs to track changes
-  console.log("AddTransactionModal - Prop BTC:", propAvailableBtc);
-  console.log("AddTransactionModal - Calculated BTC:", calculatedBtc);
-  console.log("AddTransactionModal - Final Available BTC:", availableBtc);
+  // Use provided BTC balance
+  const availableBtc = propAvailableBtc || 0;
   
   const [formData, setFormData] = useState({
     price: "",
@@ -78,37 +71,25 @@ export default function AddTransactionModal({
     resetForm();
     onClose();
   };
-  const calculateMissingValues = () => {
-    const {
-      quantity,
-      totalSpent,
-      pricePerCoin
-    } = formData;
-    const updatedData = {
-      ...formData
-    };
-
-    // Convert SATS to BTC if needed
-    let quantityInBtc = parseFloat(quantity);
-    if (quantityUnit === "SATS" && quantity) {
-      quantityInBtc = parseFloat(quantity) / 100000000;
-      updatedData.quantity = quantityInBtc.toString();
-    }
-
-    // Auto-calculate missing values based on what's filled
-    if (quantity && pricePerCoin && !totalSpent) {
-      updatedData.totalSpent = (quantityInBtc * parseFloat(pricePerCoin)).toString();
-    } else if (totalSpent && quantity && !pricePerCoin) {
-      updatedData.pricePerCoin = (parseFloat(totalSpent) / quantityInBtc).toString();
-    } else if (totalSpent && pricePerCoin && !quantity) {
-      const calcQuantity = parseFloat(totalSpent) / parseFloat(pricePerCoin);
-      updatedData.quantity = calcQuantity.toString();
-    }
-
-    // Set price as price per coin
-    if (pricePerCoin) {
-      updatedData.price = pricePerCoin;
-    }
+  const handleFieldChange = (changedField: 'totalSpent' | 'quantity' | 'pricePerCoin', newValue: string) => {
+    // Update the changed field first
+    const updatedData = { ...formData, [changedField]: newValue };
+    
+    // Calculate interlinked values
+    const calculatedValues = calculateInterlinkedValues(
+      changedField,
+      updatedData.totalSpent,
+      updatedData.quantity, 
+      updatedData.pricePerCoin,
+      quantityUnit
+    );
+    
+    // Apply calculated values
+    updatedData.totalSpent = calculatedValues.totalSpent;
+    updatedData.quantity = calculatedValues.quantity;
+    updatedData.pricePerCoin = calculatedValues.pricePerCoin;
+    updatedData.price = calculatedValues.pricePerCoin;
+    
     setFormData(updatedData);
   };
 
@@ -201,15 +182,19 @@ export default function AddTransactionModal({
                 <div className="relative">
                   <Input 
                     id="totalSpent" 
-                    type="number" 
-                    step="0.01" 
-                    placeholder="0.00" 
+                    type="text"
+                    placeholder={getInputPlaceholder("fiat", formData.market)} 
                     value={formData.totalSpent} 
-                    onChange={e => setFormData(prev => ({
-                      ...prev,
-                      totalSpent: e.target.value
-                    }))} 
-                    onBlur={calculateMissingValues} 
+                    onChange={e => {
+                      const value = e.target.value;
+                      if (validateDecimalInput(value, formData.market)) {
+                        setFormData(prev => ({ ...prev, totalSpent: value }));
+                        const normalizedValue = normalizeDecimalInput(value, formData.market);
+                        if (normalizedValue && !isNaN(parseFloat(normalizedValue))) {
+                          handleFieldChange('totalSpent', normalizedValue);
+                        }
+                      }
+                    }}
                     className="pr-16 h-12"
                     required 
                   />
@@ -239,11 +224,13 @@ export default function AddTransactionModal({
                     step={quantityUnit === "BTC" ? "0.00000001" : "1"}
                     placeholder={quantityUnit === "BTC" ? "0.00000000" : "0"} 
                     value={formData.quantity} 
-                    onChange={e => setFormData(prev => ({
-                      ...prev,
-                      quantity: e.target.value
-                    }))} 
-                    onBlur={calculateMissingValues} 
+                    onChange={e => {
+                      const value = e.target.value;
+                      setFormData(prev => ({ ...prev, quantity: value }));
+                      if (value) {
+                        handleFieldChange('quantity', value);
+                      }
+                    }}
                     className="pr-20 h-12"
                     required 
                   />
@@ -274,15 +261,19 @@ export default function AddTransactionModal({
                 <div className="relative">
                   <Input 
                     id="pricePerCoin" 
-                    type="number" 
-                    step="0.01" 
-                    placeholder="0.00" 
+                    type="text"
+                    placeholder={getInputPlaceholder("fiat", formData.market)} 
                     value={formData.pricePerCoin} 
-                    onChange={e => setFormData(prev => ({
-                      ...prev,
-                      pricePerCoin: e.target.value
-                    }))} 
-                    onBlur={calculateMissingValues} 
+                    onChange={e => {
+                      const value = e.target.value;
+                      if (validateDecimalInput(value, formData.market)) {
+                        setFormData(prev => ({ ...prev, pricePerCoin: value }));
+                        const normalizedValue = normalizeDecimalInput(value, formData.market);
+                        if (normalizedValue && !isNaN(parseFloat(normalizedValue))) {
+                          handleFieldChange('pricePerCoin', normalizedValue);
+                        }
+                      }
+                    }}
                     className="pr-16 h-12"
                     required 
                   />
@@ -366,15 +357,19 @@ export default function AddTransactionModal({
                 <div className="relative">
                   <Input 
                     id="totalReceived" 
-                    type="number" 
-                    step="0.01" 
-                    placeholder="0.00" 
+                    type="text"
+                    placeholder={getInputPlaceholder("fiat", formData.market)} 
                     value={formData.totalSpent} 
-                    onChange={e => setFormData(prev => ({
-                      ...prev,
-                      totalSpent: e.target.value
-                    }))} 
-                    onBlur={calculateMissingValues} 
+                    onChange={e => {
+                      const value = e.target.value;
+                      if (validateDecimalInput(value, formData.market)) {
+                        setFormData(prev => ({ ...prev, totalSpent: value }));
+                        const normalizedValue = normalizeDecimalInput(value, formData.market);
+                        if (normalizedValue && !isNaN(parseFloat(normalizedValue))) {
+                          handleFieldChange('totalSpent', normalizedValue);
+                        }
+                      }
+                    }}
                     className="pr-16 h-12"
                     required 
                   />
@@ -404,11 +399,13 @@ export default function AddTransactionModal({
                     step={quantityUnit === "BTC" ? "0.00000001" : "1"}
                     placeholder={quantityUnit === "BTC" ? "0.00000000" : "0"} 
                     value={formData.quantity} 
-                    onChange={e => setFormData(prev => ({
-                      ...prev,
-                      quantity: e.target.value
-                    }))} 
-                    onBlur={calculateMissingValues} 
+                    onChange={e => {
+                      const value = e.target.value;
+                      setFormData(prev => ({ ...prev, quantity: value }));
+                      if (value) {
+                        handleFieldChange('quantity', value);
+                      }
+                    }}
                     className="pr-24 h-12"
                     required 
                   />
@@ -448,15 +445,19 @@ export default function AddTransactionModal({
                 <div className="relative">
                   <Input 
                     id="pricePerCoin" 
-                    type="number" 
-                    step="0.01" 
-                    placeholder="0.00" 
+                    type="text"
+                    placeholder={getInputPlaceholder("fiat", formData.market)} 
                     value={formData.pricePerCoin} 
-                    onChange={e => setFormData(prev => ({
-                      ...prev,
-                      pricePerCoin: e.target.value
-                    }))} 
-                    onBlur={calculateMissingValues} 
+                    onChange={e => {
+                      const value = e.target.value;
+                      if (validateDecimalInput(value, formData.market)) {
+                        setFormData(prev => ({ ...prev, pricePerCoin: value }));
+                        const normalizedValue = normalizeDecimalInput(value, formData.market);
+                        if (normalizedValue && !isNaN(parseFloat(normalizedValue))) {
+                          handleFieldChange('pricePerCoin', normalizedValue);
+                        }
+                      }
+                    }}
                     className="pr-16 h-12"
                     required 
                   />

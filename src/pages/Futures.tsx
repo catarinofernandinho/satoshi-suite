@@ -13,10 +13,12 @@ import OrderStatusTabs from "@/components/futures/OrderStatusTabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { subDays, format, isWithinInterval, parseISO } from "date-fns";
 import { useTimezone } from "@/contexts/TimezoneContext";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 export default function Futures() {
   const { futures, loading, calculateFutureMetrics } = useFutures();
   const { getCurrentTime, convertToUserTime } = useTimezone();
+  const { formatCurrency, formatNumber } = useCurrency();
   const [btcPrice, setBtcPrice] = useState(0);
   const [priceLoading, setPriceLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("all");
@@ -201,7 +203,7 @@ export default function Futures() {
         </CardHeader>
         <CardContent>
           <div className="text-3xl font-bold text-bitcoin">
-            ${btcPrice.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+            {formatCurrency(btcPrice)}
           </div>
           <p className="text-sm text-muted-foreground">Preço usado para cálculos em tempo real</p>
         </CardContent>

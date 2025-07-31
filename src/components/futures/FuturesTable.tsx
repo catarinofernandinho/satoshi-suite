@@ -9,6 +9,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import EditFutureModal from "./EditFutureModal";
 import CloseOrderModal from "./CloseOrderModal";
 import { useTimezone } from "@/contexts/TimezoneContext";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 interface FuturesTableProps {
   futures: Future[];
@@ -18,6 +19,7 @@ interface FuturesTableProps {
 export default function FuturesTable({ futures, btcCurrentPrice }: FuturesTableProps) {
   const { deleteFuture, calculateFutureMetrics } = useFutures();
   const { formatDateTime } = useTimezone();
+  const { formatCurrency: formatCurrencyContext, formatNumber, currency } = useCurrency();
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [editingOrder, setEditingOrder] = useState<Future | null>(null);
   const [closingOrder, setClosingOrder] = useState<Future | null>(null);
@@ -33,18 +35,14 @@ export default function FuturesTable({ futures, btcCurrentPrice }: FuturesTableP
     }
   };
 
-  const formatCurrency = (value: number | undefined, currency: 'USD' | 'SATS' = 'USD') => {
+  const formatCurrency = (value: number | undefined, currencyType: 'USD' | 'SATS' = 'USD') => {
     if (value === undefined || value === null) return '-';
     
-    if (currency === 'USD') {
-      return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
-        minimumFractionDigits: 2
-      }).format(value);
+    if (currencyType === 'USD') {
+      return formatCurrencyContext(value);
     }
     
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat(currency === 'BRL' ? 'pt-BR' : 'en-US', {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
     }).format(value) + ' sats';
@@ -52,7 +50,7 @@ export default function FuturesTable({ futures, btcCurrentPrice }: FuturesTableP
 
   const formatPercent = (value: number | undefined) => {
     if (value === undefined || value === null) return '-';
-    const formatted = value.toFixed(2);
+    const formatted = formatNumber(value);
     return `${value >= 0 ? '+' : ''}${formatted}%`;
   };
 

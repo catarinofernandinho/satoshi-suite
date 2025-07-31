@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrendingUp, TrendingDown, DollarSign, Target } from "lucide-react";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 interface FuturesStatsProps {
   stats: {
@@ -13,13 +14,7 @@ interface FuturesStatsProps {
 }
 
 export default function FuturesStats({ stats }: FuturesStatsProps) {
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 2
-    }).format(value);
-  };
+  const { formatCurrency } = useCurrency();
 
   const getColorClass = (value: number) => {
     return value >= 0 ? 'text-green-600' : 'text-red-600';

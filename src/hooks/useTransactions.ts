@@ -146,7 +146,9 @@ export function useTransactions() {
   };
 
   // Calculate portfolio stats from transactions
-  const getPortfolioStats = (btcCurrentPrice: number) => {
+  const getPortfolioStats = (btcCurrentPrice: number, userCurrency: string = 'USD', exchangeRate: number = 1) => {
+    console.log('=== GETSTATS DEBUG ===');
+    console.log('Input - BTC Price:', btcCurrentPrice, 'Currency:', userCurrency, 'Exchange Rate:', exchangeRate);
     let totalBtc = 0;
     let totalCost = 0;
     let totalRevenue = 0;
@@ -154,10 +156,28 @@ export function useTransactions() {
     transactions.forEach(t => {
       if (t.type === 'Comprar') {
         totalBtc += t.quantity;
-        totalCost += t.total_spent;
+        // Convert transaction cost to user's currency if needed
+        if (t.market === userCurrency) {
+          totalCost += t.total_spent;
+        } else if (t.market === 'BRL' && userCurrency === 'USD') {
+          totalCost += t.total_spent / exchangeRate;
+        } else if (t.market === 'USD' && userCurrency === 'BRL') {
+          totalCost += t.total_spent * exchangeRate;
+        } else {
+          totalCost += t.total_spent; // fallback
+        }
       } else if (t.type === 'Vender') {
         totalBtc -= t.quantity;
-        totalRevenue += t.total_spent; // What was received from sale
+        // Convert transaction revenue to user's currency if needed
+        if (t.market === userCurrency) {
+          totalRevenue += t.total_spent;
+        } else if (t.market === 'BRL' && userCurrency === 'USD') {
+          totalRevenue += t.total_spent / exchangeRate;
+        } else if (t.market === 'USD' && userCurrency === 'BRL') {
+          totalRevenue += t.total_spent * exchangeRate;
+        } else {
+          totalRevenue += t.total_spent; // fallback
+        }
       } else if (t.type === 'Transferência') {
         if (t.transfer_type === 'entrada') {
           totalBtc += t.quantity;
@@ -167,10 +187,18 @@ export function useTransactions() {
       }
     });
     
+    // Current value using BTC price (already in correct currency from API)
     const currentValue = totalBtc * btcCurrentPrice;
     const netCost = totalCost - totalRevenue;
     const gainLoss = currentValue - netCost;
     const avgBuyPrice = totalBtc > 0 ? netCost / totalBtc : 0;
+    
+    console.log('Final calculations:');
+    console.log('- Total BTC:', totalBtc);
+    console.log('- Total Cost:', totalCost);
+    console.log('- Current Value:', currentValue);
+    console.log('- Gain/Loss:', gainLoss);
+    console.log('======================');
     
     return {
       totalBtc,

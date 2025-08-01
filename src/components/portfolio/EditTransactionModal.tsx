@@ -318,11 +318,15 @@ export default function EditTransactionModal({
                 <Input 
                   id="date" 
                   type="datetime-local" 
-                  value={new Date(new Date(formData.date).getTime() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16)}
-                  onChange={e => setFormData(prev => ({
-                    ...prev,
-                    date: new Date(e.target.value).toISOString()
-                  }))} 
+                  value={convertToUserTime(formData.date).toISOString().slice(0, 16)}
+                  onChange={e => {
+                    const userTimeDate = new Date(e.target.value);
+                    const utcDate = convertToUTC(userTimeDate);
+                    setFormData(prev => ({
+                      ...prev,
+                      date: utcDate.toISOString()
+                    }));
+                  }}
                   required 
                 />
               </div>
@@ -482,11 +486,15 @@ export default function EditTransactionModal({
                 <Input 
                   id="date" 
                   type="datetime-local" 
-                  value={new Date(new Date(formData.date).getTime() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16)}
-                  onChange={e => setFormData(prev => ({
-                    ...prev,
-                    date: new Date(e.target.value).toISOString()
-                  }))} 
+                  value={convertToUserTime(formData.date).toISOString().slice(0, 16)}
+                  onChange={e => {
+                    const userTimeDate = new Date(e.target.value);
+                    const utcDate = convertToUTC(userTimeDate);
+                    setFormData(prev => ({
+                      ...prev,
+                      date: utcDate.toISOString()
+                    }));
+                  }} 
                   required 
                 />
               </div>
@@ -577,11 +585,15 @@ export default function EditTransactionModal({
                 <Input 
                   id="date" 
                   type="datetime-local" 
-                  value={new Date(new Date(formData.date).getTime() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16)} 
-                  onChange={e => setFormData(prev => ({
-                    ...prev,
-                    date: new Date(e.target.value).toISOString()
-                  }))} 
+                  value={convertToUserTime(formData.date).toISOString().slice(0, 16)} 
+                  onChange={e => {
+                    const userTimeDate = new Date(e.target.value);
+                    const utcDate = convertToUTC(userTimeDate);
+                    setFormData(prev => ({
+                      ...prev,
+                      date: utcDate.toISOString()
+                    }));
+                  }} 
                   required 
                 />
               </div>

@@ -10,6 +10,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { ChevronDown } from "lucide-react";
 import { Transaction } from "@/hooks/useTransactions";
 import { useTransactions } from "@/hooks/useTransactions";
+import { useTimezone } from "@/contexts/TimezoneContext";
 import { calculateInterlinkedValues, formatFiatValue, validateDecimalInput, normalizeDecimalInput, getInputPlaceholder } from "@/utils/numberUtils";
 interface AddTransactionModalProps {
   isOpen: boolean;
@@ -35,6 +36,7 @@ export default function AddTransactionModal({
   const [quantityUnit, setQuantityUnit] = useState<"BTC" | "SATS">("BTC");
   const [transferType, setTransferType] = useState<"entrada" | "saida">("entrada");
   const { getPortfolioStats, transactions } = useTransactions();
+  const { getCurrentTime } = useTimezone();
   
   // Use provided BTC balance
   const availableBtc = propAvailableBtc || 0;
@@ -47,7 +49,7 @@ export default function AddTransactionModal({
     market: currency,
     fees: "",
     notes: "",
-    date: new Date().toISOString().slice(0, 16), // Default to current date/time
+    date: getCurrentTime().toISOString().slice(0, 16), // Default to current user timezone date/time
     transferType: "entrada"
   });
   const resetForm = () => {
@@ -59,7 +61,7 @@ export default function AddTransactionModal({
       market: currency,
       fees: "",
       notes: "",
-      date: new Date().toISOString().slice(0, 16),
+      date: getCurrentTime().toISOString().slice(0, 16),
       transferType: "entrada"
     });
     setActiveTab("Comprar");

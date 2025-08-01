@@ -10,6 +10,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { ChevronDown } from "lucide-react";
 import { Transaction } from "@/hooks/useTransactions";
 import { useTransactions } from "@/hooks/useTransactions";
+import { useTimezone } from "@/contexts/TimezoneContext";
 import { calculateInterlinkedValues, validateDecimalInput, normalizeDecimalInput, getInputPlaceholder } from "@/utils/numberUtils";
 
 interface EditTransactionModalProps {
@@ -37,6 +38,7 @@ export default function EditTransactionModal({
   const [quantityUnit, setQuantityUnit] = useState<"BTC" | "SATS">("BTC");
   const [transferType, setTransferType] = useState<"entrada" | "saida">("entrada");
   const { getPortfolioStats, transactions } = useTransactions();
+  const { getCurrentTime } = useTimezone();
   
   // Use provided BTC balance  
   const availableBtc = propAvailableBtc || 0;
@@ -49,7 +51,7 @@ export default function EditTransactionModal({
     market: currency,
     fees: "",
     notes: "",
-    date: new Date().toISOString().slice(0, 16),
+    date: getCurrentTime().toISOString().slice(0, 16),
     transferType: "entrada"
   });
 
@@ -84,7 +86,7 @@ export default function EditTransactionModal({
       market: currency,
       fees: "",
       notes: "",
-      date: new Date().toISOString().slice(0, 16),
+      date: getCurrentTime().toISOString().slice(0, 16),
       transferType: "entrada"
     });
     setActiveTab("Comprar");

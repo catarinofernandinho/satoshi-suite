@@ -155,13 +155,11 @@ export default function UserSettingsModal() {
                 <DollarSign className="h-4 w-4" />
                 Moeda Preferida
               </CardTitle>
-              <CardDescription>
-                Escolha a moeda padrão para exibição de valores na plataforma. A alteração será aplicada após recarregar a página.
-              </CardDescription>
+              
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                <Label htmlFor="currency">Moeda Padrão</Label>
+                
                 <Select value={formData.preferred_currency} onValueChange={value => setFormData({
                 ...formData,
                 preferred_currency: value as UserSettings['preferred_currency']
@@ -185,13 +183,11 @@ export default function UserSettingsModal() {
                 <Globe className="h-4 w-4" />
                 País
               </CardTitle>
-              <CardDescription>
-                Selecione seu país para configurar automaticamente o fuso horário correto.
-              </CardDescription>
+              
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                <Label htmlFor="country">País</Label>
+                
                 <Select value={selectedCountry} onValueChange={handleCountryChange}>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecionar país" />

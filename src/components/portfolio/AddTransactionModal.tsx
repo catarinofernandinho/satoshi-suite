@@ -36,7 +36,7 @@ export default function AddTransactionModal({
   const [quantityUnit, setQuantityUnit] = useState<"BTC" | "SATS">("BTC");
   const [transferType, setTransferType] = useState<"entrada" | "saida">("entrada");
   const { getPortfolioStats, transactions } = useTransactions();
-  const { getCurrentTime } = useTimezone();
+  const { getCurrentTime, convertToUserTime, convertToUTC } = useTimezone();
   
   // Use provided BTC balance
   const availableBtc = propAvailableBtc || 0;
@@ -290,10 +290,10 @@ export default function AddTransactionModal({
                 <Input 
                   id="date" 
                   type="datetime-local" 
-                  value={formData.date} 
+                  value={convertToUserTime(new Date(formData.date)).toISOString().slice(0, 16)} 
                   onChange={e => setFormData(prev => ({
                     ...prev,
-                    date: e.target.value
+                    date: convertToUTC(new Date(e.target.value)).toISOString()
                   }))} 
                   className="h-12"
                   required 
@@ -474,10 +474,10 @@ export default function AddTransactionModal({
                 <Input 
                   id="date" 
                   type="datetime-local" 
-                  value={formData.date} 
+                  value={convertToUserTime(new Date(formData.date)).toISOString().slice(0, 16)} 
                   onChange={e => setFormData(prev => ({
                     ...prev,
-                    date: e.target.value
+                    date: convertToUTC(new Date(e.target.value)).toISOString()
                   }))} 
                   className="h-12"
                   required 
@@ -573,10 +573,10 @@ export default function AddTransactionModal({
                 <Input 
                   id="date" 
                   type="datetime-local" 
-                  value={formData.date} 
+                  value={convertToUserTime(new Date(formData.date)).toISOString().slice(0, 16)} 
                   onChange={e => setFormData(prev => ({
                     ...prev,
-                    date: e.target.value
+                    date: convertToUTC(new Date(e.target.value)).toISOString()
                   }))} 
                   className="h-12"
                   required 

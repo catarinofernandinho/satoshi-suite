@@ -49,7 +49,7 @@ export default function AddTransactionModal({
     market: currency,
     fees: "",
     notes: "",
-    date: getCurrentTime().toISOString().slice(0, 16), // Default to current user timezone date/time
+    date: new Date().toISOString(), // Store as UTC, display will be converted
     transferType: "entrada"
   });
   const resetForm = () => {
@@ -61,7 +61,7 @@ export default function AddTransactionModal({
       market: currency,
       fees: "",
       notes: "",
-      date: getCurrentTime().toISOString().slice(0, 16),
+      date: new Date().toISOString(),
       transferType: "entrada"
     });
     setActiveTab("Comprar");
@@ -290,10 +290,10 @@ export default function AddTransactionModal({
                 <Input 
                   id="date" 
                   type="datetime-local" 
-                  value={convertToUserTime(new Date(formData.date)).toISOString().slice(0, 16)} 
+                  value={new Date(new Date(formData.date).getTime() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16)}
                   onChange={e => setFormData(prev => ({
                     ...prev,
-                    date: convertToUTC(new Date(e.target.value)).toISOString()
+                    date: new Date(e.target.value).toISOString()
                   }))} 
                   className="h-12"
                   required 
@@ -474,10 +474,10 @@ export default function AddTransactionModal({
                 <Input 
                   id="date" 
                   type="datetime-local" 
-                  value={convertToUserTime(new Date(formData.date)).toISOString().slice(0, 16)} 
+                  value={new Date(new Date(formData.date).getTime() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16)}
                   onChange={e => setFormData(prev => ({
                     ...prev,
-                    date: convertToUTC(new Date(e.target.value)).toISOString()
+                    date: new Date(e.target.value).toISOString()
                   }))} 
                   className="h-12"
                   required 
@@ -573,10 +573,10 @@ export default function AddTransactionModal({
                 <Input 
                   id="date" 
                   type="datetime-local" 
-                  value={convertToUserTime(new Date(formData.date)).toISOString().slice(0, 16)} 
+                  value={new Date(new Date(formData.date).getTime() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16)} 
                   onChange={e => setFormData(prev => ({
                     ...prev,
-                    date: convertToUTC(new Date(e.target.value)).toISOString()
+                    date: new Date(e.target.value).toISOString()
                   }))} 
                   className="h-12"
                   required 

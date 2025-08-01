@@ -318,10 +318,10 @@ export default function EditTransactionModal({
                 <Input 
                   id="date" 
                   type="datetime-local" 
-                  value={convertToUserTime(new Date(formData.date)).toISOString().slice(0, 16)} 
+                  value={new Date(new Date(formData.date).getTime() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16)}
                   onChange={e => setFormData(prev => ({
                     ...prev,
-                    date: convertToUTC(new Date(e.target.value)).toISOString()
+                    date: new Date(e.target.value).toISOString()
                   }))} 
                   required 
                 />
@@ -482,10 +482,10 @@ export default function EditTransactionModal({
                 <Input 
                   id="date" 
                   type="datetime-local" 
-                  value={convertToUserTime(new Date(formData.date)).toISOString().slice(0, 16)} 
+                  value={new Date(new Date(formData.date).getTime() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16)}
                   onChange={e => setFormData(prev => ({
                     ...prev,
-                    date: convertToUTC(new Date(e.target.value)).toISOString()
+                    date: new Date(e.target.value).toISOString()
                   }))} 
                   required 
                 />
@@ -577,10 +577,10 @@ export default function EditTransactionModal({
                 <Input 
                   id="date" 
                   type="datetime-local" 
-                  value={convertToUserTime(new Date(formData.date)).toISOString().slice(0, 16)} 
+                  value={new Date(new Date(formData.date).getTime() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16)} 
                   onChange={e => setFormData(prev => ({
                     ...prev,
-                    date: convertToUTC(new Date(e.target.value)).toISOString()
+                    date: new Date(e.target.value).toISOString()
                   }))} 
                   required 
                 />

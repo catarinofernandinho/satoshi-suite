@@ -56,9 +56,11 @@ export const calculateInterlinkedValues = (
   pricePerCoin: string,
   quantityUnit: "BTC" | "SATS"
 ): { totalSpent: string; quantity: string; pricePerCoin: string } => {
-  const totalSpentNum = parseFloat(totalSpent) || 0;
-  const quantityNum = parseFloat(quantity) || 0;
-  const pricePerCoinNum = parseFloat(pricePerCoin) || 0;
+  // Normaliza vírgula para ponto antes do parseFloat
+  const normalize = (val: string) => val.replace(',', '.');
+  const totalSpentNum = parseFloat(normalize(totalSpent)) || 0;
+  const quantityNum = parseFloat(normalize(quantity)) || 0;
+  const pricePerCoinNum = parseFloat(normalize(pricePerCoin)) || 0;
   
   // Convert SATS to BTC for calculations
   let quantityInBtc = quantityNum;

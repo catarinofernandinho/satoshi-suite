@@ -11,6 +11,8 @@ import { ChevronDown } from "lucide-react";
 import { Transaction } from "@/hooks/useTransactions";
 import { useTransactions } from "@/hooks/useTransactions";
 import { useTimezone } from "@/contexts/TimezoneContext";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 import { calculateInterlinkedValues, formatFiatValue, validateDecimalInput, normalizeDecimalInput, getInputPlaceholder } from "@/utils/numberUtils";
 interface AddTransactionModalProps {
   isOpen: boolean;
@@ -286,23 +288,25 @@ export default function AddTransactionModal({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="date" className="text-sm font-medium">Data e Hora</Label>
-                <Input 
-                  id="date" 
-                  type="datetime-local" 
-                  value={convertToUserTime(formData.date).toISOString().slice(0, 16)}
-                  onChange={e => {
-                    const userTimeDate = new Date(e.target.value);
-                    const utcDate = convertToUTC(userTimeDate);
-                    setFormData(prev => ({
-                      ...prev,
-                      date: utcDate.toISOString()
-                    }));
-                  }} 
-                  className="h-12"
-                  required 
-                />
-              </div>
+  <Label htmlFor="date" className="text-sm font-medium">Data e Hora</Label>
+  <DatePicker
+    selected={convertToUserTime(formData.date)}
+    onChange={date => {
+      const utcDate = convertToUTC(date);
+      setFormData(prev => ({
+        ...prev,
+        date: utcDate.toISOString()
+      }));
+    }}
+    dateFormat="dd/MM/yyyy HH:mm"
+    showTimeSelect
+    timeFormat="HH:mm"
+    timeIntervals={5}
+    className="h-12 w-full border rounded px-3"
+    placeholderText="DD/MM/AAAA HH:mm"
+    locale="pt-BR"
+  />
+</div>
 
               {/* Advanced Options */}
               <Collapsible open={isAdvancedOpen} onOpenChange={setIsAdvancedOpen}>

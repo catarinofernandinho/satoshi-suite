@@ -104,26 +104,22 @@ export default function EditTransactionModal({
   };
 
   const handleFieldChange = (changedField: 'totalSpent' | 'quantity' | 'pricePerCoin', newValue: string) => {
-    // Update the changed field first
-    const updatedData = { ...formData, [changedField]: newValue };
+  const calculatedValues = calculateInterlinkedValues(
+    changedField,
+    changedField === 'totalSpent' ? newValue : formData.totalSpent,
+    changedField === 'quantity' ? newValue : formData.quantity,
+    changedField === 'pricePerCoin' ? newValue : formData.pricePerCoin,
+    quantityUnit
+  );
     
-    // Calculate interlinked values
-    const calculatedValues = calculateInterlinkedValues(
-      changedField,
-      updatedData.totalSpent,
-      updatedData.quantity, 
-      updatedData.pricePerCoin,
-      quantityUnit
-    );
-    
-    // Apply calculated values
-    updatedData.totalSpent = calculatedValues.totalSpent;
-    updatedData.quantity = calculatedValues.quantity;
-    updatedData.pricePerCoin = calculatedValues.pricePerCoin;
-    updatedData.price = calculatedValues.pricePerCoin;
-    
-    setFormData(updatedData);
-  };
+      setFormData(prev => ({
+    ...prev,
+    quantity: changedField === 'quantity' ? newValue : calculatedValues.quantity,
+    pricePerCoin: changedField === 'pricePerCoin' ? newValue : calculatedValues.pricePerCoin,
+    totalSpent: changedField === 'totalSpent' ? newValue : calculatedValues.totalSpent,
+    price: calculatedValues.pricePerCoin
+  }));
+};
 
   const setMaxQuantity = () => {
     setFormData(prev => ({

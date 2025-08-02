@@ -64,10 +64,12 @@ export default function TransactionTableEnhanced({
     const convertedAmount = transactionMarket ? convertToUserCurrency(amount, transactionMarket) : amount;
     
     if (curr === "BRL") return `R$ ${convertedAmount.toLocaleString("pt-BR", {
-      minimumFractionDigits: 2
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
     })}`;
     return `US$ ${convertedAmount.toLocaleString("en-US", {
-      minimumFractionDigits: 2
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
     })}`;
   };
 

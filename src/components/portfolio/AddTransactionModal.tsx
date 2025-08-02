@@ -13,6 +13,7 @@ import { useTransactions } from "@/hooks/useTransactions";
 import { useTimezone } from "@/contexts/TimezoneContext";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import "src/styles/datepicker-dark.css";
 import { calculateInterlinkedValues, formatFiatValue, validateDecimalInput, normalizeDecimalInput, getInputPlaceholder } from "@/utils/numberUtils";
 interface AddTransactionModalProps {
   isOpen: boolean;
@@ -290,22 +291,22 @@ export default function AddTransactionModal({
               <div className="space-y-2">
   <Label htmlFor="date" className="text-sm font-medium">Data e Hora</Label>
   <DatePicker
-    selected={convertToUserTime(formData.date)}
-    onChange={date => {
-      const utcDate = convertToUTC(date);
-      setFormData(prev => ({
-        ...prev,
-        date: utcDate.toISOString()
-      }));
-    }}
-    dateFormat="dd/MM/yyyy HH:mm"
-    showTimeSelect
-    timeFormat="HH:mm"
-    timeIntervals={5}
-    className="h-12 w-full border rounded px-3"
-    placeholderText="DD/MM/AAAA HH:mm"
-    locale="pt-BR"
-  />
+  selected={convertToUserTime(formData.date)}
+  onChange={date => {
+    const utcDate = convertToUTC(date);
+    setFormData(prev => ({
+      ...prev,
+      date: utcDate.toISOString()
+    }));
+  }}
+  dateFormat="dd/MM/yyyy HH:mm"
+  showTimeSelect
+  timeFormat="HH:mm"
+  timeIntervals={5}
+  className="h-12 w-full px-3 py-2 rounded-md border border-input bg-background text-foreground placeholder:text-muted-foreground"
+  placeholderText="DD/MM/AAAA HH:mm"
+  locale="pt-BR"
+/>
 </div>
 
               {/* Advanced Options */}

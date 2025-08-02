@@ -145,11 +145,11 @@ export const validateDecimalInput = (value: string, currency: string): boolean =
   const isBRL = currency === 'BRL';
 
   if (isBRL) {
-    // Permite qualquer número de dígitos antes da vírgula e qualquer número depois
-    return /^(\d{1,})(,\d{0,})?$/.test(value);
+    // Permite: 123456,78 ou 1, ou 1,2, ou 1,234
+    return /^(\d+)?(,\d*)?$/.test(value);
   } else {
-    // Permite qualquer número de dígitos antes do ponto e qualquer número depois
-    return /^(\d{1,})(\.\d{0,})?$/.test(value);
+    // Permite: 123456.78 ou 1. ou 1.2 ou 1.234
+    return /^(\d+)?(\.\d*)?$/.test(value);
   }
 };
 
@@ -167,14 +167,13 @@ export const normalizeDecimalInput = (value: string, currency: string): string =
   let normalized = value;
 
   if (isBRL) {
-    // Remove milhares, troca vírgula por ponto e limita para 2 casas decimais
+    // Só troca vírgula por ponto para cálculo/salvar
     normalized = normalized.replace(/\./g, '').replace(',', '.');
   } else {
-    // Remove milhares 
     normalized = normalized.replace(/,/g, '');
   }
 
-  // Limitar para 2 casas decimais
+  // Limita para 2 casas decimais
   const parts = normalized.split('.');
   if (parts.length === 2) {
     parts[1] = parts[1].slice(0, 2);

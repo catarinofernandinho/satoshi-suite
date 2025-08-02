@@ -13,7 +13,7 @@ import { useTransactions } from "@/hooks/useTransactions";
 import { useTimezone } from "@/contexts/TimezoneContext";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import "src/styles/datepicker-dark.css";
+import "@/styles/datepicker-dark.css";
 import { calculateInterlinkedValues, formatFiatValue, validateDecimalInput, normalizeDecimalInput, getInputPlaceholder } from "@/utils/numberUtils";
 interface AddTransactionModalProps {
   isOpen: boolean;

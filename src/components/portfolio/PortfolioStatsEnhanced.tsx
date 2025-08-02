@@ -1,8 +1,10 @@
+import { memo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Info, Bitcoin } from "lucide-react";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { formatCurrencyDirect } from "@/utils/portfolioCalculations";
 
 interface PortfolioStatsEnhancedProps {
   btcPrice: number;
@@ -15,7 +17,7 @@ interface PortfolioStatsEnhancedProps {
   currency: string;
 }
 
-export default function PortfolioStatsEnhanced({
+const PortfolioStatsEnhanced = memo(function PortfolioStatsEnhanced({
   btcPrice,
   btcPriceChange,
   totalValue,
@@ -27,15 +29,7 @@ export default function PortfolioStatsEnhanced({
 }: PortfolioStatsEnhancedProps) {
   const { formatNumber } = useCurrency();
   
-  // Format currency without applying conversion for BTC price since it's already in correct currency
-  const formatCurrencyDirect = (amount: number) => {
-    const prefix = currency === "BRL" ? "R$" : "US$";
-    const locale = currency === "BRL" ? "pt-BR" : "en-US";
-    return `${prefix} ${amount.toLocaleString(locale, {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    })}`;
-  };
+  // Use imported utility function for formatting
 
   // Calculate net liquid average cost
   const netCost = totalCost - totalRevenue;
@@ -59,7 +53,7 @@ Caso o custo líquido médio seja negativo, as receitas são superiores ao custo
               <h3 className="text-lg font-semibold text-foreground">Bitcoin BTC</h3>
               <div className="flex items-center gap-2">
                 <span className="text-2xl font-bold text-foreground">
-                  {formatCurrencyDirect(btcPrice)}
+                  {formatCurrencyDirect(btcPrice, currency)}
                 </span>
                 <Badge 
                   variant="outline" 
@@ -82,7 +76,7 @@ Caso o custo líquido médio seja negativo, as receitas são superiores ao custo
           <CardContent className="pt-4">
             <div className="text-xs text-muted-foreground mb-1">Valor dos Ativos</div>
             <div className="text-lg font-bold text-foreground">
-              {formatCurrencyDirect(totalValue)}
+              {formatCurrencyDirect(totalValue, currency)}
             </div>
           </CardContent>
         </Card>
@@ -100,7 +94,7 @@ Caso o custo líquido médio seja negativo, as receitas são superiores ao custo
           <CardContent className="pt-4">
             <div className="text-xs text-muted-foreground mb-1">Custo Total</div>
             <div className="text-lg font-bold text-foreground">
-              {formatCurrencyDirect(totalCost)}
+              {formatCurrencyDirect(totalCost, currency)}
             </div>
           </CardContent>
         </Card>
@@ -122,8 +116,8 @@ Caso o custo líquido médio seja negativo, as receitas são superiores ao custo
             </div>
             <div className="text-lg font-bold text-foreground">
               {liquidAverageCost >= 0 
-                ? formatCurrencyDirect(liquidAverageCost)
-                : formatCurrencyDirect(Math.abs(liquidAverageCost))
+                ? formatCurrencyDirect(liquidAverageCost, currency)
+                : formatCurrencyDirect(Math.abs(liquidAverageCost), currency)
               }
             </div>
           </CardContent>
@@ -135,11 +129,13 @@ Caso o custo líquido médio seja negativo, as receitas são superiores ao custo
             <div className={`text-lg font-bold ${
               totalGainLoss >= 0 ? "text-success" : "text-destructive"
             }`}>
-              {formatCurrencyDirect(totalGainLoss)}
+              {formatCurrencyDirect(totalGainLoss, currency)}
             </div>
           </CardContent>
         </Card>
       </div>
     </div>
   );
-}
+});
+
+export default PortfolioStatsEnhanced;

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo, memo, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Transaction } from "@/hooks/useTransactions";
 import { useAuthIntercept } from "@/contexts/AuthInterceptContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { convertToUserCurrency, calculateTransactionGP } from "@/utils/portfolioCalculations";
 
 interface TransactionTableEnhancedProps {
   transactions: Transaction[];
@@ -19,7 +20,7 @@ interface TransactionTableEnhancedProps {
   onDeleteTransaction: (id: string) => void;
 }
 
-export default function TransactionTableEnhanced({
+const TransactionTableEnhanced = memo(function TransactionTableEnhanced({
   transactions,
   currency,
   btcCurrentPrice,
@@ -36,32 +37,14 @@ export default function TransactionTableEnhanced({
   const { requireAuth } = useAuthIntercept();
   const { formatCurrency: formatCurrencyWithConversion, exchangeRate } = useCurrency();
 
-  // Convert amount from transaction's original currency to user's preferred currency
-  const convertToUserCurrency = (amount: number, transactionMarket: string) => {
-    const userCurrency = currency;
-    
-    // If transaction and user currency are the same, no conversion needed
-    if (transactionMarket === userCurrency) {
-      return amount;
-    }
-    
-    // Convert between USD and BRL
-    if (transactionMarket === 'BRL' && userCurrency === 'USD') {
-      return amount / exchangeRate;
-    } else if (transactionMarket === 'USD' && userCurrency === 'BRL') {
-      return amount * exchangeRate;
-    }
-    
-    // Fallback - return original amount
-    return amount;
-  };
+  // Use imported utility function for currency conversion
 
   const formatCurrency = (amount: number, curr: string, transactionMarket?: string) => {
     if (curr === "BTC") return `${amount.toFixed(8)} BTC`;
     if (curr === "SATS") return `${Math.floor(amount * 100000000)} sats`;
     
     // For fiat currencies, apply conversion if needed
-    const convertedAmount = transactionMarket ? convertToUserCurrency(amount, transactionMarket) : amount;
+    const convertedAmount = transactionMarket ? convertToUserCurrency(amount, transactionMarket, currency, exchangeRate) : amount;
     
     if (curr === "BRL") return `R$ ${convertedAmount.toLocaleString("pt-BR", {
       minimumFractionDigits: 2,
@@ -98,44 +81,20 @@ export default function TransactionTableEnhanced({
     }
   };
 
-  const calculateGP = (transaction: Transaction): { value: number; color: string } => {
-    if (transaction.type === "Comprar") {
-      const currentValue = transaction.quantity * btcCurrentPrice;
-      const convertedTotalSpent = convertToUserCurrency(transaction.total_spent, transaction.market);
-      const gp = currentValue - convertedTotalSpent;
-      return {
-        value: gp,
-        color: gp >= 0 ? "text-success" : "text-destructive"
-      };
-    } else if (transaction.type === "Vender") {
-      // For sell transactions, GP = received - (quantity * average buy price)
-      // Since we don't have average buy price, we'll use the transaction's price
-      const convertedTotalSpent = convertToUserCurrency(transaction.total_spent, transaction.market);
-      const convertedPricePerCoin = convertToUserCurrency(transaction.price_per_coin, transaction.market);
-      const gp = convertedTotalSpent - (transaction.quantity * convertedPricePerCoin);
-      return {
-        value: gp,
-        color: gp >= 0 ? "text-success" : "text-destructive"
-      };
-    }
-    // For transfers, show value in USD/BRL
-    const transferValue = transaction.quantity * btcCurrentPrice;
-    return {
-      value: transferValue,
-      color: "text-muted-foreground"
-    };
-  };
+  // Use imported utility function for GP calculation
 
-  const handleSort = (field: string) => {
+  const handleSort = useCallback((field: string) => {
     if (sortField === field) {
       setSortDirection(sortDirection === "asc" ? "desc" : "asc");
     } else {
       setSortField(field);
       setSortDirection("desc");
     }
-  };
+  }, [sortField, sortDirection]);
 
-  const sortedTransactions = [...transactions].sort((a, b) => {
+  // Memoized sorting to prevent unnecessary recalculations
+  const sortedTransactions = useMemo(() => {
+    return [...transactions].sort((a, b) => {
     if (!sortField) return 0;
     
     let aValue: any = a[sortField as keyof Transaction];
@@ -157,13 +116,21 @@ export default function TransactionTableEnhanced({
     bValue = String(bValue).toLowerCase();
     
     if (aValue < bValue) return sortDirection === "asc" ? -1 : 1;
-    if (aValue > bValue) return sortDirection === "asc" ? 1 : -1;
-    return 0;
-  });
+      if (aValue > bValue) return sortDirection === "asc" ? 1 : -1;
+      return 0;
+    });
+  }, [transactions, sortField, sortDirection]);
 
-  const totalPages = Math.ceil(sortedTransactions.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const currentTransactions = sortedTransactions.slice(startIndex, startIndex + itemsPerPage);
+  // Memoized pagination calculations
+  const paginationData = useMemo(() => {
+    const totalPages = Math.ceil(sortedTransactions.length / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const currentTransactions = sortedTransactions.slice(startIndex, startIndex + itemsPerPage);
+    
+    return { totalPages, startIndex, currentTransactions };
+  }, [sortedTransactions, itemsPerPage, currentPage]);
+
+  const { totalPages, startIndex, currentTransactions } = paginationData;
 
   const confirmDelete = (id: string) => {
     setTransactionToDelete(id);
@@ -251,7 +218,7 @@ export default function TransactionTableEnhanced({
               </TableRow>
             ) : (
               currentTransactions.map((transaction) => {
-                const gp = calculateGP(transaction);
+                const gp = calculateTransactionGP(transaction, btcCurrentPrice, currency, exchangeRate);
                 return (
                   <TableRow key={transaction.id} className="border-border hover:bg-muted/10 transition-colors">
                     <TableCell>
@@ -410,4 +377,6 @@ export default function TransactionTableEnhanced({
       </Dialog>
     </Card>
   );
-}
+});
+
+export default TransactionTableEnhanced;

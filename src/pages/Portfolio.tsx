@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useCallback, useMemo } from "react";
 import PortfolioStatsEnhanced from "@/components/portfolio/PortfolioStatsEnhanced";
 import TransactionTableEnhanced from "@/components/portfolio/TransactionTableEnhanced";
 import { useTransactions } from "@/hooks/useTransactions";
@@ -8,86 +8,62 @@ import AddTransactionModal from "@/components/portfolio/AddTransactionModal";
 import EditTransactionModal from "@/components/portfolio/EditTransactionModal";
 import { Transaction } from "@/hooks/useTransactions";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { useBitcoinPrice } from "@/hooks/useBitcoinPrice";
+import { calculatePortfolioStats } from "@/utils/portfolioCalculations";
 export default function Portfolio() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
-  const [btcPrice, setBtcPrice] = useState(100000); // Default fallback price
-  const [btcPriceChange, setBtcPriceChange] = useState(0);
-  const {
-    settings
-  } = useUserSettings();
+  
+  const { settings } = useUserSettings();
   const currentCurrency = settings?.preferred_currency || "USD";
   const { exchangeRate } = useCurrency();
+  const { btcPrice, btcPriceChange, loading: priceLoading } = useBitcoinPrice(currentCurrency);
+  
   const {
     transactions,
-    loading,
+    loading: transactionsLoading,
     addTransaction,
     updateTransaction,
     deleteTransaction,
-    getPortfolioStats
   } = useTransactions();
-  const {
-    toast
-  } = useToast();
+  
+  const { toast } = useToast();
 
-  // Fetch Bitcoin price from CoinGecko only on page load
-  useEffect(() => {
-    const fetchBtcPrice = async () => {
-      try {
-        const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd,brl&include_24hr_change=true');
-        const data = await response.json();
-        if (data.bitcoin) {
-          const price = currentCurrency === 'BRL' ? data.bitcoin.brl : data.bitcoin.usd;
-          setBtcPrice(price);
-          setBtcPriceChange(data.bitcoin.usd_24h_change || 0);
-          
-          // Store last known price in localStorage
-          localStorage.setItem('lastBtcPrice', price.toString());
-          localStorage.setItem('lastBtcPriceChange', (data.bitcoin.usd_24h_change || 0).toString());
-        }
-      } catch (error) {
-        console.error('Failed to fetch BTC price:', error);
-        // Try to use last known price from localStorage
-        const lastPrice = localStorage.getItem('lastBtcPrice');
-        const lastPriceChange = localStorage.getItem('lastBtcPriceChange');
-        if (lastPrice) {
-          setBtcPrice(parseFloat(lastPrice));
-          setBtcPriceChange(parseFloat(lastPriceChange || '0'));
-        }
-        // Don't show toast error, just silently handle it
-      }
-    };
-    fetchBtcPrice();
-  }, [currentCurrency]);
-  
-  const portfolioStats = getPortfolioStats(btcPrice, currentCurrency, exchangeRate);
-  
-  // Debug logs
-  console.log('=== PORTFOLIO DEBUG ===');
-  console.log('BTC Price:', btcPrice);
-  console.log('Current Currency:', currentCurrency);
-  console.log('Exchange Rate:', exchangeRate);
-  console.log('Portfolio Stats:', portfolioStats);
-  console.log('======================');
-  const handleAddTransaction = () => {
+  // Memoized portfolio calculations to prevent unnecessary recalculations
+  const portfolioStats = useMemo(() => {
+    return calculatePortfolioStats(transactions, btcPrice, currentCurrency, exchangeRate);
+  }, [transactions, btcPrice, currentCurrency, exchangeRate]);
+
+  const loading = transactionsLoading || priceLoading;
+  // Memoized handlers to prevent unnecessary re-renders
+  const handleAddTransaction = useCallback(() => {
     setIsAddModalOpen(true);
-  };
-  const handleEditTransaction = (id: string) => {
+  }, []);
+
+  const handleEditTransaction = useCallback((id: string) => {
     const transaction = transactions.find(t => t.id === id);
     if (transaction) {
       setEditingTransaction(transaction);
       setIsEditModalOpen(true);
     }
-  };
+  }, [transactions]);
 
-  const handleUpdateTransaction = async (id: string, updates: Partial<Transaction>) => {
+  const handleUpdateTransaction = useCallback(async (id: string, updates: Partial<Transaction>) => {
     await updateTransaction(id, updates);
     toast({
       title: "Sucesso",
       description: "Transação atualizada com sucesso!"
     });
-  };
+  }, [updateTransaction, toast]);
+
+  const handleAddTransactionSubmit = useCallback(async (transaction: any) => {
+    await addTransaction(transaction);
+    toast({
+      title: "Sucesso",
+      description: "Transação adicionada com sucesso!"
+    });
+  }, [addTransaction, toast]);
   return <div className="space-y-6">
       <div>
         
@@ -126,13 +102,7 @@ export default function Portfolio() {
       <AddTransactionModal 
         isOpen={isAddModalOpen} 
         onClose={() => setIsAddModalOpen(false)} 
-        onSubmit={async transaction => {
-          await addTransaction(transaction);
-          toast({
-            title: "Sucesso",
-            description: "Transação adicionada com sucesso!"
-          });
-        }} 
+        onSubmit={handleAddTransactionSubmit} 
         currency={currentCurrency}
         availableBtc={portfolioStats.totalBtc}
         btcCurrentPrice={btcPrice}

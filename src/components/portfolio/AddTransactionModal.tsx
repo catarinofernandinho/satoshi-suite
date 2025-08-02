@@ -289,7 +289,7 @@ export default function AddTransactionModal({
               </div>
 
               <div className="space-y-2">
-              <Label htmlFor="date" className="text-sm font-medium">Data e Hora</Label>
+              <Label htmlFor="date" className="text-sm font-medium">Data e Hora:   </Label>
               <DatePicker
                 selected={convertToUserTime(formData.date)}
                 onChange={date => {
@@ -479,7 +479,7 @@ export default function AddTransactionModal({
               </div>
 
               <div className="space-y-2">
-              <Label htmlFor="date" className="text-sm font-medium">Data e Hora</Label>
+              <Label htmlFor="date" className="text-sm font-medium">Data e Hora:   </Label>
               <DatePicker
                 selected={convertToUserTime(formData.date)}
                 onChange={date => {
@@ -584,7 +584,7 @@ export default function AddTransactionModal({
               </div>
 
               <div className="space-y-2">
-              <Label htmlFor="date" className="text-sm font-medium">Data e Hora</Label>
+              <Label htmlFor="date" className="text-sm font-medium">Data e Hora:   </Label>
               <DatePicker
                 selected={convertToUserTime(formData.date)}
                 onChange={date => {

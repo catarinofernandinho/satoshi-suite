@@ -145,21 +145,22 @@ export const validateDecimalInput = (value: string, currency: string): boolean =
   const isBRL = currency === 'BRL';
   const decimalSeparator = isBRL ? ',' : '.';
   const thousandsSeparator = isBRL ? '.' : ',';
-  
-  // Remove any thousands separators first
+
+  // Remove thousands separators
   const cleanValue = value.replace(new RegExp(`\\${thousandsSeparator}`, 'g'), '');
-  
-  // Check if it uses the correct decimal separator
-  if (cleanValue.includes('.') && cleanValue.includes(',')) {
-    return false; // Cannot have both separators
-  }
-  
+
+  // Permitir apenas um separador decimal (vírgula para BRL)
   if (isBRL) {
-    // For BRL, decimal should be comma, no dots allowed except as thousands
-    return !cleanValue.includes('.') || cleanValue.indexOf('.') < cleanValue.lastIndexOf(',');
+    // Só pode ter uma vírgula e nenhum ponto como separador decimal
+    if ((cleanValue.match(/,/g) || []).length > 1) return false;
+    if (cleanValue.includes('.') && !value.endsWith('.')) return false; // Ponto só como milhares
+    // Permitir digitação de vírgula
+    return /^[0-9]{1,3}(\.[0-9]{3})*(,[0-9]*)?$/.test(value);
   } else {
-    // For USD, decimal should be dot, no commas allowed except as thousands  
-    return !cleanValue.includes(',') || cleanValue.indexOf(',') < cleanValue.lastIndexOf('.');
+    // USD: só pode ter um ponto e nenhum vírgula como decimal
+    if ((cleanValue.match(/\./g) || []).length > 1) return false;
+    if (cleanValue.includes(',')) return false;
+    return /^[0-9]{1,3}(,[0-9]{3})*(\.[0-9]*)?$/.test(value);
   }
 };
 
@@ -171,15 +172,27 @@ export const validateDecimalInput = (value: string, currency: string): boolean =
  */
 export const normalizeDecimalInput = (value: string, currency: string): string => {
   if (!value) return "";
-  
+
   const isBRL = currency === 'BRL';
-  
+
   if (isBRL) {
-    // For BRL: replace comma with dot for calculation
-    return value.replace(/\./g, '').replace(',', '.');
+    // Remove milhares, troca vírgula por ponto e limita para 2 casas decimais
+    let normalized = value.replace(/\./g, '').replace(',', '.');
+    const parts = normalized.split('.');
+    if (parts.length === 2) {
+      parts[1] = parts[1].slice(0, 2); // Limita a 2 casas decimais
+      normalized = parts[0] + '.' + parts[1];
+    }
+    return normalized;
   } else {
-    // For USD: remove commas (thousands separator)
-    return value.replace(/,/g, '');
+    // USD: remove milhares e limita a 2 casas decimais
+    let normalized = value.replace(/,/g, '');
+    const parts = normalized.split('.');
+    if (parts.length === 2) {
+      parts[1] = parts[1].slice(0, 2); // Limita a 2 casas decimais
+      normalized = parts[0] + '.' + parts[1];
+    }
+    return normalized;
   }
 };
 

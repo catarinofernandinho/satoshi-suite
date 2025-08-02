@@ -143,24 +143,13 @@ export const validateDecimalInput = (value: string, currency: string): boolean =
   if (!value) return true;
   
   const isBRL = currency === 'BRL';
-  const decimalSeparator = isBRL ? ',' : '.';
-  const thousandsSeparator = isBRL ? '.' : ',';
 
-  // Remove thousands separators
-  const cleanValue = value.replace(new RegExp(`\\${thousandsSeparator}`, 'g'), '');
-
-  // Permitir apenas um separador decimal (vírgula para BRL)
   if (isBRL) {
-    // Só pode ter uma vírgula e nenhum ponto como separador decimal
-    if ((cleanValue.match(/,/g) || []).length > 1) return false;
-    if (cleanValue.includes('.') && !value.endsWith('.')) return false; // Ponto só como milhares
-    // Permitir digitação de vírgula
-    return /^[0-9]{1,3}(\.[0-9]{3})*(,[0-9]*)?$/.test(value);
+    // Permite qualquer número de dígitos antes da vírgula e qualquer número depois
+    return /^(\d{1,})(,\d{0,})?$/.test(value);
   } else {
-    // USD: só pode ter um ponto e nenhum vírgula como decimal
-    if ((cleanValue.match(/\./g) || []).length > 1) return false;
-    if (cleanValue.includes(',')) return false;
-    return /^[0-9]{1,3}(,[0-9]{3})*(\.[0-9]*)?$/.test(value);
+    // Permite qualquer número de dígitos antes do ponto e qualquer número depois
+    return /^(\d{1,})(\.\d{0,})?$/.test(value);
   }
 };
 
@@ -170,30 +159,29 @@ export const validateDecimalInput = (value: string, currency: string): boolean =
  * @param currency - The currency (USD/BRL)
  * @returns Normalized value
  */
+// Limita para apenas 2 casas decimais na hora de normalizar para cálculo/salvar
 export const normalizeDecimalInput = (value: string, currency: string): string => {
   if (!value) return "";
-
+  
   const isBRL = currency === 'BRL';
+  let normalized = value;
 
   if (isBRL) {
     // Remove milhares, troca vírgula por ponto e limita para 2 casas decimais
-    let normalized = value.replace(/\./g, '').replace(',', '.');
-    const parts = normalized.split('.');
-    if (parts.length === 2) {
-      parts[1] = parts[1].slice(0, 2); // Limita a 2 casas decimais
-      normalized = parts[0] + '.' + parts[1];
-    }
-    return normalized;
+    normalized = normalized.replace(/\./g, '').replace(',', '.');
   } else {
-    // USD: remove milhares e limita a 2 casas decimais
-    let normalized = value.replace(/,/g, '');
-    const parts = normalized.split('.');
-    if (parts.length === 2) {
-      parts[1] = parts[1].slice(0, 2); // Limita a 2 casas decimais
-      normalized = parts[0] + '.' + parts[1];
-    }
-    return normalized;
+    // Remove milhares 
+    normalized = normalized.replace(/,/g, '');
   }
+
+  // Limitar para 2 casas decimais
+  const parts = normalized.split('.');
+  if (parts.length === 2) {
+    parts[1] = parts[1].slice(0, 2);
+    normalized = parts[0] + '.' + parts[1];
+  }
+
+  return normalized;
 };
 
 /**

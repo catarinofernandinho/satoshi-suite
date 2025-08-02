@@ -282,7 +282,19 @@ export default function AddTransactionModal({
                     required 
                   />
                   <div className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
-                    {formData.market}
+                    
+                    <Select value={formData.market} onValueChange={value => setFormData(prev => ({
+                      ...prev,
+                      market: value
+                    }))}>
+                      <SelectTrigger className="border-0 bg-transparent w-16 h-auto p-0 focus:ring-0">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="USD">USD</SelectItem>
+                        <SelectItem value="BRL">BRL</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
               </div>
@@ -474,7 +486,20 @@ export default function AddTransactionModal({
                     required 
                   />
                   <div className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
-                    {formData.market}
+                    
+
+                    <Select value={formData.market} onValueChange={value => setFormData(prev => ({
+                      ...prev,
+                      market: value
+                    }))}>
+                      <SelectTrigger className="border-0 bg-transparent w-16 h-auto p-0 focus:ring-0">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="USD">USD</SelectItem>
+                        <SelectItem value="BRL">BRL</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
               </div>

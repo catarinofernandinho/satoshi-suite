@@ -43,6 +43,7 @@ export default function EditTransactionModal({
   const [transferType, setTransferType] = useState<"entrada" | "saida">("entrada");
   const { getPortfolioStats, transactions } = useTransactions();
   const { getCurrentTime, convertToUserTime, convertToUTC } = useTimezone();
+  const { exchangeRate } = useCurrency();
   
   // Use provided BTC balance  
   const availableBtc = propAvailableBtc || 0;
@@ -132,7 +133,6 @@ export default function EditTransactionModal({
   const useMarketPrice = () => {
     if (btcCurrentPrice) {
       // Convert price based on selected market currency
-      const { exchangeRate } = useCurrency();
       const convertedPrice = formData.market === 'BRL' ? btcCurrentPrice * exchangeRate : btcCurrentPrice;
       
       const updatedData = {

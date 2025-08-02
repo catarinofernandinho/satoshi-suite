@@ -291,12 +291,14 @@ export default function AddTransactionModal({
               <Label htmlFor="date" className="text-sm font-medium">Data e Hora:   </Label>
               <DatePicker
                 selected={convertToUserTime(formData.date)}
-                onChange={date => {
-                  const utcDate = convertToUTC(date);
-                  setFormData(prev => ({
-                    ...prev,
-                    date: utcDate.toISOString()
-                  }));
+                onChange={(date: Date | null) => {
+                  if (date) {
+                    const utcDate = convertToUTC(date);
+                    setFormData(prev => ({
+                      ...prev,
+                      date: utcDate.toISOString()
+                    }));
+                  }
                 }}
                 dateFormat="dd/MM/yyyy HH:mm"
                 showTimeSelect
@@ -481,12 +483,14 @@ export default function AddTransactionModal({
               <Label htmlFor="date" className="text-sm font-medium">Data e Hora:   </Label>
               <DatePicker
                 selected={convertToUserTime(formData.date)}
-                onChange={date => {
-                  const utcDate = convertToUTC(date);
-                  setFormData(prev => ({
-                    ...prev,
-                    date: utcDate.toISOString()
-                  }));
+                onChange={(date: Date | null) => {
+                  if (date) {
+                    const utcDate = convertToUTC(date);
+                    setFormData(prev => ({
+                      ...prev,
+                      date: utcDate.toISOString()
+                    }));
+                  }
                 }}
                 dateFormat="dd/MM/yyyy HH:mm"
                 showTimeSelect
@@ -586,12 +590,14 @@ export default function AddTransactionModal({
               <Label htmlFor="date" className="text-sm font-medium">Data e Hora:   </Label>
               <DatePicker
                 selected={convertToUserTime(formData.date)}
-                onChange={date => {
-                  const utcDate = convertToUTC(date);
-                  setFormData(prev => ({
-                    ...prev,
-                    date: utcDate.toISOString()
-                  }));
+                onChange={(date: Date | null) => {
+                  if (date) {
+                    const utcDate = convertToUTC(date);
+                    setFormData(prev => ({
+                      ...prev,
+                      date: utcDate.toISOString()
+                    }));
+                  }
                 }}
                 dateFormat="dd/MM/yyyy HH:mm"
                 showTimeSelect

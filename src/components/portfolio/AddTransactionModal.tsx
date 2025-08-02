@@ -15,6 +15,7 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import "@/styles/datepicker-dark.css";
 import { calculateInterlinkedValues, formatFiatValue, validateDecimalInput, normalizeDecimalInput, getInputPlaceholder } from "@/utils/numberUtils";
+import { useCurrency } from "@/contexts/CurrencyContext";
 interface AddTransactionModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -104,10 +105,14 @@ export default function AddTransactionModal({
 
   const useMarketPrice = () => {
     if (btcCurrentPrice) {
+      // Convert price based on selected market currency
+      const { exchangeRate } = useCurrency();
+      const convertedPrice = formData.market === 'BRL' ? btcCurrentPrice * exchangeRate : btcCurrentPrice;
+      
       const updatedData = {
         ...formData,
-        pricePerCoin: btcCurrentPrice.toString(),
-        price: btcCurrentPrice.toString()
+        pricePerCoin: convertedPrice.toString(),
+        price: convertedPrice.toString()
       };
       
       // Auto-calculate total spent if quantity is filled
@@ -116,7 +121,7 @@ export default function AddTransactionModal({
         if (quantityUnit === "SATS") {
           quantityInBtc = quantityInBtc / 100000000;
         }
-        updatedData.totalSpent = (quantityInBtc * btcCurrentPrice).toString();
+        updatedData.totalSpent = (quantityInBtc * convertedPrice).toString();
       }
       
       setFormData(updatedData);

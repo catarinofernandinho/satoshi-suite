@@ -258,7 +258,7 @@ export default function EditTransactionModal({
                         setFormData(prev => ({ ...prev, totalSpent: value }));
                         const normalizedValue = normalizeDecimalInput(value, formData.market);
                         if (normalizedValue && !isNaN(parseFloat(normalizedValue))) {
-                          handleFieldChange('totalSpent', normalizedValue);
+                          handleFieldChange('totalSpent', value);
                         }
                       }
                     }}
@@ -289,7 +289,7 @@ export default function EditTransactionModal({
                         setFormData(prev => ({ ...prev, pricePerCoin: value }));
                         const normalizedValue = normalizeDecimalInput(value, formData.market);
                         if (normalizedValue && !isNaN(parseFloat(normalizedValue))) {
-                          handleFieldChange('pricePerCoin', normalizedValue);
+                          handleFieldChange('pricePerCoin', value);
                         }
                       }
                     }}
@@ -430,7 +430,7 @@ export default function EditTransactionModal({
                         setFormData(prev => ({ ...prev, totalSpent: value }));
                         const normalizedValue = normalizeDecimalInput(value, formData.market);
                         if (normalizedValue && !isNaN(parseFloat(normalizedValue))) {
-                          handleFieldChange('totalSpent', normalizedValue);
+                          handleFieldChange('totalSpent', value);
                         }
                       }
                     }}
@@ -461,7 +461,7 @@ export default function EditTransactionModal({
                         setFormData(prev => ({ ...prev, pricePerCoin: value }));
                         const normalizedValue = normalizeDecimalInput(value, formData.market);
                         if (normalizedValue && !isNaN(parseFloat(normalizedValue))) {
-                          handleFieldChange('pricePerCoin', normalizedValue);
+                          handleFieldChange('pricePerCoin', value);
                         }
                       }
                     }}

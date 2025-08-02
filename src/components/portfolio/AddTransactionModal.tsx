@@ -139,7 +139,9 @@ export default function AddTransactionModal({
       let transactionData: any = {
         type: activeTab,
         price: parseFloat(formData.price || formData.pricePerCoin) || 0,
-        quantity: parseFloat(formData.quantity),
+        quantity: quantityUnit === "SATS"
+        ? parseFloat(formData.quantity) / 100000000
+        : parseFloat(formData.quantity),
         market: formData.market,
         fees: formData.fees ? parseFloat(formData.fees) : 0,
         notes: formData.notes,

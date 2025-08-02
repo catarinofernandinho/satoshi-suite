@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Edit, Trash2, ChevronLeft, ChevronRight, ArrowUpDown } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Transaction } from "@/hooks/useTransactions";
@@ -27,14 +28,13 @@ export default function TransactionTableEnhanced({
   onDeleteTransaction
 }: TransactionTableEnhancedProps) {
   const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(20);
   const [sortField, setSortField] = useState<string | null>("date");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [transactionToDelete, setTransactionToDelete] = useState<string | null>(null);
   const { requireAuth } = useAuthIntercept();
   const { formatCurrency: formatCurrencyWithConversion, exchangeRate } = useCurrency();
-  
-  const itemsPerPage = 50;
 
   // Convert amount from transaction's original currency to user's preferred currency
   const convertToUserCurrency = (amount: number, transactionMarket: string) => {
@@ -176,6 +176,11 @@ export default function TransactionTableEnhanced({
       setDeleteDialogOpen(false);
       setTransactionToDelete(null);
     }
+  };
+
+  const handleItemsPerPageChange = (value: string) => {
+    setItemsPerPage(Number(value));
+    setCurrentPage(1); // Reset to first page when changing items per page
   };
 
   return (
@@ -328,18 +333,38 @@ export default function TransactionTableEnhanced({
         </Table>
       </div>
 
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between p-4 border-t border-border">
-          <div className="text-sm text-muted-foreground">
-            Pág {currentPage} de {totalPages}
-          </div>
+      {/* Pagination and Items Per Page Selector */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 border-t border-border">
+        <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">Itens por página:</span>
+            <Select value={itemsPerPage.toString()} onValueChange={handleItemsPerPageChange}>
+              <SelectTrigger className="w-20">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="20">20</SelectItem>
+                <SelectItem value="30">30</SelectItem>
+                <SelectItem value="50">50</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="text-sm text-muted-foreground">
+            Mostrando {startIndex + 1}-{Math.min(startIndex + itemsPerPage, sortedTransactions.length)} de {sortedTransactions.length} transações
+          </div>
+        </div>
+        
+        {totalPages > 1 && (
+          <div className="flex items-center gap-2">
+            <div className="text-sm text-muted-foreground">
+              Página {currentPage} de {totalPages}
+            </div>
             <Button
               variant="outline"
               size="sm"
               onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
               disabled={currentPage === 1}
+              className="gap-1"
             >
               <ChevronLeft className="h-4 w-4" />
               Anterior
@@ -349,13 +374,14 @@ export default function TransactionTableEnhanced({
               size="sm"
               onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
               disabled={currentPage === totalPages}
+              className="gap-1"
             >
               Próxima
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

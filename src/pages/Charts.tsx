@@ -7,7 +7,7 @@ import BitcoinPriceChart from "@/components/charts/BitcoinPriceChart";
 import TradingViewChart from "@/components/charts/TradingViewChart";
 import CurrencyConverter from "@/components/conversor/CurrencyConverter";
 import { TrendingUp, Activity, BarChart3, Calculator, PieChart, LineChart } from "lucide-react";
-import MiniPanelsCounterflow from "@/components/charts/MiniPanelsCounterflow";
+
 import CounterflowIframePanel from "@/components/charts/CounterflowIframePanel";
 
 export default function Charts() {
@@ -21,7 +21,7 @@ export default function Charts() {
       {/* Tabs for different chart sections */}
       
       <Tabs defaultValue="price" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3 gap-2 gap-y-4 lg:grid-cols-6 mb-9">
+        <TabsList className="grid w-full grid-cols-2 gap-1 gap-y-2 sm:grid-cols-3 sm:gap-2 sm:gap-y-3 lg:grid-cols-6 lg:gap-2 lg:gap-y-4 mb-6 sm:mb-8 lg:mb-9 p-1 sm:p-1">
           <TabsTrigger value="price" className="flex items-center gap-2">
             <TrendingUp className="h-4 w-4" /> Preço
           </TabsTrigger>

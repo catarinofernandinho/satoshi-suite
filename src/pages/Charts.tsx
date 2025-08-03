@@ -8,7 +8,7 @@ import BitcoinPriceChart from "@/components/charts/BitcoinPriceChart";
 import TradingViewChart from "@/components/charts/TradingViewChart";
 import CurrencyConverter from "@/components/conversor/CurrencyConverter";
 import { BarChart3, TrendingUp, Calculator, Activity } from "lucide-react";
-import BitcoinCounterflowDashboard from "@/components/charts/BitcoinCounterflowDashboard";
+import MiniPanelsCounterflow from "@/components/charts/MiniPanelsCounterflow";
 
 
 export default function Charts() {
@@ -39,7 +39,7 @@ export default function Charts() {
         {/* Price Chart Tab */}
         <TabsContent value="price" className="space-y-6">
           <BitcoinPriceChart />
-          <BitcoinCounterflowDashboard />
+          <MiniPanelsCounterflow />
         </TabsContent>
 
         {/* Sentiment Analysis Tab */}

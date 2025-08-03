@@ -8,7 +8,7 @@ import TradingViewChart from "@/components/charts/TradingViewChart";
 import CurrencyConverter from "@/components/conversor/CurrencyConverter";
 import { BarChart3, TrendingUp, Calculator, Activity } from "lucide-react";
 import MiniPanelsCounterflow from "@/components/charts/MiniPanelsCounterflow";
-
+import CounterflowIframePanel from "@/components/charts/CounterflowIframePanel";
 
 export default function Charts() {
   return <div className="container mx-auto p-6 space-y-6">
@@ -19,19 +19,26 @@ export default function Charts() {
       </div>
 
       {/* Tabs for different chart sections */}
+      
       <Tabs defaultValue="price" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="price" className="flex items-center gap-2">
-            <TrendingUp className="h-4 w-4" />
-            Preço
+            <TrendingUp className="h-4 w-4" /> Preço
           </TabsTrigger>
           <TabsTrigger value="sentiment" className="flex items-center gap-2">
-            <Activity className="h-4 w-4" />
-            Sentimento
+            <Activity className="h-4 w-4" /> Sentimento
           </TabsTrigger>
           <TabsTrigger value="advanced" className="flex items-center gap-2">
-            <BarChart3 className="h-4 w-4" />
-            Análise Avançada
+            <BarChart3 className="h-4 w-4" /> Análise Avançada
+          </TabsTrigger>
+          <TabsTrigger value="dca" className="flex items-center gap-2">
+            <Calculator className="h-4 w-4" /> Calculadora DCA
+          </TabsTrigger>
+          <TabsTrigger value="retirement" className="flex items-center gap-2">
+            <PieChart className="h-4 w-4" /> Aposentadoria
+          </TabsTrigger>
+          <TabsTrigger value="etf" className="flex items-center gap-2">
+            <LineChart className="h-4 w-4" /> Rastreador ETF
           </TabsTrigger>
         </TabsList>
 
@@ -51,8 +58,35 @@ export default function Charts() {
 
         {/* Advanced Tab */}
         <TabsContent value="advanced" className="space-y-6">
-          <MiniPanelsCounterflow />
-        </TabsContent>
+  <CounterflowIframePanel
+    url="https://bitcoincounterflow.com/pt/satsails-2/mini-paineis-iframe/"
+    title="Mini Painéis Bitcoin Counterflow"
+    height={4500}
+  />
+</TabsContent>
+
+<TabsContent value="dca" className="space-y-6">
+  <CounterflowIframePanel
+    url="https://bitcoincounterflow.com/pt/satsails-2/calculadora-dca-iframe/"
+    title="Calculadora DCA Bitcoin Counterflow"
+    height={800}
+  />
+</TabsContent>
+<TabsContent value="retirement" className="space-y-6">
+  <CounterflowIframePanel
+    url="https://bitcoincounterflow.com/pt/satsails-2/calculadora-de-aposentadoria-bitcoin-iframe/"
+    title="Calculadora de aposentadoria Bitcoin Counterflow"
+    height={900}
+  />
+</TabsContent>
+<TabsContent value="etf" className="space-y-6">
+  <CounterflowIframePanel
+    url="https://bitcoincounterflow.com/pt/satsails-2/etf-tracker-btc-iframe"
+    title="Rastreador ETF Bitcoin Counterflow"
+    height={900}
+  />
+</TabsContent>
+
       </Tabs>
     </div>;
 }

@@ -56,7 +56,7 @@ export default function AddFutureModal({
       target_price: formData.target_price ? parseFloat(formData.target_price) : undefined,
       quantity_usd: parseFloat(formData.quantity_usd),
       buy_date: convertToUTC(formData.buy_date).toISOString(),
-      status: formData.status as "OPEN" | "CLOSED" | "STOP" | "CANCELLED"
+      status: formData.status as "OPEN" | "CLOSED"
     };
 
     if (formData.status === "CLOSED") {
@@ -75,7 +75,7 @@ export default function AddFutureModal({
       target_price: formData.target_price ? parseFloat(formData.target_price) : undefined,
       quantity_usd: parseFloat(formData.quantity_usd),
       buy_date: convertToUTC(formData.buy_date).toISOString(),
-      status: formData.status as "OPEN" | "CLOSED" | "STOP" | "CANCELLED"
+      status: formData.status as "OPEN" | "CLOSED"
     } as Omit<Future, 'id' | 'created_at' | 'updated_at'>);
     setFormData({
       direction: "",
@@ -180,8 +180,6 @@ return <Dialog open={modalOpen} onOpenChange={setModalOpen}>
       <SelectContent>
         <SelectItem value="OPEN">Aberto</SelectItem>
         <SelectItem value="CLOSED">Fechado</SelectItem>
-        <SelectItem value="STOP">Stop</SelectItem>
-        <SelectItem value="CANCELLED">Cancelado</SelectItem>
       </SelectContent>
     </Select>
   </div>

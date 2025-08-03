@@ -70,7 +70,7 @@ export default function Charts() {
           <Suspense fallback={<Skeleton className="h-96 w-full" />}>
             <CounterflowIframePanel
               url="https://bitcoincounterflow.com/pt/satsails-2/mini-paineis-iframe/"
-              title="Mini Painéis Bitcoin Counterflow"
+              title="Análise Avançada - Bitcoin Counterflow"
               height={4500}
             />
           </Suspense>
@@ -80,7 +80,7 @@ export default function Charts() {
           <Suspense fallback={<Skeleton className="h-96 w-full" />}>
             <CounterflowIframePanel
               url="https://bitcoincounterflow.com/pt/satsails-2/calculadora-dca-iframe/"
-              title="Calculadora DCA Bitcoin Counterflow"
+              title="Calculadora DCA - Bitcoin Counterflow"
               height={2500}
             />
           </Suspense>
@@ -90,8 +90,8 @@ export default function Charts() {
           <Suspense fallback={<Skeleton className="h-96 w-full" />}>
             <CounterflowIframePanel
               url="https://bitcoincounterflow.com/pt/satsails-2/calculadora-de-aposentadoria-bitcoin-iframe/"
-              title="Calculadora de aposentadoria Bitcoin Counterflow"
-              height={3750}
+              title="Calculadora de aposentadoria - Bitcoin Counterflow"
+              height={3900}
             />
           </Suspense>
         </TabsContent>
@@ -100,7 +100,7 @@ export default function Charts() {
           <Suspense fallback={<Skeleton className="h-96 w-full" />}>
             <CounterflowIframePanel
               url="https://bitcoincounterflow.com/pt/satsails-2/etf-tracker-btc-iframe"
-              title="Rastreador ETF Bitcoin Counterflow"
+              title="Rastreador ETF - Bitcoin Counterflow"
               height={4800}
             />
           </Suspense>

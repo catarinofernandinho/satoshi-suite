@@ -76,7 +76,7 @@ export default function Charts() {
   <CounterflowIframePanel
     url="https://bitcoincounterflow.com/pt/satsails-2/calculadora-de-aposentadoria-bitcoin-iframe/"
     title="Calculadora de aposentadoria Bitcoin Counterflow"
-    height={3250}
+    height={3750}
   />
 </TabsContent>
 <TabsContent value="etf" className="space-y-6">

@@ -90,7 +90,7 @@ export default function Charts() {
           <Suspense fallback={<Skeleton className="h-96 w-full" />}>
             <CounterflowIframePanel
               url="https://bitcoincounterflow.com/pt/satsails-2/calculadora-de-aposentadoria-bitcoin-iframe/"
-              title="Calculadora de aposentadoria - Bitcoin Counterflow"
+              title="Calculadora de Aposentadoria - Bitcoin Counterflow"
               height={3900}
             />
           </Suspense>

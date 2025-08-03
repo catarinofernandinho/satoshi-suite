@@ -11,7 +11,6 @@ import { useTimezone } from "@/contexts/TimezoneContext";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import "@/styles/datepicker-dark.css";
-
 interface AddFutureModalProps {
   isOpen?: boolean;
   onClose?: () => void;
@@ -31,8 +30,11 @@ export default function AddFutureModal({
   const {
     addFuture
   } = useFutures();
-  const { getCurrentTime, convertToUserTime, convertToUTC } = useTimezone();
-
+  const {
+    getCurrentTime,
+    convertToUserTime,
+    convertToUTC
+  } = useTimezone();
   const [formData, setFormData] = useState({
     direction: "",
     entry_price: "",
@@ -101,33 +103,33 @@ export default function AddFutureModal({
         <div className="space-y-2">
           <Label htmlFor="entry_price">Preço de Entrada (USD)</Label>
           <Input id="entry_price" type="number" step="0.01" placeholder="95000.00" value={formData.entry_price} onChange={e => setFormData({
-            ...formData,
-            entry_price: e.target.value
-          })} required />
+              ...formData,
+              entry_price: e.target.value
+            })} required />
         </div>
 
         <div className="space-y-2">
           <Label htmlFor="target_price">Preço Alvo (USD)</Label>
           <Input id="target_price" type="number" step="0.01" placeholder="100000.00" value={formData.target_price} onChange={e => setFormData({
-            ...formData,
-            target_price: e.target.value
-          })} />
+              ...formData,
+              target_price: e.target.value
+            })} />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="quantity_usd">Quantidade (USD)</Label>
+          <Label htmlFor="quantity_usd">Quantity (USD)</Label>
           <Input id="quantity_usd" type="number" step="0.01" placeholder="1000.00" value={formData.quantity_usd} onChange={e => setFormData({
-            ...formData,
-            quantity_usd: e.target.value
-          })} required />
+              ...formData,
+              quantity_usd: e.target.value
+            })} required />
         </div>
 
         <div className="space-y-2">
           <Label htmlFor="leverage">Alavancagem</Label>
           <Select value={formData.leverage} onValueChange={value => setFormData({
-            ...formData,
-            leverage: value
-          })} required>
+              ...formData,
+              leverage: value
+            })} required>
           <SelectTrigger>
             <SelectValue placeholder="Selecionar alavancagem" />
           </SelectTrigger>
@@ -147,9 +149,9 @@ export default function AddFutureModal({
       <div className="space-y-2">
         <Label htmlFor="status">Status</Label>
         <Select value={formData.status} onValueChange={value => setFormData({
-          ...formData,
-          status: value
-        })} required>
+              ...formData,
+              status: value
+            })} required>
         <SelectTrigger>
           <SelectValue placeholder="Selecionar status" />
         </SelectTrigger>
@@ -164,25 +166,15 @@ export default function AddFutureModal({
 
     <div className="flex items-center gap-2">
       <Label htmlFor="buy_date" className="mb-0">Data/Hora de Abertura: </Label>
-      <DatePicker
-        selected={convertToUserTime(formData.buy_date)}
-        onChange={(date: Date | null) => {
-          if (date) {
-            const utcDate = convertToUTC(date);
-            setFormData(prev => ({
-              ...prev,
-        buy_date: utcDate 
-      }));
-          }
-        }}
-        dateFormat="dd/MM/yyyy HH:mm"
-        showTimeSelect
-        timeFormat="HH:mm"
-        timeIntervals={5}
-        className="h-12 w-full px-3 py-2 rounded-md border border-input bg-background text-foreground placeholder:text-muted-foreground"
-        placeholderText="DD/MM/AAAA HH:mm"
-        locale="pt-BR"
-      />
+      <DatePicker selected={convertToUserTime(formData.buy_date)} onChange={(date: Date | null) => {
+              if (date) {
+                const utcDate = convertToUTC(date);
+                setFormData(prev => ({
+                  ...prev,
+                  buy_date: utcDate
+                }));
+              }
+            }} dateFormat="dd/MM/yyyy HH:mm" showTimeSelect timeFormat="HH:mm" timeIntervals={5} className="h-12 w-full px-3 py-2 rounded-md border border-input bg-background text-foreground placeholder:text-muted-foreground" placeholderText="DD/MM/AAAA HH:mm" locale="pt-BR" />
     </div>
   </div>
 
@@ -194,7 +186,7 @@ export default function AddFutureModal({
       {loading ? "Salvando..." : "Salvar Ordem"}
     </Button>
   </div>
-</form>
-</DialogContent>
-</Dialog>;
+      </form>
+    </DialogContent>
+  </Dialog>;
 }

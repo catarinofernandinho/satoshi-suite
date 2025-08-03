@@ -80,22 +80,22 @@ export default function AddTransactionModal({
   };
   
   const handleFieldChange = (changedField: 'totalSpent' | 'quantity' | 'pricePerCoin', newValue: string) => {
-  const calculatedValues = calculateInterlinkedValues(
-    changedField,
-    changedField === 'totalSpent' ? newValue : formData.totalSpent,
-    changedField === 'quantity' ? newValue : formData.quantity,
-    changedField === 'pricePerCoin' ? newValue : formData.pricePerCoin,
-    quantityUnit
-  );
+    const calculatedValues = calculateInterlinkedValues(
+      changedField,
+      changedField === 'totalSpent' ? newValue : formData.totalSpent,
+      changedField === 'quantity' ? newValue : formData.quantity,
+      changedField === 'pricePerCoin' ? newValue : formData.pricePerCoin,
+      quantityUnit
+      );
     
-      setFormData(prev => ({
-    ...prev,
-    quantity: changedField === 'quantity' ? newValue : calculatedValues.quantity,
-    pricePerCoin: changedField === 'pricePerCoin' ? newValue : calculatedValues.pricePerCoin,
-    totalSpent: changedField === 'totalSpent' ? newValue : calculatedValues.totalSpent,
-    price: calculatedValues.pricePerCoin
-  }));
-};
+    setFormData(prev => ({
+      ...prev,
+      quantity: changedField === 'quantity' ? newValue : calculatedValues.quantity,
+      pricePerCoin: changedField === 'pricePerCoin' ? newValue : calculatedValues.pricePerCoin,
+      totalSpent: changedField === 'totalSpent' ? newValue : calculatedValues.totalSpent,
+      price: calculatedValues.pricePerCoin
+    }));
+  };
 
   const setMaxQuantity = () => {
     setFormData(prev => ({
@@ -171,523 +171,536 @@ export default function AddTransactionModal({
     }
   };
   return <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[600px] bg-card border-border max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="text-foreground">Adicionar Transação</DialogTitle>
-        </DialogHeader>
+    <DialogContent className="sm:max-w-[600px] bg-card border-border max-h-[90vh] overflow-y-auto">
+      <DialogHeader>
+        <DialogTitle className="text-foreground">Adicionar Transação</DialogTitle>
+      </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <Tabs value={activeTab} onValueChange={value => setActiveTab(value as typeof activeTab)}>
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="Comprar">Comprar</TabsTrigger>
-              <TabsTrigger value="Vender">Vender</TabsTrigger>
-              <TabsTrigger value="Transferência">Transferência</TabsTrigger>
-            </TabsList>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <Tabs value={activeTab} onValueChange={value => setActiveTab(value as typeof activeTab)}>
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="Comprar">Comprar</TabsTrigger>
+            <TabsTrigger value="Vender">Vender</TabsTrigger>
+            <TabsTrigger value="Transferência">Transferência</TabsTrigger>
+          </TabsList>
 
             {/* Comprar Tab */}
-            <TabsContent value="Comprar" className="space-y-5 mt-6">
-              <div className="space-y-2">
-                <Label htmlFor="totalSpent" className="text-sm font-medium">Total Gasto</Label>
-                <div className="relative">
-                  <Input 
-                    id="totalSpent" 
-                    type="text"
-                    placeholder={getInputPlaceholder("fiat", formData.market)} 
-                    value={formData.totalSpent} 
-                    onChange={e => {
-                      const value = e.target.value;
-                      if (validateDecimalInput(value, formData.market)) {
-                        setFormData(prev => ({ ...prev, totalSpent: value }));
-                        const normalizedValue = normalizeDecimalInput(value, formData.market);
-                        if (normalizedValue && !isNaN(parseFloat(normalizedValue))) {
-                          handleFieldChange('totalSpent', value);
-                        }
+          <TabsContent value="Comprar" className="space-y-5 mt-6">
+            <div className="space-y-2">
+              <Label htmlFor="totalSpent" className="text-sm font-medium">Total Gasto</Label>
+              <div className="relative">
+                <Input 
+                  id="totalSpent" 
+                  type="text"
+                  placeholder={getInputPlaceholder("fiat", formData.market)} 
+                  value={formData.totalSpent} 
+                  onChange={e => {
+                    const value = e.target.value;
+                    if (validateDecimalInput(value, formData.market)) {
+                      setFormData(prev => ({ ...prev, totalSpent: value }));
+                      const normalizedValue = normalizeDecimalInput(value, formData.market);
+                      if (normalizedValue && !isNaN(parseFloat(normalizedValue))) {
+                        handleFieldChange('totalSpent', value);
                       }
-                    }}
-                    className="pr-16 h-12"
-                    required 
-                  />
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                    <Select value={formData.market} onValueChange={value => setFormData(prev => ({
-                      ...prev,
-                      market: value
-                    }))}>
-                      <SelectTrigger className="border-0 bg-transparent w-16 h-auto p-0 focus:ring-0">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="USD">USD</SelectItem>
-                        <SelectItem value="BRL">BRL</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="quantity" className="text-sm font-medium">Quantidade</Label>
-                <div className="relative">
-                  <Input 
-                    id="quantity" 
-                    type="number" 
-                    step={quantityUnit === "BTC" ? "0.00000001" : "1"}
-                    placeholder={quantityUnit === "BTC" ? "0.00000000" : "0"} 
-                    value={formData.quantity} 
-                    onChange={e => {
-                      const value = e.target.value;
-                      setFormData(prev => ({ ...prev, quantity: value }));
-                      if (value) {
-                        handleFieldChange('quantity', value);
-                      }
-                    }}
-                    className="pr-20 h-12"
-                    required 
-                  />
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                    <Select value={quantityUnit} onValueChange={(value: "BTC" | "SATS") => setQuantityUnit(value)}>
-                      <SelectTrigger className="border-0 bg-transparent w-16 h-auto p-0 focus:ring-0">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="BTC">BTC</SelectItem>
-                        <SelectItem value="SATS">SATS</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="pricePerCoin" className="text-sm font-medium">
-                  Preço por Moeda
-                  <span 
-                    className="text-xs text-primary ml-2 cursor-pointer hover:underline"
-                    onClick={useMarketPrice}
-                  >
-                    Utilizar o mercado
-                  </span>
-                </Label>
-                <div className="relative">
-                  <Input 
-                    id="pricePerCoin" 
-                    type="text"
-                    placeholder={getInputPlaceholder("fiat", formData.market)} 
-                    value={formData.pricePerCoin} 
-                    onChange={e => {
-                      const value = e.target.value;
-                      if (validateDecimalInput(value, formData.market)) {
-                        setFormData(prev => ({ ...prev, pricePerCoin: value }));
-                        const normalizedValue = normalizeDecimalInput(value, formData.market);
-                        if (normalizedValue && !isNaN(parseFloat(normalizedValue))) {
-                          handleFieldChange('pricePerCoin', value);
-                        }
-                      }
-                    }}
-                    className="pr-16 h-12"
-                    required 
-                  />
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
-                    
-                    <Select value={formData.market} onValueChange={value => setFormData(prev => ({
-                      ...prev,
-                      market: value
-                    }))}>
-                      <SelectTrigger className="border-0 bg-transparent w-16 h-auto p-0 focus:ring-0">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="USD">USD</SelectItem>
-                        <SelectItem value="BRL">BRL</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-              <Label htmlFor="date" className="text-sm font-medium">Data e Hora:   </Label>
-              <DatePicker
-                selected={convertToUserTime(formData.date)}
-                onChange={(date: Date | null) => {
-                  if (date) {
-                    const utcDate = convertToUTC(date);
-                    setFormData(prev => ({
-                      ...prev,
-                      date: utcDate.toISOString()
-                    }));
-                  }
-                }}
-                dateFormat="dd/MM/yyyy HH:mm"
-                showTimeSelect
-                timeFormat="HH:mm"
-                timeIntervals={5}
-                className="h-12 w-full px-3 py-2 rounded-md border border-input bg-background text-foreground placeholder:text-muted-foreground"
-                placeholderText="DD/MM/AAAA HH:mm"
-                locale="pt-BR"
-              />
-            </div>
-
-              {/* Advanced Options */}
-              <Collapsible open={isAdvancedOpen} onOpenChange={setIsAdvancedOpen}>
-                <CollapsibleTrigger className="flex items-center gap-2 w-full justify-between text-sm font-medium py-3 border-t border-border">
-                  <span>Taxas e observações (Opcional)</span>
-                  <ChevronDown className={`h-4 w-4 transition-transform ${isAdvancedOpen ? 'rotate-180' : ''}`} />
-                </CollapsibleTrigger>
-                <CollapsibleContent className="space-y-4 pt-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="fees" className="text-sm font-medium">Taxas</Label>
-                    <div className="relative">
-                      <Input 
-                        id="fees" 
-                        type="number" 
-                        step="0.01" 
-                        placeholder="0.00" 
-                        value={formData.fees} 
-                        onChange={e => setFormData(prev => ({
-                          ...prev,
-                          fees: e.target.value
-                        }))} 
-                        className="pr-16 h-12"
-                      />
-                      <div className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
-                        {formData.market}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="notes" className="text-sm font-medium">Observações</Label>
-                    <Textarea 
-                      id="notes" 
-                      placeholder="Adicione observações sobre esta transação..." 
-                      value={formData.notes} 
-                      onChange={e => setFormData(prev => ({
-                        ...prev,
-                        notes: e.target.value
-                      }))} 
-                      className="min-h-[80px] resize-none"
-                      rows={3} 
-                    />
-                  </div>
-                </CollapsibleContent>
-              </Collapsible>
-            </TabsContent>
-
-            {/* Vender Tab */}
-            <TabsContent value="Vender" className="space-y-5 mt-6">
-              <div className="bg-muted/50 p-3 rounded-lg mb-4">
-                <p className="text-sm text-muted-foreground">
-                  Saldo: <span className="font-medium text-foreground">{availableBtc.toFixed(8)} BTC</span>
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="totalReceived" className="text-sm font-medium">Total Recebido</Label>
-                <div className="relative">
-                  <Input 
-                    id="totalReceived" 
-                    type="text"
-                    placeholder={getInputPlaceholder("fiat", formData.market)} 
-                    value={formData.totalSpent} 
-                    onChange={e => {
-                      const value = e.target.value;
-                      if (validateDecimalInput(value, formData.market)) {
-                        setFormData(prev => ({ ...prev, totalSpent: value }));
-                        const normalizedValue = normalizeDecimalInput(value, formData.market);
-                        if (normalizedValue && !isNaN(parseFloat(normalizedValue))) {
-                          handleFieldChange('totalSpent', value);
-                        }
-                      }
-                    }}
-                    className="pr-16 h-12"
-                    required 
-                  />
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                    <Select value={formData.market} onValueChange={value => setFormData(prev => ({
-                      ...prev,
-                      market: value
-                    }))}>
-                      <SelectTrigger className="border-0 bg-transparent w-16 h-auto p-0 focus:ring-0">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="USD">USD</SelectItem>
-                        <SelectItem value="BRL">BRL</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="quantity" className="text-sm font-medium">Quantidade</Label>
-                <div className="relative">
-                  <Input 
-                    id="quantity" 
-                    type="number" 
-                    step={quantityUnit === "BTC" ? "0.00000001" : "1"}
-                    placeholder={quantityUnit === "BTC" ? "0.00000000" : "0"} 
-                    value={formData.quantity} 
-                    onChange={e => {
-                      const value = e.target.value;
-                      setFormData(prev => ({ ...prev, quantity: value }));
-                      if (value) {
-                        handleFieldChange('quantity', value);
-                      }
-                    }}
-                    className="pr-24 h-12"
-                    required 
-                  />
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      size="sm"
-                      onClick={setMaxQuantity} 
-                      className="h-7 px-2 text-xs font-medium bg-green-500/10 border-green-500/20 text-green-600 hover:bg-green-500/20"
-                    >
-                      MÁXIMO
-                    </Button>
-                    <Select value={quantityUnit} onValueChange={(value: "BTC" | "SATS") => setQuantityUnit(value)}>
-                      <SelectTrigger className="border-0 bg-transparent w-16 h-auto p-0 focus:ring-0">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="BTC">BTC</SelectItem>
-                        <SelectItem value="SATS">SATS</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="pricePerCoin" className="text-sm font-medium">
-                  Preço por Moeda
-                  <span 
-                    className="text-xs text-primary ml-2 cursor-pointer hover:underline"
-                    onClick={useMarketPrice}
-                  >
-                    Utilizar o mercado
-                  </span>
-                </Label>
-                <div className="relative">
-                  <Input 
-                    id="pricePerCoin" 
-                    type="text"
-                    placeholder={getInputPlaceholder("fiat", formData.market)} 
-                    value={formData.pricePerCoin} 
-                    onChange={e => {
-                      const value = e.target.value;
-                      if (validateDecimalInput(value, formData.market)) {
-                        setFormData(prev => ({ ...prev, pricePerCoin: value }));
-                        const normalizedValue = normalizeDecimalInput(value, formData.market);
-                        if (normalizedValue && !isNaN(parseFloat(normalizedValue))) {
-                          handleFieldChange('pricePerCoin', value);
-                        }
-                      }
-                    }}
-                    className="pr-16 h-12"
-                    required 
-                  />
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
-                    
-
-                    <Select value={formData.market} onValueChange={value => setFormData(prev => ({
-                      ...prev,
-                      market: value
-                    }))}>
-                      <SelectTrigger className="border-0 bg-transparent w-16 h-auto p-0 focus:ring-0">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="USD">USD</SelectItem>
-                        <SelectItem value="BRL">BRL</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-              <Label htmlFor="date" className="text-sm font-medium">Data e Hora:   </Label>
-              <DatePicker
-                selected={convertToUserTime(formData.date)}
-                onChange={(date: Date | null) => {
-                  if (date) {
-                    const utcDate = convertToUTC(date);
-                    setFormData(prev => ({
-                      ...prev,
-                      date: utcDate.toISOString()
-                    }));
-                  }
-                }}
-                dateFormat="dd/MM/yyyy HH:mm"
-                showTimeSelect
-                timeFormat="HH:mm"
-                timeIntervals={5}
-                className="h-12 w-full px-3 py-2 rounded-md border border-input bg-background text-foreground placeholder:text-muted-foreground"
-                placeholderText="DD/MM/AAAA HH:mm"
-                locale="pt-BR"
-              />
-            </div>
-
-              {/* Advanced Options */}
-              <Collapsible open={isAdvancedOpen} onOpenChange={setIsAdvancedOpen}>
-                <CollapsibleTrigger className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
-                  <ChevronDown className={`h-4 w-4 transition-transform ${isAdvancedOpen ? 'rotate-180' : ''}`} />
-                  Opções Avançadas
-                </CollapsibleTrigger>
-                <CollapsibleContent className="space-y-4 pt-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="fees">Taxas (opcional)</Label>
-                    <Input 
-                      id="fees" 
-                      type="number" 
-                      step="0.01" 
-                      placeholder="0.00" 
-                      value={formData.fees} 
-                      onChange={e => setFormData(prev => ({
-                        ...prev,
-                        fees: e.target.value
-                      }))} 
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="notes">Notas (opcional)</Label>
-                    <Textarea 
-                      id="notes" 
-                      placeholder="Adicione observações sobre esta transação..." 
-                      value={formData.notes} 
-                      onChange={e => setFormData(prev => ({
-                        ...prev,
-                        notes: e.target.value
-                      }))} 
-                      rows={3} 
-                    />
-                  </div>
-                </CollapsibleContent>
-              </Collapsible>
-            </TabsContent>
-
-            {/* Transferência Tab */}
-            <TabsContent value="Transferência" className="space-y-5 mt-6">
-              <div className="space-y-2">
-                <Label htmlFor="transferType" className="text-sm font-medium">Tipo de Transferência</Label>
-                <Select value={transferType} onValueChange={(value: "entrada" | "saida") => setTransferType(value)}>
-                  <SelectTrigger className="h-12">
+                    }
+                  }}
+                  className="pr-16 h-12"
+                  required 
+                />
+                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                  <Select value={formData.market} onValueChange={value => setFormData(prev => ({
+                    ...prev,
+                    market: value
+                  }))}>
+                  <SelectTrigger className="border-0 bg-transparent w-16 h-auto p-0 focus:ring-0">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="entrada">Transferência de Entrada</SelectItem>
-                    <SelectItem value="saida">Transferência de Saída</SelectItem>
+                    <SelectItem value="USD">USD</SelectItem>
+                    <SelectItem value="BRL">BRL</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+          </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="quantity" className="text-sm font-medium">Quantidade</Label>
-                <div className="relative">
-                  <Input 
-                    id="quantity" 
-                    type="number" 
-                    step={quantityUnit === "BTC" ? "0.00000001" : "1"}
-                    placeholder={quantityUnit === "BTC" ? "0.00000000" : "0"} 
-                    value={formData.quantity} 
-                    onChange={e => setFormData(prev => ({
-                      ...prev,
-                      quantity: e.target.value
-                    }))} 
-                    className="pr-20 h-12"
-                    required 
-                  />
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                    <Select value={quantityUnit} onValueChange={(value: "BTC" | "SATS") => setQuantityUnit(value)}>
-                      <SelectTrigger className="border-0 bg-transparent w-16 h-auto p-0 focus:ring-0">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="BTC">BTC</SelectItem>
-                        <SelectItem value="SATS">SATS</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-              <Label htmlFor="date" className="text-sm font-medium">Data e Hora:   </Label>
-              <DatePicker
-                selected={convertToUserTime(formData.date)}
-                onChange={(date: Date | null) => {
-                  if (date) {
-                    const utcDate = convertToUTC(date);
-                    setFormData(prev => ({
-                      ...prev,
-                      date: utcDate.toISOString()
-                    }));
+          <div className="space-y-2">
+            <Label htmlFor="quantity" className="text-sm font-medium">Quantidade</Label>
+            <div className="relative">
+              <Input 
+                id="quantity" 
+                type="number" 
+                step={quantityUnit === "BTC" ? "0.00000001" : "1"}
+                placeholder={quantityUnit === "BTC" ? "0.00000000" : "0"} 
+                value={formData.quantity} 
+                onChange={e => {
+                  const value = e.target.value;
+                  setFormData(prev => ({ ...prev, quantity: value }));
+                  if (value) {
+                    handleFieldChange('quantity', value);
                   }
                 }}
-                dateFormat="dd/MM/yyyy HH:mm"
-                showTimeSelect
-                timeFormat="HH:mm"
-                timeIntervals={5}
-                className="h-12 w-full px-3 py-2 rounded-md border border-input bg-background text-foreground placeholder:text-muted-foreground"
-                placeholderText="DD/MM/AAAA HH:mm"
-                locale="pt-BR"
+                className="pr-20 h-12"
+                required 
               />
+              <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                <Select value={quantityUnit} onValueChange={(value: "BTC" | "SATS") => setQuantityUnit(value)}>
+                  <SelectTrigger className="border-0 bg-transparent w-16 h-auto p-0 focus:ring-0">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="BTC">BTC</SelectItem>
+                    <SelectItem value="SATS">SATS</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="pricePerCoin" className="text-sm font-medium">
+              Preço por Moeda
+              <span 
+                className="text-xs text-primary ml-2 cursor-pointer hover:underline"
+                onClick={useMarketPrice}
+              >
+                Utilizar o mercado
+              </span>
+            </Label>
+            <div className="relative">
+              <Input 
+                id="pricePerCoin" 
+                type="text"
+                placeholder={getInputPlaceholder("fiat", formData.market)} 
+                value={formData.pricePerCoin} 
+                onChange={e => {
+                  const value = e.target.value;
+                  if (validateDecimalInput(value, formData.market)) {
+                    setFormData(prev => ({ ...prev, pricePerCoin: value }));
+                    const normalizedValue = normalizeDecimalInput(value, formData.market);
+                    if (normalizedValue && !isNaN(parseFloat(normalizedValue))) {
+                      handleFieldChange('pricePerCoin', value);
+                    }
+                  }
+                }}
+                className="pr-16 h-12"
+                required 
+              />
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
+                
+                <Select value={formData.market} onValueChange={value => setFormData(prev => ({
+                  ...prev,
+                  market: value
+                }))}>
+                <SelectTrigger className="border-0 bg-transparent w-16 h-auto p-0 focus:ring-0">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="USD">USD</SelectItem>
+                  <SelectItem value="BRL">BRL</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="date" className="text-sm font-medium">Data e Hora:   </Label>
+          <DatePicker
+            selected={convertToUserTime(formData.date)}
+            onChange={(date: Date | null) => {
+              if (date) {
+                const utcDate = convertToUTC(date);
+                setFormData(prev => ({
+                  ...prev,
+                  date: utcDate.toISOString()
+                }));
+              }
+            }}
+            dateFormat="dd/MM/yyyy HH:mm"
+            showTimeSelect
+            timeFormat="HH:mm"
+            timeIntervals={5}
+            className="h-12 w-full px-3 py-2 rounded-md border border-input bg-background text-foreground placeholder:text-muted-foreground"
+            placeholderText="DD/MM/AAAA HH:mm"
+            locale="pt-BR"
+          />
+        </div>
 
               {/* Advanced Options */}
-              <Collapsible open={isAdvancedOpen} onOpenChange={setIsAdvancedOpen}>
-                <CollapsibleTrigger className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
-                  <ChevronDown className={`h-4 w-4 transition-transform ${isAdvancedOpen ? 'rotate-180' : ''}`} />
-                  Opções Avançadas
-                </CollapsibleTrigger>
-                <CollapsibleContent className="space-y-4 pt-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="fees">Taxas (opcional)</Label>
-                    <Input 
-                      id="fees" 
-                      type="number" 
-                      step="0.01" 
-                      placeholder="0.00" 
-                      value={formData.fees} 
-                      onChange={e => setFormData(prev => ({
-                        ...prev,
-                        fees: e.target.value
-                      }))} 
-                    />
-                  </div>
+        <Collapsible open={isAdvancedOpen} onOpenChange={setIsAdvancedOpen}>
+          <CollapsibleTrigger className="flex items-center gap-2 w-full justify-between text-sm font-medium py-3 border-t border-border">
+            <span>Taxas e observações (Opcional)</span>
+            <ChevronDown className={`h-4 w-4 transition-transform ${isAdvancedOpen ? 'rotate-180' : ''}`} />
+          </CollapsibleTrigger>
+          <CollapsibleContent className="space-y-4 pt-4">
+            <div className="space-y-2">
+              <Label htmlFor="fees" className="text-sm font-medium">Taxas</Label>
+              <div className="relative">
+                <Input 
+                  id="fees" 
+                  type="number" 
+                  step="0.01" 
+                  placeholder="0.00" 
+                  value={formData.fees} 
+                  onChange={e => setFormData(prev => ({
+                    ...prev,
+                    fees: e.target.value
+                  }))} 
+                  className="pr-16 h-12"
+                />
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
+                  {formData.market}
+                </div>
+              </div>
+            </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="notes">Notas (opcional)</Label>
-                    <Textarea 
-                      id="notes" 
-                      placeholder="Adicione observações sobre esta transação..." 
-                      value={formData.notes} 
-                      onChange={e => setFormData(prev => ({
-                        ...prev,
-                        notes: e.target.value
-                      }))} 
-                      rows={3} 
-                    />
-                  </div>
-                </CollapsibleContent>
-              </Collapsible>
-            </TabsContent>
-          </Tabs>
+            <div className="space-y-2">
+              <Label htmlFor="notes" className="text-sm font-medium">Observações</Label>
+              <Textarea 
+                id="notes" 
+                placeholder="Adicione observações sobre esta transação..." 
+                value={formData.notes} 
+                onChange={e => setFormData(prev => ({
+                  ...prev,
+                  notes: e.target.value
+                }))} 
+                className="min-h-[80px] resize-none"
+                rows={3} 
+              />
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
+      </TabsContent>
 
-          <div className="flex gap-3 pt-4">
-            <Button type="button" variant="outline" onClick={handleClose} className="flex-1">
-              Cancelar
-            </Button>
-            <Button type="submit" variant="bitcoin" disabled={isLoading} className="flex-1">
-              {isLoading ? "Adicionando..." : "Adicionar Transação"}
-            </Button>
+            {/* Vender Tab */}
+      <TabsContent value="Vender" className="space-y-5 mt-6">
+        <div className="bg-muted/50 p-3 rounded-lg mb-4">
+          <p className="text-sm text-muted-foreground">
+            Saldo: <span className="font-medium text-foreground">{availableBtc.toFixed(8)} BTC</span>
+          </p>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="totalReceived" className="text-sm font-medium">Total Recebido</Label>
+          <div className="relative">
+            <Input 
+              id="totalReceived" 
+              type="text"
+              placeholder={getInputPlaceholder("fiat", formData.market)} 
+              value={formData.totalSpent} 
+              onChange={e => {
+                const value = e.target.value;
+                if (validateDecimalInput(value, formData.market)) {
+                  setFormData(prev => ({ ...prev, totalSpent: value }));
+                  const normalizedValue = normalizeDecimalInput(value, formData.market);
+                  if (normalizedValue && !isNaN(parseFloat(normalizedValue))) {
+                    handleFieldChange('totalSpent', value);
+                  }
+                }
+              }}
+              className="pr-16 h-12"
+              required 
+            />
+            <div className="absolute right-3 top-1/2 -translate-y-1/2">
+              <Select value={formData.market} onValueChange={value => setFormData(prev => ({
+                ...prev,
+                market: value
+              }))}>
+              <SelectTrigger className="border-0 bg-transparent w-16 h-auto p-0 focus:ring-0">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="USD">USD</SelectItem>
+                <SelectItem value="BRL">BRL</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-        </form>
-      </DialogContent>
-    </Dialog>;
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="quantity" className="text-sm font-medium">Quantidade</Label>
+        <div className="relative">
+          <Input 
+            id="quantity" 
+            type="number" 
+            step={quantityUnit === "BTC" ? "0.00000001" : "1"}
+            placeholder={quantityUnit === "BTC" ? "0.00000000" : "0"} 
+            value={formData.quantity} 
+            onChange={e => {
+              const value = e.target.value;
+              setFormData(prev => ({ ...prev, quantity: value }));
+              if (value) {
+                handleFieldChange('quantity', value);
+              }
+            }}
+            className="pr-24 h-12"
+            required 
+          />
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
+            <Button 
+              type="button" 
+              variant="outline" 
+              size="sm"
+              onClick={setMaxQuantity} 
+              className="h-7 px-2 text-xs font-medium bg-green-500/10 border-green-500/20 text-green-600 hover:bg-green-500/20"
+            >
+              MÁXIMO
+            </Button>
+            <Select value={quantityUnit} onValueChange={(value: "BTC" | "SATS") => setQuantityUnit(value)}>
+              <SelectTrigger className="border-0 bg-transparent w-16 h-auto p-0 focus:ring-0">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="BTC">BTC</SelectItem>
+                <SelectItem value="SATS">SATS</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="pricePerCoin" className="text-sm font-medium">
+          Preço por Moeda
+          <span 
+            className="text-xs text-primary ml-2 cursor-pointer hover:underline"
+            onClick={useMarketPrice}
+          >
+            Utilizar o mercado
+          </span>
+        </Label>
+        <div className="relative">
+          <Input 
+            id="pricePerCoin" 
+            type="text"
+            placeholder={getInputPlaceholder("fiat", formData.market)} 
+            value={formData.pricePerCoin} 
+            onChange={e => {
+              const value = e.target.value;
+              if (validateDecimalInput(value, formData.market)) {
+                setFormData(prev => ({ ...prev, pricePerCoin: value }));
+                const normalizedValue = normalizeDecimalInput(value, formData.market);
+                if (normalizedValue && !isNaN(parseFloat(normalizedValue))) {
+                  handleFieldChange('pricePerCoin', value);
+                }
+              }
+            }}
+            className="pr-16 h-12"
+            required 
+          />
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
+            
+
+            <Select value={formData.market} onValueChange={value => setFormData(prev => ({
+              ...prev,
+              market: value
+            }))}>
+            <SelectTrigger className="border-0 bg-transparent w-16 h-auto p-0 focus:ring-0">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="USD">USD</SelectItem>
+              <SelectItem value="BRL">BRL</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+    </div>
+
+    <div className="space-y-2">
+      <Label htmlFor="date" className="text-sm font-medium">Data e Hora:   </Label>
+      <DatePicker
+        selected={convertToUserTime(formData.date)}
+        onChange={(date: Date | null) => {
+          if (date) {
+            const utcDate = convertToUTC(date);
+            setFormData(prev => ({
+              ...prev,
+              date: utcDate.toISOString()
+            }));
+          }
+        }}
+        dateFormat="dd/MM/yyyy HH:mm"
+        showTimeSelect
+        timeFormat="HH:mm"
+        timeIntervals={5}
+        className="h-12 w-full px-3 py-2 rounded-md border border-input bg-background text-foreground placeholder:text-muted-foreground"
+        placeholderText="DD/MM/AAAA HH:mm"
+        locale="pt-BR"
+      />
+    </div>
+
+              {/* Advanced Options */}
+    <Collapsible open={isAdvancedOpen} onOpenChange={setIsAdvancedOpen}>
+      <CollapsibleTrigger className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
+        <ChevronDown className={`h-4 w-4 transition-transform ${isAdvancedOpen ? 'rotate-180' : ''}`} />
+        Opções Avançadas
+      </CollapsibleTrigger>
+      <CollapsibleContent className="space-y-4 pt-4">
+        <div className="space-y-2">
+          <Label htmlFor="fees">Taxas (opcional)</Label>
+          <Input 
+            id="fees" 
+            type="number" 
+            step="0.01" 
+            placeholder="0.00" 
+            value={formData.fees} 
+            onChange={e => setFormData(prev => ({
+              ...prev,
+              fees: e.target.value
+            }))} 
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="notes">Notas (opcional)</Label>
+          <Textarea 
+            id="notes" 
+            placeholder="Adicione observações sobre esta transação..." 
+            value={formData.notes} 
+            onChange={e => setFormData(prev => ({
+              ...prev,
+              notes: e.target.value
+            }))} 
+            rows={3} 
+          />
+        </div>
+      </CollapsibleContent>
+    </Collapsible>
+  </TabsContent>
+
+            {/* Transferência Tab */}
+  <TabsContent value="Transferência" className="space-y-5 mt-6">
+    <div className="space-y-2">
+      <Label htmlFor="transferType" className="text-sm font-medium">Tipo de Transferência</Label>
+      <Select value={transferType} onValueChange={(value: "entrada" | "saida") => setTransferType(value)}>
+        <SelectTrigger className="h-12">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="entrada">Transferência de Entrada</SelectItem>
+          <SelectItem value="saida">Transferência de Saída</SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
+
+    <div className="space-y-2">
+        <Label htmlFor="quantity" className="text-sm font-medium">Quantidade</Label>
+        <div className="relative">
+          <Input 
+            id="quantity" 
+            type="number" 
+            step={quantityUnit === "BTC" ? "0.00000001" : "1"}
+            placeholder={quantityUnit === "BTC" ? "0.00000000" : "0"} 
+            value={formData.quantity} 
+            onChange={e => {
+              const value = e.target.value;
+              setFormData(prev => ({ ...prev, quantity: value }));
+              if (value) {
+                handleFieldChange('quantity', value);
+              }
+            }}
+            className="pr-24 h-12"
+            required 
+          />
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
+            <Button 
+              type="button" 
+              variant="outline" 
+              size="sm"
+              onClick={setMaxQuantity} 
+              className="h-7 px-2 text-xs font-medium bg-green-500/10 border-green-500/20 text-green-600 hover:bg-green-500/20"
+            >
+              MÁXIMO
+            </Button>
+            <Select value={quantityUnit} onValueChange={(value: "BTC" | "SATS") => setQuantityUnit(value)}>
+              <SelectTrigger className="border-0 bg-transparent w-16 h-auto p-0 focus:ring-0">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="BTC">BTC</SelectItem>
+                <SelectItem value="SATS">SATS</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </div>
+
+
+    <div className="space-y-2">
+      <Label htmlFor="date" className="text-sm font-medium">Data e Hora:   </Label>
+      <DatePicker
+        selected={convertToUserTime(formData.date)}
+        onChange={(date: Date | null) => {
+          if (date) {
+            const utcDate = convertToUTC(date);
+            setFormData(prev => ({
+              ...prev,
+              date: utcDate.toISOString()
+            }));
+          }
+        }}
+        dateFormat="dd/MM/yyyy HH:mm"
+        showTimeSelect
+        timeFormat="HH:mm"
+        timeIntervals={5}
+        className="h-12 w-full px-3 py-2 rounded-md border border-input bg-background text-foreground placeholder:text-muted-foreground"
+        placeholderText="DD/MM/AAAA HH:mm"
+        locale="pt-BR"
+      />
+    </div>
+
+              {/* Advanced Options */}
+    <Collapsible open={isAdvancedOpen} onOpenChange={setIsAdvancedOpen}>
+      <CollapsibleTrigger className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
+        <ChevronDown className={`h-4 w-4 transition-transform ${isAdvancedOpen ? 'rotate-180' : ''}`} />
+        Opções Avançadas
+      </CollapsibleTrigger>
+      <CollapsibleContent className="space-y-4 pt-4">
+        <div className="space-y-2">
+          <Label htmlFor="fees">Taxas (opcional)</Label>
+          <Input 
+            id="fees" 
+            type="number" 
+            step="0.01" 
+            placeholder="0.00" 
+            value={formData.fees} 
+            onChange={e => setFormData(prev => ({
+              ...prev,
+              fees: e.target.value
+            }))} 
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="notes">Notas (opcional)</Label>
+          <Textarea 
+            id="notes" 
+            placeholder="Adicione observações sobre esta transação..." 
+            value={formData.notes} 
+            onChange={e => setFormData(prev => ({
+              ...prev,
+              notes: e.target.value
+            }))} 
+            rows={3} 
+          />
+        </div>
+      </CollapsibleContent>
+    </Collapsible>
+  </TabsContent>
+</Tabs>
+
+<div className="flex gap-3 pt-4">
+  <Button type="button" variant="outline" onClick={handleClose} className="flex-1">
+    Cancelar
+  </Button>
+  <Button type="submit" variant="bitcoin" disabled={isLoading} className="flex-1">
+    {isLoading ? "Adicionando..." : "Adicionar Transação"}
+  </Button>
+</div>
+</form>
+</DialogContent>
+</Dialog>;
 }

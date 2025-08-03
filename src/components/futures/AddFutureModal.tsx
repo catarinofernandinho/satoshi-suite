@@ -31,10 +31,8 @@ export default function AddFutureModal({
   const {
     addFuture
   } = useFutures();
-  const {
-    getCurrentTime,
-    convertToUTC
-  } = useTimezone();
+  const { getCurrentTime, convertToUserTime, convertToUTC } = useTimezone();
+  
   const [formData, setFormData] = useState({
     direction: "",
     entry_price: "",

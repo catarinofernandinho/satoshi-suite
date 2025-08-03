@@ -287,7 +287,7 @@ export default function AddTransactionModal({
                 required 
               />
               <div className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
-                
+
                 <Select value={formData.market} onValueChange={value => setFormData(prev => ({
                   ...prev,
                   market: value
@@ -491,7 +491,7 @@ export default function AddTransactionModal({
             required 
           />
           <div className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
-            
+
 
             <Select value={formData.market} onValueChange={value => setFormData(prev => ({
               ...prev,
@@ -573,6 +573,11 @@ export default function AddTransactionModal({
 
             {/* Transferência Tab */}
   <TabsContent value="Transferência" className="space-y-5 mt-6">
+    <div className="bg-muted/50 p-3 rounded-lg mb-4">
+      <p className="text-sm text-muted-foreground">
+        Saldo: <span className="font-medium text-foreground">{availableBtc.toFixed(8)} BTC</span>
+      </p>
+    </div>
     <div className="space-y-2">
       <Label htmlFor="transferType" className="text-sm font-medium">Tipo de Transferência</Label>
       <Select value={transferType} onValueChange={(value: "entrada" | "saida") => setTransferType(value)}>
@@ -587,46 +592,46 @@ export default function AddTransactionModal({
     </div>
 
     <div className="space-y-2">
-        <Label htmlFor="quantity" className="text-sm font-medium">Quantidade</Label>
-        <div className="relative">
-          <Input 
-            id="quantity" 
-            type="number" 
-            step={quantityUnit === "BTC" ? "0.00000001" : "1"}
-            placeholder={quantityUnit === "BTC" ? "0.00000000" : "0"} 
-            value={formData.quantity} 
-            onChange={e => {
-              const value = e.target.value;
-              setFormData(prev => ({ ...prev, quantity: value }));
-              if (value) {
-                handleFieldChange('quantity', value);
-              }
-            }}
-            className="pr-24 h-12"
-            required 
-          />
-          <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
-            <Button 
-              type="button" 
-              variant="outline" 
-              size="sm"
-              onClick={setMaxQuantity} 
-              className="h-7 px-2 text-xs font-medium bg-green-500/10 border-green-500/20 text-green-600 hover:bg-green-500/20"
-            >
-              MÁXIMO
-            </Button>
-            <Select value={quantityUnit} onValueChange={(value: "BTC" | "SATS") => setQuantityUnit(value)}>
-              <SelectTrigger className="border-0 bg-transparent w-16 h-auto p-0 focus:ring-0">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="BTC">BTC</SelectItem>
-                <SelectItem value="SATS">SATS</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+      <Label htmlFor="quantity" className="text-sm font-medium">Quantidade</Label>
+      <div className="relative">
+        <Input 
+          id="quantity" 
+          type="number" 
+          step={quantityUnit === "BTC" ? "0.00000001" : "1"}
+          placeholder={quantityUnit === "BTC" ? "0.00000000" : "0"} 
+          value={formData.quantity} 
+          onChange={e => {
+            const value = e.target.value;
+            setFormData(prev => ({ ...prev, quantity: value }));
+            if (value) {
+              handleFieldChange('quantity', value);
+            }
+          }}
+          className="pr-24 h-12"
+          required 
+        />
+        <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
+          <Button 
+            type="button" 
+            variant="outline" 
+            size="sm"
+            onClick={setMaxQuantity} 
+            className="h-7 px-2 text-xs font-medium bg-green-500/10 border-green-500/20 text-green-600 hover:bg-green-500/20"
+          >
+            MÁXIMO
+          </Button>
+          <Select value={quantityUnit} onValueChange={(value: "BTC" | "SATS") => setQuantityUnit(value)}>
+            <SelectTrigger className="border-0 bg-transparent w-16 h-auto p-0 focus:ring-0">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="BTC">BTC</SelectItem>
+              <SelectItem value="SATS">SATS</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
+    </div>
 
 
     <div className="space-y-2">

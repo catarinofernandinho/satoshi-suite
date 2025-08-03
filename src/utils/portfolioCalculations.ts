@@ -60,6 +60,8 @@ export const calculatePortfolioStats = (
     }
   });
   
+  if (totalBtc < 0) totalBtc = 0;
+  
   const currentValue = totalBtc * btcCurrentPrice;
   const netCost = totalCost - totalRevenue;
   const gainLoss = currentValue - netCost;

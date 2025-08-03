@@ -1,4 +1,5 @@
 import CurrencyConverter from "@/components/conversor/CurrencyConverter";
+import ConversorExplanation from "@/components/conversor/ConversorExplanation";
 
 export default function Conversor() {
   return (
@@ -11,6 +12,7 @@ export default function Conversor() {
       </div>
       
       <CurrencyConverter />
+      <ConversorExplanation />
     </div>
   );
 }

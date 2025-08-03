@@ -75,9 +75,7 @@ export default function AddFutureModal({
     }
   };
   return <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-      {!isOpen && <DialogTrigger asChild>
-          
-        </DialogTrigger>}
+      
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>Adicionar Nova Ordem</DialogTitle>

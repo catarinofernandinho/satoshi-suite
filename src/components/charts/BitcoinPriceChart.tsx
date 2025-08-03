@@ -29,37 +29,32 @@ export default function BitcoinPriceChart() {
     label: "1 Semana"
   }];
   const tradingViewUrl = `https://s.tradingview.com/widgetembed/?frameElementId=tradingview_widget&symbol=${symbol}&interval=${timeframe}&hidesidetoolbar=1&symboledit=1&saveimage=1&toolbarbg=181A20&studies=[]&hideideas=1&theme=dark&style=1&timezone=America%2FSao_Paulo&studies_overrides={}&overrides={}&enabled_features=[]&disabled_features=[]&locale=pt&utm_source=localhost&utm_medium=widget&utm_campaign=chart&utm_term=${symbol}`;
-  return <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5" />
-              Gráfico Bitcoin (BTC/USD)
-            </CardTitle>
-            <CardDescription>
-              Preço em tempo real com análise técnica completa
-            </CardDescription>
+  return (
+    <>
+      {/* Mobile: Full width without card */}
+      <div className="block sm:hidden w-full">
+        <div className="mb-4">
+          <div className="flex items-center gap-2 mb-2">
+            <TrendingUp className="h-5 w-5" />
+            <h3 className="text-2xl font-semibold leading-none tracking-tight">Gráfico Bitcoin (BTC/USD)</h3>
           </div>
-          
+          <p className="text-sm text-muted-foreground">
+            Preço em tempo real com análise técnica completa
+          </p>
         </div>
-      </CardHeader>
-      <CardContent>
-        {/* TradingView Chart Widget */}
+        
         <div className="border rounded-lg overflow-hidden bg-black">
-          <iframe src={tradingViewUrl} width="100%" height="500" frameBorder="0" title="Bitcoin Price Chart" className="w-full" style={{
-          minHeight: '500px'
-        }} />
+          <iframe 
+            src={tradingViewUrl} 
+            width="100%" 
+            height="500" 
+            frameBorder="0" 
+            title="Bitcoin Price Chart" 
+            className="w-full" 
+            style={{ minHeight: '500px' }} 
+          />
         </div>
 
-        {/* Chart Info */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 text-sm">
-          
-          
-          
-        </div>
-
-        {/* Footer */}
         <div className="flex items-center justify-between text-xs text-muted-foreground pt-4 border-t mt-4">
           <span>
             Dados fornecidos por exchanges globais em tempo real
@@ -68,6 +63,49 @@ export default function BitcoinPriceChart() {
             TradingView <ExternalLink className="h-3 w-3" />
           </a>
         </div>
-      </CardContent>
-    </Card>;
+      </div>
+
+      {/* Tablet and Desktop: With card */}
+      <Card className="hidden sm:block">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <TrendingUp className="h-5 w-5" />
+                Gráfico Bitcoin (BTC/USD)
+              </CardTitle>
+              <CardDescription>
+                Preço em tempo real com análise técnica completa
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {/* TradingView Chart Widget */}
+          <div className="border rounded-lg overflow-hidden bg-black">
+            <iframe src={tradingViewUrl} width="100%" height="500" frameBorder="0" title="Bitcoin Price Chart" className="w-full" style={{
+            minHeight: '500px'
+          }} />
+          </div>
+
+          {/* Chart Info */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 text-sm">
+            
+            
+            
+          </div>
+
+          {/* Footer */}
+          <div className="flex items-center justify-between text-xs text-muted-foreground pt-4 border-t mt-4">
+            <span>
+              Dados fornecidos por exchanges globais em tempo real
+            </span>
+            <a href={`https://www.tradingview.com/chart/?symbol=${symbol}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-foreground transition-colors">
+              TradingView <ExternalLink className="h-3 w-3" />
+            </a>
+          </div>
+        </CardContent>
+      </Card>
+    </>
+  );
 }

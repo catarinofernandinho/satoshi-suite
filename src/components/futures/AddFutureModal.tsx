@@ -162,7 +162,7 @@ return <Dialog open={modalOpen} onOpenChange={setModalOpen}>
     <div className="flex items-center gap-2">
       <Label 
         htmlFor="buy_date" 
-        className="mb-0 w-[170px] whitespace-nowrap flex-shrink-0"
+        className="mb-0 w-[170px]"
       >
         Data/Hora de Abertura:
       </Label>

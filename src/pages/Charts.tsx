@@ -69,21 +69,21 @@ export default function Charts() {
   <CounterflowIframePanel
     url="https://bitcoincounterflow.com/pt/satsails-2/calculadora-dca-iframe/"
     title="Calculadora DCA Bitcoin Counterflow"
-    height={800}
+    height={1600}
   />
 </TabsContent>
 <TabsContent value="retirement" className="space-y-6">
   <CounterflowIframePanel
     url="https://bitcoincounterflow.com/pt/satsails-2/calculadora-de-aposentadoria-bitcoin-iframe/"
     title="Calculadora de aposentadoria Bitcoin Counterflow"
-    height={900}
+    height={2000}
   />
 </TabsContent>
 <TabsContent value="etf" className="space-y-6">
   <CounterflowIframePanel
     url="https://bitcoincounterflow.com/pt/satsails-2/etf-tracker-btc-iframe"
     title="Rastreador ETF Bitcoin Counterflow"
-    height={900}
+    height={4500}
   />
 </TabsContent>
 

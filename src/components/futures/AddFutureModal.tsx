@@ -119,7 +119,30 @@ export default function AddFutureModal({
           })} required />
         </div>
 
-
+        <div className="flex items-center gap-2">
+          <Label htmlFor="buy_date" className="mb-0">Data/Hora de Abertura: </Label>
+          <DatePicker
+            selected={convertToUserTime(formData.buy_date)}
+            onChange={(date: Date | null) => {
+              if (date) {
+                const utcDate = convertToUTC(date);
+                setFormData(prev => ({
+                  ...prev,
+                  buy_date: utcDate 
+                }));
+              }
+            }}
+            dateFormat="dd/MM/yyyy HH:mm"
+            showTimeSelect
+            timeFormat="HH:mm"
+            timeIntervals={5}
+            className="h-12 w-full px-3 py-2 rounded-md border border-input bg-background text-foreground placeholder:text-muted-foreground"
+            placeholderText="DD/MM/AAAA HH:mm"
+            locale="pt-BR"
+          />
+        </div>
+      </div>
+      
       <div className="space-y-2">
         <Label htmlFor="status">Status</Label>
         <Select value={formData.status} onValueChange={value => setFormData({
@@ -138,39 +161,17 @@ export default function AddFutureModal({
       </Select>
     </div>
 
-    <div className="flex items-center gap-2">
-      <Label htmlFor="buy_date" className="mb-0">Data/Hora de Abertura: </Label>
-      <DatePicker
-        selected={convertToUserTime(formData.buy_date)}
-        onChange={(date: Date | null) => {
-          if (date) {
-            const utcDate = convertToUTC(date);
-            setFormData(prev => ({
-              ...prev,
-        buy_date: utcDate 
-      }));
-          }
-        }}
-        dateFormat="dd/MM/yyyy HH:mm"
-        showTimeSelect
-        timeFormat="HH:mm"
-        timeIntervals={5}
-        className="h-12 w-full px-3 py-2 rounded-md border border-input bg-background text-foreground placeholder:text-muted-foreground"
-        placeholderText="DD/MM/AAAA HH:mm"
-        locale="pt-BR"
-      />
-    </div>
-  </div>
+    
 
-  <div className="flex justify-end gap-3 pt-4">
-    <Button type="button" variant="outline" onClick={() => setModalOpen(false)}>
-      Cancelar
-    </Button>
-    <Button type="submit" disabled={loading}>
-      {loading ? "Salvando..." : "Salvar Ordem"}
-    </Button>
-  </div>
-</form>
+    <div className="flex justify-end gap-3 pt-4">
+      <Button type="button" variant="outline" onClick={() => setModalOpen(false)}>
+        Cancelar
+      </Button>
+      <Button type="submit" disabled={loading}>
+        {loading ? "Salvando..." : "Salvar Ordem"}
+      </Button>
+    </div>
+  </form>
 </DialogContent>
 </Dialog>;
 }

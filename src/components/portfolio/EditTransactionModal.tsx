@@ -204,7 +204,7 @@ export default function EditTransactionModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[500px] bg-card border-border">
+      <DialogContent className="sm:max-w-[600px] bg-card border-border max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-foreground">Editar Transação</DialogTitle>
         </DialogHeader>

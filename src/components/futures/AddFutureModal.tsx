@@ -162,8 +162,8 @@ export default function AddFutureModal({
       </Select>
     </div>
 
-    <div className="space-y-2">
-      <Label htmlFor="buy_date">Data/Hora de Abertura:  </Label>
+    <div className="flex items-center gap-2">
+      <Label htmlFor="buy_date" className="mb-0">Data/Hora de Abertura: </Label>
       <DatePicker
         selected={convertToUserTime(formData.buy_date)}
         onChange={(date: Date | null) => {

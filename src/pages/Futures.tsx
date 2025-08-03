@@ -7,7 +7,6 @@ import FuturesStatsEnhanced from "@/components/futures/FuturesStatsEnhanced";
 import FuturesCharts from "@/components/futures/FuturesCharts";
 import FuturesTable from "@/components/futures/FuturesTable";
 import AddFutureButton from "@/components/futures/AddFutureButton";
-import SyncButton from "@/components/futures/SyncButton";
 import DateRangeFilter from "@/components/futures/DateRangeFilter";
 import OrderStatusTabs from "@/components/futures/OrderStatusTabs";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -185,7 +184,6 @@ export default function Futures() {
           </p>
         </div>
         <div className="flex gap-2">
-          <SyncButton />
           <AddFutureButton />
         </div>
       </div>
@@ -218,6 +216,7 @@ export default function Futures() {
         waterfallData={waterfallData}
       />
 
+
       {/* Orders Table */}
       <Card>
         <CardHeader>
@@ -232,6 +231,9 @@ export default function Futures() {
               </Badge>
             )}
           </CardDescription>
+          <div className="mb-4 flex justify-end">
+        <AddFutureButton />
+      </div>
         </CardHeader>
         <CardContent>
           {filteredFutures.length === 0 ? (

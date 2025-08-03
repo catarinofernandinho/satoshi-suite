@@ -13,11 +13,12 @@ export default function CounterflowIframePanel({
   height = 1300,
 }: CounterflowIframePanelProps) {
   return (
-    <Card className="w-full mx-0 sm:mx-auto lg:max-w-3xl">
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-      </CardHeader>
-      <CardContent>
+    <>
+      {/* Mobile: Full width without card */}
+      <div className="block sm:hidden w-full">
+        <div className="mb-4">
+          <h3 className="text-2xl font-semibold leading-none tracking-tight">{title}</h3>
+        </div>
         <div className="border rounded-lg overflow-hidden bg-black w-full">
           <iframe
             src={url}
@@ -36,7 +37,34 @@ export default function CounterflowIframePanel({
             bitcoincounterflow.com
           </a>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+
+      {/* Tablet and Desktop: With card */}
+      <Card className="hidden sm:block w-full mx-auto lg:max-w-3xl">
+        <CardHeader>
+          <CardTitle>{title}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="border rounded-lg overflow-hidden bg-black w-full">
+            <iframe
+              src={url}
+              width="100%"
+              height={height}
+              frameBorder="0"
+              title={title}
+              className="w-full"
+              style={{ minHeight: height }}
+              allowFullScreen
+            />
+          </div>
+          <div className="text-xs text-muted-foreground pt-2 border-t mt-4">
+            Fonte:&nbsp;
+            <a href="https://bitcoincounterflow.com/" target="_blank" rel="noopener noreferrer" className="underline hover:text-primary">
+              bitcoincounterflow.com
+            </a>
+          </div>
+        </CardContent>
+      </Card>
+    </>
   );
 }

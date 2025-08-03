@@ -162,7 +162,7 @@ return <Dialog open={modalOpen} onOpenChange={setModalOpen}>
     <div className="space-y-2">
       <Label 
         htmlFor="buy_date" 
-        className="mb-0"
+        className="mb-0 w-full"
       >
         Data/Hora de Abertura:
       </Label>
@@ -191,7 +191,7 @@ return <Dialog open={modalOpen} onOpenChange={setModalOpen}>
 
   {formData.status === "CLOSED" && (
     <>
-    <div className="space-y-2">
+    <div className="flex items-center gap-2">
       <Label htmlFor="close_date" className="mb-0">Data de Saída:</Label>
       <DatePicker
         selected={formData.close_date}

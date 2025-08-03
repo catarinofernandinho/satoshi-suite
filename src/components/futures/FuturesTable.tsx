@@ -23,6 +23,8 @@ export default function FuturesTable({ futures, btcCurrentPrice }: FuturesTableP
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [editingOrder, setEditingOrder] = useState<Future | null>(null);
   const [closingOrder, setClosingOrder] = useState<Future | null>(null);
+  const totalFees = (future.fee_trade ?? 0) + (future.fee_funding ?? 0);
+  const netPL = (future.realized_pl ?? 0) - totalFees;
 
   const handleDelete = async (id: string) => {
     setDeletingId(id);
@@ -86,7 +88,7 @@ export default function FuturesTable({ futures, btcCurrentPrice }: FuturesTableP
           <p>Adicione sua primeira ordem para começar a rastrear seus trades.</p>
         </div>
       </Card>
-    );
+      );
   }
 
   return (
@@ -119,93 +121,93 @@ export default function FuturesTable({ futures, btcCurrentPrice }: FuturesTableP
                   <div className="flex items-center gap-2">
                     {future.direction === 'LONG' ? (
                       <TrendingUp className="h-4 w-4 text-green-600" />
-                    ) : (
+                      ) : (
                       <TrendingDown className="h-4 w-4 text-red-600" />
-                    )}
-                    {future.direction}
-                  </div>
-                </TableCell>
-                <TableCell>{formatCurrency(future.quantity_usd)}</TableCell>
-                <TableCell>{future.leverage}x</TableCell>
-                <TableCell>{formatCurrency(future.entry_price)}</TableCell>
-                <TableCell>{formatCurrency(future.target_price)}</TableCell>
-                <TableCell className={getPLColor(metrics.percent_gain)}>
-                  {formatPercent(metrics.percent_gain)}
-                </TableCell>
-                <TableCell>{formatPercent(metrics.percent_fee)}</TableCell>
-                <TableCell>{formatCurrency(metrics.fees_paid)}</TableCell>
-                <TableCell className={getPLColor(metrics.net_pl_sats)}>
-                  {formatCurrency(metrics.net_pl_sats, 'SATS')}
-                </TableCell>
-                <TableCell>
-                  {formatDateTime(future.buy_date, 'dd/MM/yyyy HH:mm')}
-                </TableCell>
-                <TableCell>
-                  <div className="flex gap-1">
-                    {future.status === 'OPEN' && (
+                      )}
+                      {future.direction}
+                    </div>
+                  </TableCell>
+                  <TableCell>{formatCurrency(future.quantity_usd)}</TableCell>
+                  <TableCell>{future.leverage}x</TableCell>
+                  <TableCell>{formatCurrency(future.entry_price)}</TableCell>
+                  <TableCell>{formatCurrency(future.target_price)}</TableCell>
+                  <TableCell className={getPLColor(metrics.percent_gain)}>
+                    {formatPercent(metrics.percent_gain)}
+                  </TableCell>
+                  <TableCell>{formatPercent(metrics.percent_fee)}</TableCell>
+                  <TableCell>{formatCurrency(metrics.fees_paid)}</TableCell>
+                  <TableCell className={getPLColor(metrics.net_pl_sats)}>
+                    {formatCurrency(metrics.net_pl_sats, 'SATS')}
+                  </TableCell>
+                  <TableCell>
+                    {formatDateTime(future.buy_date, 'dd/MM/yyyy HH:mm')}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex gap-1">
+                      {future.status === 'OPEN' && (
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="h-8 px-2 text-red-600 hover:text-red-700"
+                          onClick={() => setClosingOrder(future)}
+                        >
+                          <X className="h-4 w-4 mr-1" />
+                          Fechar
+                        </Button>
+                        )}
                       <Button 
                         variant="outline" 
                         size="sm" 
-                        className="h-8 px-2 text-red-600 hover:text-red-700"
-                        onClick={() => setClosingOrder(future)}
+                        className="h-8 w-8 p-0"
+                        onClick={() => setEditingOrder(future)}
                       >
-                        <X className="h-4 w-4 mr-1" />
-                        Fechar
+                        <Edit className="h-4 w-4" />
                       </Button>
-                    )}
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="h-8 w-8 p-0"
-                      onClick={() => setEditingOrder(future)}
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button variant="outline" size="sm" className="h-8 w-8 p-0 text-red-600 hover:text-red-700">
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Excluir ordem</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Tem certeza que deseja excluir esta ordem? Esta ação não pode ser desfeita.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                          <AlertDialogAction
-                            onClick={() => handleDelete(future.id)}
-                            disabled={deletingId === future.id}
-                            className="bg-red-600 hover:bg-red-700"
-                          >
-                            {deletingId === future.id ? "Excluindo..." : "Excluir"}
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  </div>
-                </TableCell>
-              </TableRow>
-            );
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="outline" size="sm" className="h-8 w-8 p-0 text-red-600 hover:text-red-700">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Excluir ordem</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Tem certeza que deseja excluir esta ordem? Esta ação não pode ser desfeita.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => handleDelete(future.id)}
+                              disabled={deletingId === future.id}
+                              className="bg-red-600 hover:bg-red-700"
+                            >
+                              {deletingId === future.id ? "Excluindo..." : "Excluir"}
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
+                  </TableCell>
+                </TableRow>
+                );
           })}
-        </TableBody>
-      </Table>
-      
-      <EditFutureModal 
-        future={editingOrder}
-        isOpen={!!editingOrder}
-        onClose={() => setEditingOrder(null)}
-      />
-      
-      <CloseOrderModal
-        order={closingOrder}
-        isOpen={!!closingOrder}
-        onClose={() => setClosingOrder(null)}
-        btcCurrentPrice={btcCurrentPrice}
-      />
-    </div>
-  );
+</TableBody>
+</Table>
+
+<EditFutureModal 
+  future={editingOrder}
+  isOpen={!!editingOrder}
+  onClose={() => setEditingOrder(null)}
+/>
+
+<CloseOrderModal
+  order={closingOrder}
+  isOpen={!!closingOrder}
+  onClose={() => setClosingOrder(null)}
+  btcCurrentPrice={btcCurrentPrice}
+/>
+</div>
+);
 }

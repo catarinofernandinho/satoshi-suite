@@ -34,16 +34,40 @@ export default function AddFutureModal({
   const { getCurrentTime, convertToUserTime, convertToUTC } = useTimezone();
 
   const [formData, setFormData] = useState({
-    direction: "",
-    entry_price: "",
-    target_price: "",
-    quantity_usd: "",
-    buy_date: getCurrentTime(),
-    status: "OPEN"
-  });
+  direction: "",
+  entry_price: "",
+  target_price: "",
+  quantity_usd: "",
+  buy_date: getCurrentTime(),
+  status: "OPEN",
+  close_date: null, // Date
+  realized_pl: "", // string para valor
+  fee_trade: "",   // taxa negociação (sats)
+  fee_funding: "", // taxa financiamento (sats)
+});
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+
+    const orderData = {
+    direction: formData.direction as "LONG" | "SHORT",
+    entry_price: parseFloat(formData.entry_price),
+    target_price: formData.target_price ? parseFloat(formData.target_price) : undefined,
+    quantity_usd: parseFloat(formData.quantity_usd),
+    buy_date: convertToUTC(formData.buy_date).toISOString(),
+    status: formData.status as "OPEN" | "CLOSED" | "STOP" | "CANCELLED"
+  };
+
+  if (formData.status === "CLOSED") {
+    orderData.close_date = formData.close_date ? convertToUTC(formData.close_date).toISOString() : null;
+    orderData.realized_pl = parseFloat(formData.realized_pl);
+    orderData.fee_trade = parseInt(formData.fee_trade, 10);
+    orderData.fee_funding = parseInt(formData.fee_funding, 10);
+    orderData.total_fees = orderData.fee_trade + orderData.fee_funding; // se quiser já calcular
+    orderData.net_pl = orderData.realized_pl - orderData.total_fees; // se quiser já calcular
+  }
+
     try {
       await addFuture({
         direction: formData.direction as "LONG" | "SHORT",
@@ -121,22 +145,77 @@ export default function AddFutureModal({
 
 
       <div className="space-y-2">
-        <Label htmlFor="status">Status</Label>
-        <Select value={formData.status} onValueChange={value => setFormData({
-          ...formData,
-          status: value
-        })} required>
-        <SelectTrigger>
-          <SelectValue placeholder="Selecionar status" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="OPEN">Aberto</SelectItem>
-          <SelectItem value="CLOSED">Fechado</SelectItem>
-          <SelectItem value="STOP">Stop</SelectItem>
-          <SelectItem value="CANCELLED">Cancelado</SelectItem>
-        </SelectContent>
-      </Select>
+  <Label htmlFor="status">Status</Label>
+  <Select value={formData.status} onValueChange={value => setFormData({
+    ...formData,
+    status: value
+  })} required>
+    <SelectTrigger>
+      <SelectValue placeholder="Selecionar status" />
+    </SelectTrigger>
+    <SelectContent>
+      <SelectItem value="OPEN">Aberto</SelectItem>
+      <SelectItem value="CLOSED">Fechado</SelectItem>
+      <SelectItem value="STOP">Stop</SelectItem>
+      <SelectItem value="CANCELLED">Cancelado</SelectItem>
+    </SelectContent>
+  </Select>
+</div>
+
+{formData.status === "CLOSED" && (
+  <>
+    <div className="flex items-center gap-2">
+      <Label htmlFor="close_date" className="mb-0">Data de Saída:</Label>
+      <DatePicker
+        selected={formData.close_date}
+        onChange={date => setFormData(f => ({ ...f, close_date: date }))}
+        dateFormat="dd/MM/yyyy HH:mm"
+        showTimeSelect
+        timeFormat="HH:mm"
+        timeIntervals={5}
+        className="h-12 w-[220px] px-3 py-2 rounded-md border border-input bg-background text-foreground placeholder:text-muted-foreground"
+        placeholderText="DD/MM/AAAA HH:mm"
+        locale="pt-BR"
+      />
     </div>
+    <div className="space-y-2">
+      <Label htmlFor="realized_pl">PL Realizado (USD)</Label>
+      <Input
+        id="realized_pl"
+        type="number"
+        step="0.01"
+        placeholder="Valor total ganho"
+        value={formData.realized_pl}
+        onChange={e => setFormData({ ...formData, realized_pl: e.target.value })}
+        required
+      />
+    </div>
+    <div className="space-y-2">
+      <Label htmlFor="fee_trade">Taxa de Negociação (sats)</Label>
+      <Input
+        id="fee_trade"
+        type="number"
+        step="1"
+        placeholder="Satoshis pagos na negociação"
+        value={formData.fee_trade}
+        onChange={e => setFormData({ ...formData, fee_trade: e.target.value })}
+        required
+      />
+    </div>
+    <div className="space-y-2">
+      <Label htmlFor="fee_funding">Taxa de Financiamento (sats)</Label>
+      <Input
+        id="fee_funding"
+        type="number"
+        step="1"
+        placeholder="Satoshis pagos em funding"
+        value={formData.fee_funding}
+        onChange={e => setFormData({ ...formData, fee_funding: e.target.value })}
+        required
+      />
+    </div>
+  </>
+)}
 
     <div className="flex items-center gap-2">
       <Label htmlFor="buy_date" className="mb-0">Data/Hora de Abertura: </Label>

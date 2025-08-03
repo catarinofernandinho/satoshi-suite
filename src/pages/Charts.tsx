@@ -11,7 +11,7 @@ import { TrendingUp, Activity, BarChart3, Calculator, PieChart, LineChart } from
 import CounterflowIframePanel from "@/components/charts/CounterflowIframePanel";
 
 export default function Charts() {
-  return <div className="w-full px-2 sm:px-4 md:px-6 lg:container lg:mx-auto lg:p-6 space-y-6">
+  return <div className="w-full px-0 sm:px-2 md:px-4 lg:px-6 lg:container lg:mx-auto lg:p-6 space-y-6">
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-foreground">Gráficos & Análises</h1>

@@ -13,7 +13,7 @@ export default function CounterflowIframePanel({
   height = 1300,
 }: CounterflowIframePanelProps) {
   return (
-    <Card className="w-full mx-auto lg:max-w-3xl">
+    <Card className="w-full mx-0 sm:mx-auto lg:max-w-3xl">
       <CardHeader>
         <CardTitle>{title}</CardTitle>
       </CardHeader>

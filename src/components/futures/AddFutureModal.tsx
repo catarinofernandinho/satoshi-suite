@@ -8,23 +8,29 @@ import { Textarea } from "@/components/ui/textarea";
 import { Plus } from "lucide-react";
 import { useFutures, type Future } from "@/hooks/useFutures";
 import { useTimezone } from "@/contexts/TimezoneContext";
-
 interface AddFutureModalProps {
   isOpen?: boolean;
   onClose?: () => void;
   onSuccess?: () => void;
 }
-
-export default function AddFutureModal({ isOpen, onClose, onSuccess }: AddFutureModalProps) {
+export default function AddFutureModal({
+  isOpen,
+  onClose,
+  onSuccess
+}: AddFutureModalProps) {
   const [open, setOpen] = useState(false);
-  
+
   // Use external control if provided, otherwise use internal state
   const modalOpen = isOpen !== undefined ? isOpen : open;
   const setModalOpen = onClose !== undefined ? onClose : setOpen;
   const [loading, setLoading] = useState(false);
-  const { addFuture } = useFutures();
-  const { getCurrentTime, convertToUTC } = useTimezone();
-
+  const {
+    addFuture
+  } = useFutures();
+  const {
+    getCurrentTime,
+    convertToUTC
+  } = useTimezone();
   const [formData, setFormData] = useState({
     direction: "",
     entry_price: "",
@@ -32,13 +38,11 @@ export default function AddFutureModal({ isOpen, onClose, onSuccess }: AddFuture
     quantity_usd: "",
     leverage: "",
     buy_date: getCurrentTime().toISOString().slice(0, 16),
-    status: "OPEN",
+    status: "OPEN"
   });
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-
     try {
       await addFuture({
         direction: formData.direction as "LONG" | "SHORT",
@@ -47,9 +51,8 @@ export default function AddFutureModal({ isOpen, onClose, onSuccess }: AddFuture
         quantity_usd: parseFloat(formData.quantity_usd),
         leverage: parseFloat(formData.leverage),
         buy_date: convertToUTC(new Date(formData.buy_date)).toISOString(),
-        status: formData.status as "OPEN" | "CLOSED" | "STOP" | "CANCELLED",
+        status: formData.status as "OPEN" | "CLOSED" | "STOP" | "CANCELLED"
       } as Omit<Future, 'id' | 'created_at' | 'updated_at'>);
-
       setFormData({
         direction: "",
         entry_price: "",
@@ -57,9 +60,8 @@ export default function AddFutureModal({ isOpen, onClose, onSuccess }: AddFuture
         quantity_usd: "",
         leverage: "",
         buy_date: getCurrentTime().toISOString().slice(0, 16),
-        status: "OPEN",
+        status: "OPEN"
       });
-      
       setModalOpen(false);
       onSuccess?.();
     } catch (error) {
@@ -68,17 +70,10 @@ export default function AddFutureModal({ isOpen, onClose, onSuccess }: AddFuture
       setLoading(false);
     }
   };
-
-  return (
-    <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-      {!isOpen && (
-        <DialogTrigger asChild>
-          <Button className="gap-2">
-            <Plus className="h-4 w-4" />
-            Adicionar Ordem
-          </Button>
-        </DialogTrigger>
-      )}
+  return <Dialog open={modalOpen} onOpenChange={setModalOpen}>
+      {!isOpen && <DialogTrigger asChild>
+          
+        </DialogTrigger>}
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>Adicionar Nova Ordem</DialogTitle>
@@ -87,11 +82,10 @@ export default function AddFutureModal({ isOpen, onClose, onSuccess }: AddFuture
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="direction">Direção</Label>
-              <Select
-                value={formData.direction}
-                onValueChange={(value) => setFormData({ ...formData, direction: value })}
-                required
-              >
+              <Select value={formData.direction} onValueChange={value => setFormData({
+              ...formData,
+              direction: value
+            })} required>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecionar direção" />
                 </SelectTrigger>
@@ -104,49 +98,34 @@ export default function AddFutureModal({ isOpen, onClose, onSuccess }: AddFuture
 
             <div className="space-y-2">
               <Label htmlFor="entry_price">Preço de Entrada (USD)</Label>
-              <Input
-                id="entry_price"
-                type="number"
-                step="0.01"
-                placeholder="95000.00"
-                value={formData.entry_price}
-                onChange={(e) => setFormData({ ...formData, entry_price: e.target.value })}
-                required
-              />
+              <Input id="entry_price" type="number" step="0.01" placeholder="95000.00" value={formData.entry_price} onChange={e => setFormData({
+              ...formData,
+              entry_price: e.target.value
+            })} required />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="target_price">Preço Alvo (USD)</Label>
-              <Input
-                id="target_price"
-                type="number"
-                step="0.01"
-                placeholder="100000.00"
-                value={formData.target_price}
-                onChange={(e) => setFormData({ ...formData, target_price: e.target.value })}
-              />
+              <Input id="target_price" type="number" step="0.01" placeholder="100000.00" value={formData.target_price} onChange={e => setFormData({
+              ...formData,
+              target_price: e.target.value
+            })} />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="quantity_usd">Quantidade (USD)</Label>
-              <Input
-                id="quantity_usd"
-                type="number"
-                step="0.01"
-                placeholder="1000.00"
-                value={formData.quantity_usd}
-                onChange={(e) => setFormData({ ...formData, quantity_usd: e.target.value })}
-                required
-              />
+              <Input id="quantity_usd" type="number" step="0.01" placeholder="1000.00" value={formData.quantity_usd} onChange={e => setFormData({
+              ...formData,
+              quantity_usd: e.target.value
+            })} required />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="leverage">Alavancagem</Label>
-              <Select
-                value={formData.leverage}
-                onValueChange={(value) => setFormData({ ...formData, leverage: value })}
-                required
-              >
+              <Select value={formData.leverage} onValueChange={value => setFormData({
+              ...formData,
+              leverage: value
+            })} required>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecionar alavancagem" />
                 </SelectTrigger>
@@ -165,11 +144,10 @@ export default function AddFutureModal({ isOpen, onClose, onSuccess }: AddFuture
 
             <div className="space-y-2">
               <Label htmlFor="status">Status</Label>
-              <Select
-                value={formData.status}
-                onValueChange={(value) => setFormData({ ...formData, status: value })}
-                required
-              >
+              <Select value={formData.status} onValueChange={value => setFormData({
+              ...formData,
+              status: value
+            })} required>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecionar status" />
                 </SelectTrigger>
@@ -184,13 +162,10 @@ export default function AddFutureModal({ isOpen, onClose, onSuccess }: AddFuture
 
             <div className="space-y-2 md:col-span-2">
               <Label htmlFor="buy_date">Data/Hora de Abertura</Label>
-              <Input
-                id="buy_date"
-                type="datetime-local"
-                value={formData.buy_date}
-                onChange={(e) => setFormData({ ...formData, buy_date: e.target.value })}
-                required
-              />
+              <Input id="buy_date" type="datetime-local" value={formData.buy_date} onChange={e => setFormData({
+              ...formData,
+              buy_date: e.target.value
+            })} required />
             </div>
           </div>
 
@@ -204,6 +179,5 @@ export default function AddFutureModal({ isOpen, onClose, onSuccess }: AddFuture
           </div>
         </form>
       </DialogContent>
-    </Dialog>
-  );
+    </Dialog>;
 }

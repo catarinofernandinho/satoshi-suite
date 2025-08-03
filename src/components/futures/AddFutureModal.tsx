@@ -110,7 +110,7 @@ return <Dialog open={modalOpen} onOpenChange={setModalOpen}>
             direction: value
           })} required>
           <SelectTrigger>
-            <SelectValue placeholder="Selecionar direção" />
+            <SelectValue placeholder="Selecionar LONG/SHORT" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="LONG">LONG (Comprado)</SelectItem>

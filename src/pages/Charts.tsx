@@ -1,14 +1,15 @@
+import { lazy, Suspense } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import FearGreedIndexImage from "@/components/charts/FearGreedIndexImage";
-import FearGreedIndexHistory from "@/components/charts/FearGreedIndexHistory";
-import FearGreedIndexExplanation from "@/components/charts/FearGreedIndexExplanation";
-import BitcoinPriceChart from "@/components/charts/BitcoinPriceChart";
-import TradingViewChart from "@/components/charts/TradingViewChart";
-import CurrencyConverter from "@/components/conversor/CurrencyConverter";
+import { Skeleton } from "@/components/ui/skeleton";
 import { TrendingUp, Activity, BarChart3, Calculator, PieChart, LineChart } from "lucide-react";
 
-import CounterflowIframePanel from "@/components/charts/CounterflowIframePanel";
+// Lazy load components for better performance
+const FearGreedIndexImage = lazy(() => import("@/components/charts/FearGreedIndexImage"));
+const FearGreedIndexHistory = lazy(() => import("@/components/charts/FearGreedIndexHistory"));
+const FearGreedIndexExplanation = lazy(() => import("@/components/charts/FearGreedIndexExplanation"));
+const BitcoinPriceChart = lazy(() => import("@/components/charts/BitcoinPriceChart"));
+const CounterflowIframePanel = lazy(() => import("@/components/charts/CounterflowIframePanel"));
 
 export default function Charts() {
   return <div className="w-full px-0 sm:px-2 md:px-4 lg:px-6 lg:container lg:mx-auto lg:p-6 space-y-6">
@@ -44,48 +45,66 @@ export default function Charts() {
 
         {/* Price Chart Tab */}
         <TabsContent value="price" className="space-y-6">
-          <BitcoinPriceChart />
+          <Suspense fallback={<Skeleton className="h-96 w-full" />}>
+            <BitcoinPriceChart />
+          </Suspense>
         </TabsContent>
 
         {/* Sentiment Analysis Tab */}
         <TabsContent value="sentiment" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <FearGreedIndexImage />
-            <FearGreedIndexHistory />
+            <Suspense fallback={<Skeleton className="h-64 w-full" />}>
+              <FearGreedIndexImage />
+            </Suspense>
+            <Suspense fallback={<Skeleton className="h-64 w-full" />}>
+              <FearGreedIndexHistory />
+            </Suspense>
           </div>
-          <FearGreedIndexExplanation />
+          <Suspense fallback={<Skeleton className="h-32 w-full" />}>
+            <FearGreedIndexExplanation />
+          </Suspense>
         </TabsContent>
 
         {/* Advanced Tab */}
         <TabsContent value="advanced" className="space-y-6">
-  <CounterflowIframePanel
-    url="https://bitcoincounterflow.com/pt/satsails-2/mini-paineis-iframe/"
-    title="Mini Painéis Bitcoin Counterflow"
-    height={4500}
-  />
-</TabsContent>
+          <Suspense fallback={<Skeleton className="h-96 w-full" />}>
+            <CounterflowIframePanel
+              url="https://bitcoincounterflow.com/pt/satsails-2/mini-paineis-iframe/"
+              title="Mini Painéis Bitcoin Counterflow"
+              height={4500}
+            />
+          </Suspense>
+        </TabsContent>
 
-<TabsContent value="dca" className="space-y-6">
-  <CounterflowIframePanel
-    url="https://bitcoincounterflow.com/pt/satsails-2/calculadora-dca-iframe/"
-    title="Calculadora DCA Bitcoin Counterflow"
-    height={2500}
-  />
-</TabsContent>
-<TabsContent value="retirement" className="space-y-6">
-  <CounterflowIframePanel
-    url="https://bitcoincounterflow.com/pt/satsails-2/calculadora-de-aposentadoria-bitcoin-iframe/"
-    title="Calculadora de aposentadoria Bitcoin Counterflow"
-    height={3750}
-  />
-</TabsContent>
-<TabsContent value="etf" className="space-y-6">
-  <CounterflowIframePanel
-    url="https://bitcoincounterflow.com/pt/satsails-2/etf-tracker-btc-iframe"
-    title="Rastreador ETF Bitcoin Counterflow"
-    height={4800}
-  />
-</TabsContent>
+        <TabsContent value="dca" className="space-y-6">
+          <Suspense fallback={<Skeleton className="h-96 w-full" />}>
+            <CounterflowIframePanel
+              url="https://bitcoincounterflow.com/pt/satsails-2/calculadora-dca-iframe/"
+              title="Calculadora DCA Bitcoin Counterflow"
+              height={2500}
+            />
+          </Suspense>
+        </TabsContent>
+
+        <TabsContent value="retirement" className="space-y-6">
+          <Suspense fallback={<Skeleton className="h-96 w-full" />}>
+            <CounterflowIframePanel
+              url="https://bitcoincounterflow.com/pt/satsails-2/calculadora-de-aposentadoria-bitcoin-iframe/"
+              title="Calculadora de aposentadoria Bitcoin Counterflow"
+              height={3750}
+            />
+          </Suspense>
+        </TabsContent>
+
+        <TabsContent value="etf" className="space-y-6">
+          <Suspense fallback={<Skeleton className="h-96 w-full" />}>
+            <CounterflowIframePanel
+              url="https://bitcoincounterflow.com/pt/satsails-2/etf-tracker-btc-iframe"
+              title="Rastreador ETF Bitcoin Counterflow"
+              height={4800}
+            />
+          </Suspense>
+        </TabsContent>
 
       </Tabs>
     </div>;

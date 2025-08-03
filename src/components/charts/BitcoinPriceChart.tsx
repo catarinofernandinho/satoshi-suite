@@ -56,10 +56,7 @@ export default function BitcoinPriceChart() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 text-sm">
           
           
-          <div className="text-center p-3 bg-muted rounded-lg">
-            <div className="font-medium text-muted-foreground">Fonte</div>
-            <div className="text-lg font-bold">TradingView</div>
-          </div>
+          
         </div>
 
         {/* Footer */}

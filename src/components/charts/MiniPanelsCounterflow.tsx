@@ -19,11 +19,11 @@ export default function MiniPanelsCounterflow() {
           <iframe
             src="https://bitcoincounterflow.com/pt/satsails-2/mini-paineis-iframe/"
             width="100%"
-            height={1300}
+            height={2000}
             frameBorder="0"
             title="Mini Painéis Bitcoin Counterflow"
             className="w-full"
-            style={{ minHeight: 1300 }}
+            style={{ minHeight: 2000 }}
             allowFullScreen
           />
         </div>

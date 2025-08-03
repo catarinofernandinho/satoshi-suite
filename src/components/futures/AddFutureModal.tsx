@@ -76,7 +76,7 @@ export default function AddFutureModal({
   };
   return <Dialog open={modalOpen} onOpenChange={setModalOpen}>
     {!isOpen && <DialogTrigger asChild>
-      
+
     </DialogTrigger>}
     <DialogContent className="sm:max-w-[600px]">
       <DialogHeader>
@@ -165,18 +165,25 @@ export default function AddFutureModal({
     </div>
 
     <div className="space-y-2">
-      <Label htmlFor="buy_date">Data/Hora de Abertura</Label>
+      <Label htmlFor="buy_date">Data/Hora de Abertura:  </Label>
       <DatePicker
-        selected={formData.buy_date}
-        onChange={date => setFormData(prev => ({ ...prev, buy_date: date }))}
+        selected={convertToUserTime(formData.date)}
+        onChange={(date: Date | null) => {
+          if (date) {
+            const utcDate = convertToUTC(date);
+            setFormData(prev => ({
+              ...prev,
+              date: utcDate.toISOString()
+            }));
+          }
+        }}
+        dateFormat="dd/MM/yyyy HH:mm"
         showTimeSelect
         timeFormat="HH:mm"
-        timeIntervals={15}
-        dateFormat="dd/MM/yyyy HH:mm"
-        className="w-full"
+        timeIntervals={5}
+        className="h-12 w-full px-3 py-2 rounded-md border border-input bg-background text-foreground placeholder:text-muted-foreground"
+        placeholderText="DD/MM/AAAA HH:mm"
         locale="pt-BR"
-        maxDate={new Date()}
-        popperPlacement="auto"
       />
     </div>
   </div>

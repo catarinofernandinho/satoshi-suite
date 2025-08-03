@@ -144,7 +144,7 @@ return <Dialog open={modalOpen} onOpenChange={setModalOpen}>
       </div>
 
       <div className="flex items-center gap-2 flex-nowrap">
-        <Label htmlFor="buy_date" className="mb-0">Data/Hora de Abertura: </Label>
+        <Label htmlFor="buy_date" className="mb-5">Data/Hora de Abertura: </Label>
         <DatePicker
           selected={convertToUserTime(formData.buy_date)}
           onChange={(date: Date | null) => {

@@ -115,25 +115,22 @@ Custo líquido médio = (Custo total - Receitas totais) / Ativos.
             </TooltipProvider>
           </div>
           <div className="text-lg font-bold text-foreground">
-            {(totalBtc ?? 0) > 0
-            ? formatCurrencyDirect(liquidAverageCost, currency)
-            : "US$ 0.00"
-          }
+            {formatCurrencyDirect(totalBtc > 0 ? liquidAverageCost : 0, currency)}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="bg-gradient-card border-border">
+        <CardContent className="pt-4">
+          <div className="text-xs text-muted-foreground mb-1">Total de Ganhos/Perdas</div>
+          <div className={`text-lg font-bold ${
+            totalGainLoss >= 0 ? "text-success" : "text-destructive"
+          }`}>
+          {formatCurrencyDirect(totalGainLoss, currency)}
         </div>
       </CardContent>
     </Card>
-
-    <Card className="bg-gradient-card border-border">
-      <CardContent className="pt-4">
-        <div className="text-xs text-muted-foreground mb-1">Total de Ganhos/Perdas</div>
-        <div className={`text-lg font-bold ${
-          totalGainLoss >= 0 ? "text-success" : "text-destructive"
-        }`}>
-        {formatCurrencyDirect(totalGainLoss, currency)}
-      </div>
-    </CardContent>
-  </Card>
-</div>
+  </div>
 </div>
 );
 });

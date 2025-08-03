@@ -28,7 +28,7 @@ export const calculatePortfolioStats = (
   
   transactions.forEach(t => {
     if (t.type === 'Comprar') {
-      totalBtc += t.quantity;
+      totalBtc += Math.abs(t.quantity);
       // Convert transaction cost to user's currency if needed
       if (t.market === userCurrency) {
         totalCost += t.total_spent;
@@ -40,7 +40,7 @@ export const calculatePortfolioStats = (
         totalCost += t.total_spent;
       }
     } else if (t.type === 'Vender') {
-      totalBtc -= t.quantity;
+      totalBtc -= Math.abs(t.quantity);
       // Convert transaction revenue to user's currency if needed
       if (t.market === userCurrency) {
         totalRevenue += t.total_spent;

@@ -38,7 +38,7 @@ const PortfolioStatsEnhanced = memo(function PortfolioStatsEnhanced({
 
   const tooltipText = `Fórmula de Custo Líquido Médio:
 Custo líquido médio = (Custo total - Receitas totais) / Ativos.
-Caso o custo líquido médio seja negativo, as receitas são superiores ao custo (incluindo taxas) combinado.`;
+  Caso o custo líquido médio seja negativo, as receitas são superiores ao custo (incluindo taxas) combinado.`;
 
   return (
     <div className="space-y-4">
@@ -58,84 +58,84 @@ Caso o custo líquido médio seja negativo, as receitas são superiores ao custo
                 <Badge 
                   variant="outline" 
                   className={btcPriceChange >= 0 
-                    ? "bg-success/20 text-success border-success/30" 
-                    : "bg-destructive/20 text-destructive border-destructive/30"
-                  }
-                >
-                  {btcPriceChange >= 0 ? "+" : ""}{formatNumber(btcPriceChange)}%
-                </Badge>
-              </div>
+                  ? "bg-success/20 text-success border-success/30" 
+                  : "bg-destructive/20 text-destructive border-destructive/30"
+                }
+              >
+                {btcPriceChange >= 0 ? "+" : ""}{formatNumber(btcPriceChange)}%
+              </Badge>
             </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+
+      {/* Statistics Row */}
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+      <Card className="bg-gradient-card border-border">
+        <CardContent className="pt-4">
+          <div className="text-xs text-muted-foreground mb-1">Valor dos Ativos</div>
+          <div className="text-lg font-bold text-foreground">
+            {formatCurrencyDirect(totalValue, currency)}
           </div>
         </CardContent>
       </Card>
 
-      {/* Statistics Row */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-        <Card className="bg-gradient-card border-border">
-          <CardContent className="pt-4">
-            <div className="text-xs text-muted-foreground mb-1">Valor dos Ativos</div>
-            <div className="text-lg font-bold text-foreground">
-              {formatCurrencyDirect(totalValue, currency)}
-            </div>
-          </CardContent>
-        </Card>
+      <Card className="bg-gradient-card border-border">
+        <CardContent className="pt-4">
+          <div className="text-xs text-muted-foreground mb-1">Ativos</div>
+          <div className="text-lg font-bold text-foreground">
+            {totalBtc.toFixed(8)} BTC
+          </div>
+        </CardContent>
+      </Card>
 
-        <Card className="bg-gradient-card border-border">
-          <CardContent className="pt-4">
-            <div className="text-xs text-muted-foreground mb-1">Ativos</div>
-            <div className="text-lg font-bold text-foreground">
-              {totalBtc.toFixed(8)} BTC
-            </div>
-          </CardContent>
-        </Card>
+      <Card className="bg-gradient-card border-border">
+        <CardContent className="pt-4">
+          <div className="text-xs text-muted-foreground mb-1">Custo Total</div>
+          <div className="text-lg font-bold text-foreground">
+            {formatCurrencyDirect(totalCost, currency)}
+          </div>
+        </CardContent>
+      </Card>
 
-        <Card className="bg-gradient-card border-border">
-          <CardContent className="pt-4">
-            <div className="text-xs text-muted-foreground mb-1">Custo Total</div>
-            <div className="text-lg font-bold text-foreground">
-              {formatCurrencyDirect(totalCost, currency)}
-            </div>
-          </CardContent>
-        </Card>
+      <Card className="bg-gradient-card border-border">
+        <CardContent className="pt-4">
+          <div className="flex items-center gap-1 mb-1">
+            <span className="text-xs text-muted-foreground">Custo Líquido Médio</span>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger>
+                  <Info className="h-3 w-3 text-muted-foreground" />
+                </TooltipTrigger>
+                <TooltipContent className="max-w-xs">
+                  <p className="whitespace-pre-line text-sm">{tooltipText}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+          <div className="text-lg font-bold text-foreground">
+            {totalBtc > 0
+            ? formatCurrencyDirect(liquidAverageCost, currency)
+            : "US$ 0.00"
+          }
+        </div>
+      </CardContent>
+    </Card>
 
-        <Card className="bg-gradient-card border-border">
-          <CardContent className="pt-4">
-            <div className="flex items-center gap-1 mb-1">
-              <span className="text-xs text-muted-foreground">Custo Líquido Médio</span>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger>
-                    <Info className="h-3 w-3 text-muted-foreground" />
-                  </TooltipTrigger>
-                  <TooltipContent className="max-w-xs">
-                    <p className="whitespace-pre-line text-sm">{tooltipText}</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </div>
-            <div className="text-lg font-bold text-foreground">
-              {liquidAverageCost >= 0 
-                ? formatCurrencyDirect(liquidAverageCost, currency)
-                : formatCurrencyDirect(Math.abs(liquidAverageCost), currency)
-              }
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-card border-border">
-          <CardContent className="pt-4">
-            <div className="text-xs text-muted-foreground mb-1">Total de Ganhos/Perdas</div>
-            <div className={`text-lg font-bold ${
-              totalGainLoss >= 0 ? "text-success" : "text-destructive"
-            }`}>
-              {formatCurrencyDirect(totalGainLoss, currency)}
-            </div>
-          </CardContent>
-        </Card>
+    <Card className="bg-gradient-card border-border">
+      <CardContent className="pt-4">
+        <div className="text-xs text-muted-foreground mb-1">Total de Ganhos/Perdas</div>
+        <div className={`text-lg font-bold ${
+          totalGainLoss >= 0 ? "text-success" : "text-destructive"
+        }`}>
+        {formatCurrencyDirect(totalGainLoss, currency)}
       </div>
-    </div>
-  );
+    </CardContent>
+  </Card>
+</div>
+</div>
+);
 });
 
 export default PortfolioStatsEnhanced;

@@ -21,7 +21,7 @@ export const calculatePortfolioStats = (
   btcCurrentPrice: number,
   userCurrency: string,
   exchangeRate: number
-): PortfolioMetrics => {
+  ): PortfolioMetrics => {
   let totalBtc = 0;
   let totalCost = 0;
   let totalRevenue = 0;
@@ -61,7 +61,9 @@ export const calculatePortfolioStats = (
   });
   
   if (totalBtc < 0) totalBtc = 0;
-  
+  // Se o totalBtc for menor que 1 satoshi, considere zero!
+  if (Math.abs(totalBtc) < 0.00000001) totalBtc = 0;
+
   const currentValue = totalBtc * btcCurrentPrice;
   const netCost = totalCost - totalRevenue;
   const gainLoss = currentValue - netCost;
@@ -84,7 +86,7 @@ export const convertToUserCurrency = (
   transactionMarket: string,
   userCurrency: string,
   exchangeRate: number
-): number => {
+  ): number => {
   // If transaction and user currency are the same, no conversion needed
   if (transactionMarket === userCurrency) {
     return amount;
@@ -107,7 +109,7 @@ export const calculateTransactionGP = (
   btcCurrentPrice: number,
   userCurrency: string,
   exchangeRate: number
-): TransactionGP => {
+  ): TransactionGP => {
   if (transaction.type === "Comprar") {
     const currentValue = transaction.quantity * btcCurrentPrice;
     const convertedTotalSpent = convertToUserCurrency(
@@ -115,7 +117,7 @@ export const calculateTransactionGP = (
       transaction.market,
       userCurrency,
       exchangeRate
-    );
+      );
     const gp = currentValue - convertedTotalSpent;
     return {
       value: gp,
@@ -127,13 +129,13 @@ export const calculateTransactionGP = (
       transaction.market,
       userCurrency,
       exchangeRate
-    );
+      );
     const convertedPricePerCoin = convertToUserCurrency(
       transaction.price_per_coin,
       transaction.market,
       userCurrency,
       exchangeRate
-    );
+      );
     const gp = convertedTotalSpent - (transaction.quantity * convertedPricePerCoin);
     return {
       value: gp,

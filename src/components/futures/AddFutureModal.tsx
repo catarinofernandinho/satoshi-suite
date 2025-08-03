@@ -11,7 +11,6 @@ import { useTimezone } from "@/contexts/TimezoneContext";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import "@/styles/datepicker-dark.css";
-import { useTimezone } from "@/contexts/TimezoneContext";
 
 interface AddFutureModalProps {
   isOpen?: boolean;
@@ -76,9 +75,7 @@ export default function AddFutureModal({
     }
   };
   return <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-      {!isOpen && <DialogTrigger asChild>
-          
-        </DialogTrigger>}
+      
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>Adicionar Nova Ordem</DialogTitle>

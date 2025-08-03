@@ -6,7 +6,7 @@ import FearGreedIndexExplanation from "@/components/charts/FearGreedIndexExplana
 import BitcoinPriceChart from "@/components/charts/BitcoinPriceChart";
 import TradingViewChart from "@/components/charts/TradingViewChart";
 import CurrencyConverter from "@/components/conversor/CurrencyConverter";
-import { BarChart3, TrendingUp, Calculator, Activity } from "lucide-react";
+import { TrendingUp, Activity, BarChart3, Calculator, PieChart, LineChart } from "lucide-react";
 import MiniPanelsCounterflow from "@/components/charts/MiniPanelsCounterflow";
 import CounterflowIframePanel from "@/components/charts/CounterflowIframePanel";
 

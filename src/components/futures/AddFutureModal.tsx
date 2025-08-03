@@ -8,10 +8,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Plus } from "lucide-react";
 import { useFutures, type Future } from "@/hooks/useFutures";
 import { useTimezone } from "@/contexts/TimezoneContext";
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
-import "@/styles/datepicker-dark.css";
-
 interface AddFutureModalProps {
   isOpen?: boolean;
   onClose?: () => void;
@@ -41,7 +37,7 @@ export default function AddFutureModal({
     target_price: "",
     quantity_usd: "",
     leverage: "",
-    buy_date: getCurrentTime(),
+    buy_date: getCurrentTime().toISOString().slice(0, 16),
     status: "OPEN"
   });
   const handleSubmit = async (e: React.FormEvent) => {
@@ -54,7 +50,7 @@ export default function AddFutureModal({
         target_price: formData.target_price ? parseFloat(formData.target_price) : undefined,
         quantity_usd: parseFloat(formData.quantity_usd),
         leverage: parseFloat(formData.leverage),
-        buy_date: convertToUTC(formData.buy_date).toISOString(),
+        buy_date: convertToUTC(new Date(formData.buy_date)).toISOString(),
         status: formData.status as "OPEN" | "CLOSED" | "STOP" | "CANCELLED"
       } as Omit<Future, 'id' | 'created_at' | 'updated_at'>);
       setFormData({
@@ -63,7 +59,7 @@ export default function AddFutureModal({
         target_price: "",
         quantity_usd: "",
         leverage: "",
-        buy_date: getCurrentTime(),
+        buy_date: getCurrentTime().toISOString().slice(0, 16),
         status: "OPEN"
       });
       setModalOpen(false);
@@ -75,7 +71,9 @@ export default function AddFutureModal({
     }
   };
   return <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-      
+      {!isOpen && <DialogTrigger asChild>
+          
+        </DialogTrigger>}
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>Adicionar Nova Ordem</DialogTitle>
@@ -162,21 +160,15 @@ export default function AddFutureModal({
               </Select>
             </div>
 
-            <div className="space-y-2">
-  <Label>Data/Hora de Abertura</Label>
-  <DatePicker
-    selected={formData.buy_date}
-    onChange={date => setFormData(prev => ({ ...prev, buy_date: date }))}
-    showTimeSelect
-    timeFormat="HH:mm"
-    timeIntervals={15}
-    dateFormat="dd/MM/yyyy HH:mm"
-    className="w-full"
-    locale="pt-BR"
-    maxDate={new Date()}
-    popperPlacement="auto"
-  />
-</div>
+            <div className="space-y-2 md:col-span-2">
+              <Label htmlFor="buy_date">Data/Hora de Abertura</Label>
+              <Input id="buy_date" type="datetime-local" value={formData.buy_date} onChange={e => setFormData({
+              ...formData,
+              buy_date: e.target.value
+            })} required />
+            </div>
+          </div>
+
           <div className="flex justify-end gap-3 pt-4">
             <Button type="button" variant="outline" onClick={() => setModalOpen(false)}>
               Cancelar

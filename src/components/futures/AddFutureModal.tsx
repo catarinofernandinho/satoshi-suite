@@ -32,7 +32,7 @@ export default function AddFutureModal({
     addFuture
   } = useFutures();
   const { getCurrentTime, convertToUserTime, convertToUTC } = useTimezone();
-  
+
   const [formData, setFormData] = useState({
     direction: "",
     entry_price: "",
@@ -52,7 +52,7 @@ export default function AddFutureModal({
         target_price: formData.target_price ? parseFloat(formData.target_price) : undefined,
         quantity_usd: parseFloat(formData.quantity_usd),
         leverage: parseFloat(formData.leverage),
-        buy_date: convertToUTC(new Date(formData.buy_date)).toISOString(),
+        buy_date: convertToUTC(formData.buy_date).toISOString(),
         status: formData.status as "OPEN" | "CLOSED" | "STOP" | "CANCELLED"
       } as Omit<Future, 'id' | 'created_at' | 'updated_at'>);
       setFormData({
@@ -61,7 +61,7 @@ export default function AddFutureModal({
         target_price: "",
         quantity_usd: "",
         leverage: "",
-        buy_date: convertToUTC(formData.buy_date).toISOString(),
+        buy_date: getCurrentTime(),
         status: "OPEN"
       });
       setModalOpen(false);
@@ -165,14 +165,14 @@ export default function AddFutureModal({
     <div className="space-y-2">
       <Label htmlFor="buy_date">Data/Hora de Abertura:  </Label>
       <DatePicker
-        selected={convertToUserTime(formData.date)}
+        selected={convertToUserTime(formData.buy_date)}
         onChange={(date: Date | null) => {
           if (date) {
             const utcDate = convertToUTC(date);
             setFormData(prev => ({
               ...prev,
-              date: utcDate.toISOString()
-            }));
+        buy_date: utcDate 
+      }));
           }
         }}
         dateFormat="dd/MM/yyyy HH:mm"

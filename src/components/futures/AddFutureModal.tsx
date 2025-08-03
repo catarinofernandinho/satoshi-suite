@@ -162,7 +162,7 @@ return <Dialog open={modalOpen} onOpenChange={setModalOpen}>
     <div className="space-y-2">
       <Label 
         htmlFor="buy_date" 
-        className="mb-0 w-full"
+        className="mb-0"
       >
         Data/Hora de Abertura:
       </Label>
@@ -181,7 +181,7 @@ return <Dialog open={modalOpen} onOpenChange={setModalOpen}>
         showTimeSelect
         timeFormat="HH:mm"
         timeIntervals={5}
-        className="h-12 w-full px-3 py-2 rounded-md border border-input bg-background text-foreground placeholder:text-muted-foreground"
+        className="h-12 px-3 py-2 rounded-md border border-input bg-background text-foreground placeholder:text-muted-foreground"
         placeholderText="DD/MM/AAAA HH:mm"
         locale="pt-BR"
       />
@@ -191,7 +191,7 @@ return <Dialog open={modalOpen} onOpenChange={setModalOpen}>
 
   {formData.status === "CLOSED" && (
     <>
-    <div className="flex items-center gap-2">
+    <div className="space-y-2">
       <Label htmlFor="close_date" className="mb-0">Data de Saída:</Label>
       <DatePicker
         selected={formData.close_date}
@@ -200,7 +200,7 @@ return <Dialog open={modalOpen} onOpenChange={setModalOpen}>
         showTimeSelect
         timeFormat="HH:mm"
         timeIntervals={5}
-        className="h-12 w-[220px] px-3 py-2 rounded-md border border-input bg-background text-foreground placeholder:text-muted-foreground"
+        className="h-12 px-3 py-2 rounded-md border border-input bg-background text-foreground placeholder:text-muted-foreground"
         placeholderText="DD/MM/AAAA HH:mm"
         locale="pt-BR"
       />

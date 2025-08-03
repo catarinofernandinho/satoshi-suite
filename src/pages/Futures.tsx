@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useFutures } from "@/hooks/useFutures";
 import FuturesStatsEnhanced from "@/components/futures/FuturesStatsEnhanced";
 import FuturesCharts from "@/components/futures/FuturesCharts";
-import FuturesTable from "@/components/futures/FuturesTable";
+import FuturesTableEnhanced from "@/components/futures/FuturesTableEnhanced";
 import AddFutureButton from "@/components/futures/AddFutureButton";
 import DateRangeFilter from "@/components/futures/DateRangeFilter";
 import OrderStatusTabs from "@/components/futures/OrderStatusTabs";
@@ -221,20 +221,21 @@ export default function Futures() {
       <Card>
         <CardHeader>
           <CardTitle>Ordens</CardTitle>
-          <CardDescription className="flex items-center justify-between">
-            <span>
-              Operações do período selecionado ({filteredFutures.length} de {futures.length} total)
-            </span>
-            {filteredFutures.length !== futures.length && (
-              <Badge variant="outline" className="ml-2">
-                Filtro ativo
-              </Badge>
-            )}
-            <div className="mb-4 flex justify-end">
-        <AddFutureButton />
-      </div>
+          <CardDescription>
+            <div className="flex items-center justify-between">
+              <span>
+                Operações do período selecionado ({filteredFutures.length} de {futures.length} total)
+              </span>
+              <div className="flex items-center gap-2">
+                {filteredFutures.length !== futures.length && (
+                  <Badge variant="outline">
+                    Filtro ativo
+                  </Badge>
+                )}
+                <AddFutureButton />
+              </div>
+            </div>
           </CardDescription>
-
         </CardHeader>
         <CardContent>
           {filteredFutures.length === 0 ? (
@@ -263,7 +264,7 @@ export default function Futures() {
               onTabChange={setActiveTab}
             >
               {(tabFilteredFutures) => (
-                <FuturesTable futures={tabFilteredFutures} btcCurrentPrice={btcPrice} />
+                <FuturesTableEnhanced futures={tabFilteredFutures} btcCurrentPrice={btcPrice} />
               )}
             </OrderStatusTabs>
           )}

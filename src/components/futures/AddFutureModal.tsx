@@ -40,59 +40,57 @@ export default function AddFutureModal({
     quantity_usd: "",
     buy_date: getCurrentTime(),
     status: "OPEN",
-  close_date: null, // Date
-  realized_pl: "", // string para valor
-  fee_trade: "",   // taxa negociação (sats)
-  fee_funding: "", // taxa financiamento (sats)
-});
+    close_date: null as Date | null,
+    realized_pl: "",
+    fee_trade: "",
+    fee_funding: "",
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
-    const orderData = {
-      direction: formData.direction as "LONG" | "SHORT",
-      entry_price: parseFloat(formData.entry_price),
-      target_price: formData.target_price ? parseFloat(formData.target_price) : undefined,
-      quantity_usd: parseFloat(formData.quantity_usd),
-      buy_date: convertToUTC(formData.buy_date).toISOString(),
-      status: formData.status as "OPEN" | "CLOSED"
-    };
+    try {
+      const orderData: any = {
+        direction: formData.direction as "LONG" | "SHORT",
+        entry_price: parseFloat(formData.entry_price),
+        target_price: formData.target_price ? parseFloat(formData.target_price) : undefined,
+        quantity_usd: parseFloat(formData.quantity_usd),
+        buy_date: convertToUTC(formData.buy_date).toISOString(),
+        status: formData.status as "OPEN" | "CLOSED"
+      };
 
-    if (formData.status === "CLOSED") {
-      orderData.close_date = formData.close_date ? convertToUTC(formData.close_date).toISOString() : null;
-      orderData.realized_pl = parseFloat(formData.realized_pl);
-      orderData.fee_trade = parseInt(formData.fee_trade, 10);
-      orderData.fee_funding = parseInt(formData.fee_funding, 10);
-    orderData.total_fees = orderData.fee_trade + orderData.fee_funding; // se quiser já calcular
-    orderData.net_pl = orderData.realized_pl - orderData.total_fees; // se quiser já calcular
-  }
+      if (formData.status === "CLOSED") {
+        orderData.close_date = formData.close_date ? convertToUTC(formData.close_date).toISOString() : null;
+        orderData.realized_pl = parseFloat(formData.realized_pl);
+        orderData.fee_trade = parseInt(formData.fee_trade, 10);
+        orderData.fee_funding = parseInt(formData.fee_funding, 10);
+        orderData.total_fees = orderData.fee_trade + orderData.fee_funding;
+        orderData.net_pl = orderData.realized_pl - orderData.total_fees;
+      }
 
-  try {
-    await addFuture({
-      direction: formData.direction as "LONG" | "SHORT",
-      entry_price: parseFloat(formData.entry_price),
-      target_price: formData.target_price ? parseFloat(formData.target_price) : undefined,
-      quantity_usd: parseFloat(formData.quantity_usd),
-      buy_date: convertToUTC(formData.buy_date).toISOString(),
-      status: formData.status as "OPEN" | "CLOSED"
-    } as Omit<Future, 'id' | 'created_at' | 'updated_at'>);
-    setFormData({
-      direction: "",
-      entry_price: "",
-      target_price: "",
-      quantity_usd: "",
-      buy_date: getCurrentTime(),
-      status: "OPEN"
-    });
-    setModalOpen(false);
-    onSuccess?.();
-  } catch (error) {
-    console.error('Error adding future:', error);
-  } finally {
-    setLoading(false);
-  }
-};
+      await addFuture(orderData);
+      
+      setFormData({
+        direction: "",
+        entry_price: "",
+        target_price: "",
+        quantity_usd: "",
+        buy_date: getCurrentTime(),
+        status: "OPEN",
+        close_date: null,
+        realized_pl: "",
+        fee_trade: "",
+        fee_funding: "",
+      });
+      setModalOpen(false);
+      onSuccess?.();
+    } catch (error) {
+      console.error('Error adding future:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 return <Dialog open={modalOpen} onOpenChange={setModalOpen}>
   {!isOpen && <DialogTrigger asChild>
 
@@ -195,7 +193,7 @@ return <Dialog open={modalOpen} onOpenChange={setModalOpen}>
       <Label htmlFor="close_date" className="mb-0">Data de Saída:</Label>
       <DatePicker
         selected={formData.close_date}
-        onChange={date => setFormData(f => ({ ...f, close_date: date }))}
+        onChange={(date: Date | null) => setFormData(f => ({ ...f, close_date: date }))}
         dateFormat="dd/MM/yyyy HH:mm"
         showTimeSelect
         timeFormat="HH:mm"

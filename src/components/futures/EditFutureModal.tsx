@@ -4,15 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, Save, X } from "lucide-react";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
-import { cn } from "@/lib/utils";
+import { Save, X } from "lucide-react";
 import { useFutures, type Future } from "@/hooks/useFutures";
 import { useToast } from "@/hooks/use-toast";
+import { useTimezone } from "@/contexts/TimezoneContext";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import "@/styles/datepicker-dark.css";
 
 interface EditFutureModalProps {
   future: Future | null;
@@ -24,16 +22,19 @@ export default function EditFutureModal({ future, isOpen, onClose }: EditFutureM
   const [loading, setLoading] = useState(false);
   const { updateFuture } = useFutures();
   const { toast } = useToast();
+  const { getCurrentTime, convertToUserTime, convertToUTC } = useTimezone();
 
   const [formData, setFormData] = useState({
     direction: "LONG" as "LONG" | "SHORT",
     entry_price: "",
-    exit_price: "",
     target_price: "",
     quantity_usd: "",
-    leverage: "",
-    status: "OPEN" as "OPEN" | "CLOSED" | "STOP" | "CANCELLED",
-    buy_date: new Date()
+    status: "OPEN" as "OPEN" | "CLOSED",
+    buy_date: getCurrentTime(),
+    close_date: null as Date | null,
+    realized_pl: "",
+    fee_trade: "",
+    fee_funding: "",
   });
 
   useEffect(() => {
@@ -41,12 +42,14 @@ export default function EditFutureModal({ future, isOpen, onClose }: EditFutureM
       setFormData({
         direction: future.direction,
         entry_price: future.entry_price.toString(),
-        exit_price: future.exit_price?.toString() || "",
         target_price: future.target_price?.toString() || "",
         quantity_usd: future.quantity_usd.toString(),
-        leverage: future.leverage.toString(),
-        status: future.status,
-        buy_date: new Date(future.buy_date)
+        status: future.status as "OPEN" | "CLOSED",
+        buy_date: new Date(future.buy_date),
+        close_date: (future as any).close_date ? new Date((future as any).close_date) : null,
+        realized_pl: (future as any).realized_pl?.toString() || "",
+        fee_trade: (future as any).fee_trade?.toString() || "",
+        fee_funding: (future as any).fee_funding?.toString() || "",
       });
     }
   }, [future]);
@@ -56,7 +59,7 @@ export default function EditFutureModal({ future, isOpen, onClose }: EditFutureM
     if (!future) return;
 
     // Validation
-    if (!formData.entry_price || !formData.quantity_usd || !formData.leverage) {
+    if (!formData.entry_price || !formData.quantity_usd) {
       toast({
         title: "Campos obrigatórios",
         description: "Preencha todos os campos obrigatórios.",
@@ -67,12 +70,11 @@ export default function EditFutureModal({ future, isOpen, onClose }: EditFutureM
 
     const entryPrice = parseFloat(formData.entry_price);
     const quantityUsd = parseFloat(formData.quantity_usd);
-    const leverage = parseFloat(formData.leverage);
 
-    if (entryPrice <= 0 || quantityUsd <= 0 || leverage <= 0) {
+    if (entryPrice <= 0 || quantityUsd <= 0) {
       toast({
         title: "Valores inválidos",
-        description: "Preço, quantidade e alavancagem devem ser maiores que zero.",
+        description: "Preço e quantidade devem ser maiores que zero.",
         variant: "destructive"
       });
       return;
@@ -81,28 +83,40 @@ export default function EditFutureModal({ future, isOpen, onClose }: EditFutureM
     setLoading(true);
 
     try {
-      const updateData = {
+      const updateData: any = {
         direction: formData.direction,
         entry_price: entryPrice,
-        exit_price: formData.exit_price ? parseFloat(formData.exit_price) : undefined,
         target_price: formData.target_price ? parseFloat(formData.target_price) : undefined,
         quantity_usd: quantityUsd,
-        leverage,
         status: formData.status,
-        buy_date: formData.buy_date.toISOString()
+        buy_date: convertToUTC(formData.buy_date).toISOString()
       };
+
+      if (formData.status === "CLOSED") {
+        updateData.close_date = formData.close_date ? convertToUTC(formData.close_date).toISOString() : null;
+        updateData.realized_pl = parseFloat(formData.realized_pl);
+        updateData.fee_trade = parseInt(formData.fee_trade, 10);
+        updateData.fee_funding = parseInt(formData.fee_funding, 10);
+        updateData.total_fees = updateData.fee_trade + updateData.fee_funding;
+        updateData.net_pl = updateData.realized_pl - updateData.total_fees;
+      }
 
       await updateFuture(future.id, updateData);
       onClose();
+      toast({
+        title: "Ordem atualizada",
+        description: "A ordem foi atualizada com sucesso.",
+      });
     } catch (error) {
       console.error('Error updating future:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao atualizar a ordem.",
+        variant: "destructive"
+      });
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleInputChange = (field: string, value: string | Date | null) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
   };
 
   return (
@@ -120,13 +134,13 @@ export default function EditFutureModal({ future, isOpen, onClose }: EditFutureM
             {/* Direction */}
             <div className="space-y-2">
               <Label htmlFor="direction">Direção *</Label>
-              <Select value={formData.direction} onValueChange={(value) => handleInputChange('direction', value)}>
+              <Select value={formData.direction} onValueChange={value => setFormData({...formData, direction: value as "LONG" | "SHORT"})}>
                 <SelectTrigger>
-                  <SelectValue />
+                  <SelectValue placeholder="Selecionar LONG/SHORT" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="LONG">LONG</SelectItem>
-                  <SelectItem value="SHORT">SHORT</SelectItem>
+                  <SelectItem value="LONG">LONG (Comprado)</SelectItem>
+                  <SelectItem value="SHORT">SHORT (Vendido)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -134,15 +148,13 @@ export default function EditFutureModal({ future, isOpen, onClose }: EditFutureM
             {/* Status */}
             <div className="space-y-2">
               <Label htmlFor="status">Status *</Label>
-              <Select value={formData.status} onValueChange={(value) => handleInputChange('status', value)}>
+              <Select value={formData.status} onValueChange={value => setFormData({...formData, status: value as "OPEN" | "CLOSED"})}>
                 <SelectTrigger>
-                  <SelectValue />
+                  <SelectValue placeholder="Selecionar status" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="OPEN">Aberto</SelectItem>
                   <SelectItem value="CLOSED">Fechado</SelectItem>
-                  <SelectItem value="STOP">Stop</SelectItem>
-                  <SelectItem value="CANCELLED">Cancelado</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -154,23 +166,10 @@ export default function EditFutureModal({ future, isOpen, onClose }: EditFutureM
                 id="entry_price"
                 type="number"
                 step="0.01"
+                placeholder="95000.00"
                 value={formData.entry_price}
-                onChange={(e) => handleInputChange('entry_price', e.target.value)}
-                placeholder="0.00"
+                onChange={e => setFormData({...formData, entry_price: e.target.value})}
                 required
-              />
-            </div>
-
-            {/* Exit Price */}
-            <div className="space-y-2">
-              <Label htmlFor="exit_price">Preço de Saída (USD)</Label>
-              <Input
-                id="exit_price"
-                type="number"
-                step="0.01"
-                value={formData.exit_price}
-                onChange={(e) => handleInputChange('exit_price', e.target.value)}
-                placeholder="0.00"
               />
             </div>
 
@@ -181,9 +180,9 @@ export default function EditFutureModal({ future, isOpen, onClose }: EditFutureM
                 id="target_price"
                 type="number"
                 step="0.01"
+                placeholder="100000.00"
                 value={formData.target_price}
-                onChange={(e) => handleInputChange('target_price', e.target.value)}
-                placeholder="0.00"
+                onChange={e => setFormData({...formData, target_price: e.target.value})}
               />
             </div>
 
@@ -194,58 +193,95 @@ export default function EditFutureModal({ future, isOpen, onClose }: EditFutureM
                 id="quantity_usd"
                 type="number"
                 step="0.01"
+                placeholder="1000.00"
                 value={formData.quantity_usd}
-                onChange={(e) => handleInputChange('quantity_usd', e.target.value)}
-                placeholder="0.00"
-                required
-              />
-            </div>
-
-            {/* Leverage */}
-            <div className="space-y-2">
-              <Label htmlFor="leverage">Alavancagem *</Label>
-              <Input
-                id="leverage"
-                type="number"
-                step="0.1"
-                value={formData.leverage}
-                onChange={(e) => handleInputChange('leverage', e.target.value)}
-                placeholder="1.0"
+                onChange={e => setFormData({...formData, quantity_usd: e.target.value})}
                 required
               />
             </div>
 
             {/* Buy Date */}
             <div className="space-y-2">
-              <Label>Data da Operação *</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !formData.buy_date && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {formData.buy_date ? (
-                      format(formData.buy_date, "PPP", { locale: ptBR })
-                    ) : (
-                      <span>Selecionar data</span>
-                    )}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={formData.buy_date}
-                    onSelect={(date) => handleInputChange('buy_date', date || new Date())}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
+              <Label htmlFor="buy_date" className="mb-0 w-full">
+                Data/Hora de Abertura *
+              </Label>
+              <DatePicker
+                selected={convertToUserTime(formData.buy_date)}
+                onChange={(date: Date | null) => {
+                  if (date) {
+                    const utcDate = convertToUTC(date);
+                    setFormData(prev => ({
+                      ...prev,
+                      buy_date: utcDate 
+                    }));
+                  }
+                }}
+                dateFormat="dd/MM/yyyy HH:mm"
+                showTimeSelect
+                timeFormat="HH:mm"
+                timeIntervals={5}
+                className="h-12 w-full px-3 py-2 rounded-md border border-input bg-background text-foreground placeholder:text-muted-foreground"
+                placeholderText="DD/MM/AAAA HH:mm"
+                locale="pt-BR"
+              />
             </div>
           </div>
+
+          {/* Campos adicionais quando status é CLOSED */}
+          {formData.status === "CLOSED" && (
+            <>
+              <div className="flex items-center gap-2">
+                <Label htmlFor="close_date" className="mb-0">Data de Saída:</Label>
+                <DatePicker
+                  selected={formData.close_date}
+                  onChange={(date: Date | null) => setFormData(f => ({ ...f, close_date: date }))}
+                  dateFormat="dd/MM/yyyy HH:mm"
+                  showTimeSelect
+                  timeFormat="HH:mm"
+                  timeIntervals={5}
+                  className="h-12 w-[220px] px-3 py-2 rounded-md border border-input bg-background text-foreground placeholder:text-muted-foreground"
+                  placeholderText="DD/MM/AAAA HH:mm"
+                  locale="pt-BR"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="realized_pl">PL Realizado (USD)</Label>
+                <Input
+                  id="realized_pl"
+                  type="number"
+                  step="0.01"
+                  placeholder="Valor total ganho"
+                  value={formData.realized_pl}
+                  onChange={e => setFormData({ ...formData, realized_pl: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="fee_trade">Taxa de Negociação (sats)</Label>
+                <Input
+                  id="fee_trade"
+                  type="number"
+                  step="1"
+                  placeholder="Satoshis pagos na negociação"
+                  value={formData.fee_trade}
+                  onChange={e => setFormData({ ...formData, fee_trade: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="fee_funding">Taxa de Financiamento (sats)</Label>
+                <Input
+                  id="fee_funding"
+                  type="number"
+                  step="1"
+                  placeholder="Satoshis pagos em funding"
+                  value={formData.fee_funding}
+                  onChange={e => setFormData({ ...formData, fee_funding: e.target.value })}
+                  required
+                />
+              </div>
+            </>
+          )}
 
           {/* Action Buttons */}
           <div className="flex justify-end gap-3 pt-4">

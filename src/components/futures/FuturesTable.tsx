@@ -23,8 +23,6 @@ export default function FuturesTable({ futures, btcCurrentPrice }: FuturesTableP
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [editingOrder, setEditingOrder] = useState<Future | null>(null);
   const [closingOrder, setClosingOrder] = useState<Future | null>(null);
-  const totalFees = (future.fee_trade ?? 0) + (future.fee_funding ?? 0);
-  const netPL = (future.realized_pl ?? 0) - totalFees;
 
   const handleDelete = async (id: string) => {
     setDeletingId(id);

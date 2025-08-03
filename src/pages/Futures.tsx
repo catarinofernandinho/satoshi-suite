@@ -230,10 +230,11 @@ export default function Futures() {
                 Filtro ativo
               </Badge>
             )}
-          </CardDescription>
-          <div className="mb-4 flex justify-end">
+            <div className="mb-4 flex justify-end">
         <AddFutureButton />
       </div>
+          </CardDescription>
+
         </CardHeader>
         <CardContent>
           {filteredFutures.length === 0 ? (

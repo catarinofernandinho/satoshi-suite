@@ -40,7 +40,6 @@ export default function AddFutureModal({
     entry_price: "",
     target_price: "",
     quantity_usd: "",
-    leverage: "",
     buy_date: getCurrentTime(),
     status: "OPEN"
   });
@@ -53,7 +52,6 @@ export default function AddFutureModal({
         entry_price: parseFloat(formData.entry_price),
         target_price: formData.target_price ? parseFloat(formData.target_price) : undefined,
         quantity_usd: parseFloat(formData.quantity_usd),
-        leverage: parseFloat(formData.leverage),
         buy_date: convertToUTC(formData.buy_date).toISOString(),
         status: formData.status as "OPEN" | "CLOSED" | "STOP" | "CANCELLED"
       } as Omit<Future, 'id' | 'created_at' | 'updated_at'>);
@@ -62,7 +60,6 @@ export default function AddFutureModal({
         entry_price: "",
         target_price: "",
         quantity_usd: "",
-        leverage: "",
         buy_date: getCurrentTime(),
         status: "OPEN"
       });
@@ -124,6 +121,8 @@ export default function AddFutureModal({
             })} required />
         </div>
 
+<<<<<<< HEAD
+=======
         <div className="space-y-2">
           <Label htmlFor="leverage">Alavancagem</Label>
           <Select value={formData.leverage} onValueChange={value => setFormData({
@@ -146,6 +145,7 @@ export default function AddFutureModal({
         </Select>
       </div>
 
+>>>>>>> bfd5b6f8449bb2ba3cb198da414ff4a03af72867
       <div className="space-y-2">
         <Label htmlFor="status">Status</Label>
         <Select value={formData.status} onValueChange={value => setFormData({

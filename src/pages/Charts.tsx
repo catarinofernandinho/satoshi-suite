@@ -21,7 +21,7 @@ export default function Charts() {
       {/* Tabs for different chart sections */}
       
       <Tabs defaultValue="price" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3 gap-2 gap-y-4 lg:grid-cols-6 mb-13">
+        <TabsList className="grid w-full grid-cols-3 gap-2 gap-y-4 lg:grid-cols-6 mb-9">
           <TabsTrigger value="price" className="flex items-center gap-2">
             <TrendingUp className="h-4 w-4" /> Preço
           </TabsTrigger>

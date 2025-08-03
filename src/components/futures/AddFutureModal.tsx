@@ -143,51 +143,51 @@ return <Dialog open={modalOpen} onOpenChange={setModalOpen}>
         })} required />
       </div>
 
-      <div className="flex items-center gap-2">
-        <Label 
-          htmlFor="buy_date" 
-          className="mb-0 w-[170px] whitespace-nowrap flex-shrink-0"
-        >
-          Data/Hora de Abertura:
-        </Label>
-        <DatePicker
-          selected={convertToUserTime(formData.buy_date)}
-          onChange={(date: Date | null) => {
-            if (date) {
-              const utcDate = convertToUTC(date);
-              setFormData(prev => ({
-                ...prev,
-                buy_date: utcDate 
-              }));
-            }
-          }}
-          dateFormat="dd/MM/yyyy HH:mm"
-          showTimeSelect
-          timeFormat="HH:mm"
-          timeIntervals={5}
-          className="h-12 w-[220px] px-3 py-2 rounded-md border border-input bg-background text-foreground placeholder:text-muted-foreground"
-          placeholderText="DD/MM/AAAA HH:mm"
-          locale="pt-BR"
-        />
-      </div>
+      <div className="space-y-2">
+        <Label htmlFor="status">Status</Label>
+        <Select value={formData.status} onValueChange={value => setFormData({
+          ...formData,
+          status: value
+        })} required>
+        <SelectTrigger>
+          <SelectValue placeholder="Selecionar status" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="OPEN">Aberto</SelectItem>
+          <SelectItem value="CLOSED">Fechado</SelectItem>
+        </SelectContent>
+      </Select>
     </div>
 
-
-    <div className="space-y-2">
-      <Label htmlFor="status">Status</Label>
-      <Select value={formData.status} onValueChange={value => setFormData({
-        ...formData,
-        status: value
-      })} required>
-      <SelectTrigger>
-        <SelectValue placeholder="Selecionar status" />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectItem value="OPEN">Aberto</SelectItem>
-        <SelectItem value="CLOSED">Fechado</SelectItem>
-      </SelectContent>
-    </Select>
+    <div className="flex items-center gap-2">
+      <Label 
+        htmlFor="buy_date" 
+        className="mb-0 w-[170px] whitespace-nowrap flex-shrink-0"
+      >
+        Data/Hora de Abertura:
+      </Label>
+      <DatePicker
+        selected={convertToUserTime(formData.buy_date)}
+        onChange={(date: Date | null) => {
+          if (date) {
+            const utcDate = convertToUTC(date);
+            setFormData(prev => ({
+              ...prev,
+              buy_date: utcDate 
+            }));
+          }
+        }}
+        dateFormat="dd/MM/yyyy HH:mm"
+        showTimeSelect
+        timeFormat="HH:mm"
+        timeIntervals={5}
+        className="h-12 w-[220px] px-3 py-2 rounded-md border border-input bg-background text-foreground placeholder:text-muted-foreground"
+        placeholderText="DD/MM/AAAA HH:mm"
+        locale="pt-BR"
+      />
+    </div>
   </div>
+
 
   {formData.status === "CLOSED" && (
     <>

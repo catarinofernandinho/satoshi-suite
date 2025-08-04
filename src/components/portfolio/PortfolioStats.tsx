@@ -21,7 +21,6 @@ export default function PortfolioStats({
 }: PortfolioStatsProps) {
   const { formatCurrency: formatCurrencyContext, formatNumber, exchangeRate } = useCurrency();
   
-  const btcPriceConverted = currency === "BRL" ? btcPrice * exchangeRate : btcPrice;
   
   const formatCurrency = (amount: number, curr: string) => {
     if (curr === "BTC") return `${amount.toFixed(8)} BTC`;

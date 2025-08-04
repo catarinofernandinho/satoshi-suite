@@ -4,7 +4,6 @@ import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Info, Bitcoin } from "lucide-react";
 import { useCurrency } from "@/contexts/CurrencyContext";
-import { formatCurrencyDirect } from "@/utils/portfolioCalculations";
 
 interface PortfolioStatsEnhancedProps {
   btcPrice: number;
@@ -27,7 +26,7 @@ const PortfolioStatsEnhanced = memo(function PortfolioStatsEnhanced({
   totalGainLoss,
   currency
 }: PortfolioStatsEnhancedProps) {
-  const { formatNumber } = useCurrency();
+  const { formatNumber, formatCurrency } = useCurrency();
   
   // Use imported utility function for formatting
 
@@ -53,7 +52,7 @@ Custo líquido médio = (Custo total - Receitas totais) / Ativos.
               <h3 className="text-lg font-semibold text-foreground">Bitcoin BTC</h3>
               <div className="flex items-center gap-2">
                 <span className="text-2xl font-bold text-foreground">
-                  {formatCurrencyDirect(btcPrice, currency)}
+                  {formatCurrency(btcPrice, true)}
                 </span>
                 <Badge 
                   variant="outline" 
@@ -76,7 +75,7 @@ Custo líquido médio = (Custo total - Receitas totais) / Ativos.
         <CardContent className="pt-4">
           <div className="text-xs text-muted-foreground mb-1">Valor dos Ativos</div>
           <div className="text-lg font-bold text-foreground">
-            {formatCurrencyDirect(totalValue, currency)}
+            {formatCurrency(totalValue)}
           </div>
         </CardContent>
       </Card>
@@ -94,7 +93,7 @@ Custo líquido médio = (Custo total - Receitas totais) / Ativos.
         <CardContent className="pt-4">
           <div className="text-xs text-muted-foreground mb-1">Custo Total</div>
           <div className="text-lg font-bold text-foreground">
-            {formatCurrencyDirect(totalCost, currency)}
+            {formatCurrency(totalCost)}
           </div>
         </CardContent>
       </Card>
@@ -115,7 +114,7 @@ Custo líquido médio = (Custo total - Receitas totais) / Ativos.
             </TooltipProvider>
           </div>
           <div className="text-lg font-bold text-foreground">
-            {formatCurrencyDirect(totalBtc > 0 ? liquidAverageCost : 0, currency)}
+            {formatCurrency(totalBtc > 0 ? liquidAverageCost : 0)}
           </div>
         </CardContent>
       </Card>
@@ -126,7 +125,7 @@ Custo líquido médio = (Custo total - Receitas totais) / Ativos.
           <div className={`text-lg font-bold ${
             totalGainLoss >= 0 ? "text-success" : "text-destructive"
           }`}>
-          {formatCurrencyDirect(totalGainLoss, currency)}
+          {formatCurrency(totalGainLoss)}
         </div>
       </CardContent>
     </Card>

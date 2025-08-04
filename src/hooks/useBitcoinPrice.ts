@@ -11,29 +11,35 @@ const CACHE_DURATION = 60000; // 1 minute cache
 const LOCALSTORAGE_KEYS = {
   PRICE: 'lastBtcPrice',
   CHANGE: 'lastBtcPriceChange',
-  TIMESTAMP: 'lastBtcPriceTimestamp'
+  TIMESTAMP: 'lastBtcPriceTimestamp',
+  CURRENCY: 'lastBtcPriceCurrency'
 };
 
 export function useBitcoinPrice(currency: string = 'USD') {
   const [data, setData] = useState<BitcoinPriceData>(() => {
-    // Initialize with cached data if available
+    // Initialize with cached data if available and currency matches
     const cachedPrice = localStorage.getItem(LOCALSTORAGE_KEYS.PRICE);
     const cachedChange = localStorage.getItem(LOCALSTORAGE_KEYS.CHANGE);
     const cachedTimestamp = localStorage.getItem(LOCALSTORAGE_KEYS.TIMESTAMP);
+    const cachedCurrency = localStorage.getItem(LOCALSTORAGE_KEYS.CURRENCY);
+    
+    // Only use cached data if currency matches current currency
+    const shouldUseCachedData = cachedCurrency === currency && cachedPrice && cachedChange && cachedTimestamp;
     
     return {
-      price: cachedPrice ? parseFloat(cachedPrice) : 100000,
-      priceChange: cachedChange ? parseFloat(cachedChange) : 0,
+      price: shouldUseCachedData ? parseFloat(cachedPrice) : 100000,
+      priceChange: shouldUseCachedData ? parseFloat(cachedChange) : 0,
       loading: false,
-      lastUpdate: cachedTimestamp ? parseInt(cachedTimestamp) : 0
+      lastUpdate: shouldUseCachedData ? parseInt(cachedTimestamp) : 0
     };
   });
 
   const fetchPrice = useCallback(async () => {
     const now = Date.now();
+    const cachedCurrency = localStorage.getItem(LOCALSTORAGE_KEYS.CURRENCY);
     
-    // Check if cache is still valid
-    if (now - data.lastUpdate < CACHE_DURATION && data.lastUpdate > 0) {
+    // Check if cache is still valid AND currency hasn't changed
+    if (now - data.lastUpdate < CACHE_DURATION && data.lastUpdate > 0 && cachedCurrency === currency) {
       return;
     }
 
@@ -50,10 +56,11 @@ export function useBitcoinPrice(currency: string = 'USD') {
         const price = currency === 'BRL' ? apiData.bitcoin.brl : apiData.bitcoin.usd;
         const priceChange = currency === 'BRL' ? (apiData.bitcoin.brl_24h_change || 0) : (apiData.bitcoin.usd_24h_change || 0);
         
-        // Cache the data
+        // Cache the data with currency
         localStorage.setItem(LOCALSTORAGE_KEYS.PRICE, price.toString());
         localStorage.setItem(LOCALSTORAGE_KEYS.CHANGE, priceChange.toString());
         localStorage.setItem(LOCALSTORAGE_KEYS.TIMESTAMP, now.toString());
+        localStorage.setItem(LOCALSTORAGE_KEYS.CURRENCY, currency);
         
         setData({
           price,

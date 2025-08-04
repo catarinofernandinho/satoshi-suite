@@ -16,8 +16,7 @@ export default function Portfolio() {
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   
   const { settings } = useUserSettings();
-  const currentCurrency = settings?.preferred_currency || "USD";
-  const { exchangeRate } = useCurrency();
+  const { currency: currentCurrency, exchangeRate } = useCurrency();
   const { btcPrice, btcPriceChange, loading: priceLoading } = useBitcoinPrice(currentCurrency);
   
   const {

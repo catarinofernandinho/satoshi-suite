@@ -55,6 +55,7 @@ export default function PortfolioStats({
           <p className="text-sm text-muted-foreground mb-1">Preço BTC</p>
           <p className="text-2xl font-bold text-foreground">
             {formatCurrency(btcPrice, currency)}
+          </p>
           <div className={`flex items-center gap-1 mt-1 ${isPriceUp ? 'text-success' : 'text-error'}`}>
             {isPriceUp ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
             <span className="text-sm font-medium">

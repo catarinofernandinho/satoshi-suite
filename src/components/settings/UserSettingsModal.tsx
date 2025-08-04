@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Settings, Save, User, DollarSign, Globe } from "lucide-react";
 import { useUserSettings, type UserSettings } from "@/hooks/useUserSettings";
 import { useAuth } from "@/hooks/useAuth";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 // Country to timezone mapping
 const COUNTRIES = [{
@@ -79,30 +80,36 @@ function detectCountryFromTimezone(timezone: string): string {
 export default function UserSettingsModal() {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const {
-    settings,
-    updateSettings
-  } = useUserSettings();
-  const {
-    user
-  } = useAuth();
+  const { settings, updateSettings } = useUserSettings();
+  const { user } = useAuth();
+  const { currency: currentCurrency, updateCurrency } = useCurrency();
+  
   const [selectedCountry, setSelectedCountry] = useState<string>(() => {
     const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
     return detectCountryFromTimezone(detectedTimezone);
   });
+  
   const [formData, setFormData] = useState<Partial<UserSettings>>({
-    preferred_currency: 'USD',
+    preferred_currency: currentCurrency || 'USD',
     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
   });
+  
   useEffect(() => {
-    if (settings) {
+    if (user && settings) {
+      // Logged-in user: use settings from database
       setFormData({
         preferred_currency: settings.preferred_currency,
         timezone: settings.timezone
       });
       setSelectedCountry(detectCountryFromTimezone(settings.timezone));
+    } else {
+      // Guest user: use current currency from context (localStorage)
+      setFormData(prev => ({
+        ...prev,
+        preferred_currency: currentCurrency
+      }));
     }
-  }, [settings]);
+  }, [settings, currentCurrency, user]);
   const handleCountryChange = (countryCode: string) => {
     setSelectedCountry(countryCode);
     const country = COUNTRIES.find(c => c.code === countryCode);
@@ -116,10 +123,20 @@ export default function UserSettingsModal() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    
     try {
-      await updateSettings(formData);
+      if (user && settings) {
+        // Logged-in user: update database
+        await updateSettings(formData);
+      } else {
+        // Guest user: update currency via context (localStorage)
+        if (formData.preferred_currency) {
+          await updateCurrency(formData.preferred_currency);
+        }
+      }
+      
       setOpen(false);
-
+      
       // Force page reload to apply currency changes immediately
       setTimeout(() => {
         window.location.reload();
@@ -176,31 +193,33 @@ export default function UserSettingsModal() {
             </CardContent>
           </Card>
 
-          {/* Country Settings */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Globe className="h-4 w-4" />
-                País
-              </CardTitle>
-              
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                
-                <Select value={selectedCountry} onValueChange={handleCountryChange}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecionar país" />
-                  </SelectTrigger>
-                  <SelectContent className="max-h-60 overflow-y-auto">
-                    {COUNTRIES.map(country => <SelectItem key={country.code} value={country.code}>
-                        {country.flag} {country.name}
-                      </SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-            </CardContent>
-          </Card>
+          {/* Country Settings - Only show for logged-in users */}
+          {user && (
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Globe className="h-4 w-4" />
+                  País
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  <Select value={selectedCountry} onValueChange={handleCountryChange}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecionar país" />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-60 overflow-y-auto">
+                      {COUNTRIES.map(country => (
+                        <SelectItem key={country.code} value={country.code}>
+                          {country.flag} {country.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Action Buttons */}
           <div className="flex justify-end gap-3 pt-4">

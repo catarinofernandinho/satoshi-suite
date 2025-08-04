@@ -99,7 +99,7 @@ export default function AddFutureModal({
       setLoading(false);
     }
   };
-  
+
   return <Dialog open={modalOpen} onOpenChange={setModalOpen}>
     {!isOpen && <DialogTrigger asChild>
 
@@ -117,7 +117,7 @@ export default function AddFutureModal({
               direction: value
             })} required>
             <SelectTrigger>
-              <SelectValue placeholder="Selecionar LONG/SHORT" />
+              <SelectValue placeholder="LONG/SHORT" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="LONG">LONG (Comprado)</SelectItem>

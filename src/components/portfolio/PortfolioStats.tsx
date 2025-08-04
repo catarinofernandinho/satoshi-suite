@@ -19,7 +19,9 @@ export default function PortfolioStats({
   totalGainLoss,
   currency
 }: PortfolioStatsProps) {
-  const { formatCurrency: formatCurrencyContext, formatNumber } = useCurrency();
+  const { formatCurrency: formatCurrencyContext, formatNumber, exchangeRate } = useCurrency();
+
+  const btcPriceConverted = currency === "BRL" ? btcPrice * exchangeRate : btcPrice;
   
   const formatCurrency = (amount: number, curr: string) => {
     if (curr === "BTC") return `${amount.toFixed(8)} BTC`;
@@ -52,7 +54,7 @@ export default function PortfolioStats({
         <div>
           <p className="text-sm text-muted-foreground mb-1">Preço BTC</p>
           <p className="text-2xl font-bold text-foreground">
-            {formatCurrency(btcPrice, currency)}
+            {formatCurrency(btcPriceConverted, currency)}
           </p>
           <div className={`flex items-center gap-1 mt-1 ${isPriceUp ? 'text-success' : 'text-error'}`}>
             {isPriceUp ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
@@ -96,5 +98,5 @@ export default function PortfolioStats({
         </div>
       </Card>
     </div>
-  );
+    );
 }

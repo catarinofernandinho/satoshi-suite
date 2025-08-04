@@ -14,6 +14,7 @@ import { subDays, format, isWithinInterval, parseISO } from "date-fns";
 import { useTimezone } from "@/contexts/TimezoneContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import AddFutureModal from "@/components/futures/AddFutureModal";
+import { useBitcoinPrice } from "@/hooks/useBitcoinPrice";
 
 export default function Futures() {
   const { futures, loading, calculateFutureMetrics } = useFutures();
@@ -21,6 +22,7 @@ export default function Futures() {
   const { formatCurrency, formatNumber } = useCurrency();
   const [btcPrice, setBtcPrice] = useState(0);
   const [priceLoading, setPriceLoading] = useState(true);
+  const { btcPrice, loading: btcLoading } = useBitcoinPrice("USD");
   const [activeTab, setActiveTab] = useState("all");
   const [dateRange, setDateRange] = useState({
     from: subDays(getCurrentTime(), 30),
@@ -159,7 +161,7 @@ export default function Futures() {
                 <Skeleton className="h-3 w-16" />
               </CardContent>
             </Card>
-          ))}
+            ))}
         </div>
         
         <Card>
@@ -171,7 +173,7 @@ export default function Futures() {
           </CardContent>
         </Card>
       </div>
-    );
+      );
   }
 
   return (
@@ -219,51 +221,52 @@ export default function Futures() {
 
       <AddFutureModal onSuccess={() => { /* não precisa recarregar! */ }} />
       <FuturesTableEnhanced
-        futures={futures} // <-- ESTADO SEMPRE ATUALIZADO!
-        btcCurrentPrice={btcCurrentPrice}
+        futures={futures}
+        btcCurrentPrice={btcPrice}
       />
+    />
 
       {/* Orders Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Ordens</CardTitle>
-          <CardDescription>
-            <div className="flex items-center justify-between">
-              <span>
-                Operações do período selecionado ({filteredFutures.length} de {futures.length} total)
-              </span>
-              <div className="flex items-center gap-2">
-                {filteredFutures.length !== futures.length && (
-                  <Badge variant="outline">
-                    Filtro ativo
-                  </Badge>
+    <Card>
+      <CardHeader>
+        <CardTitle>Ordens</CardTitle>
+        <CardDescription>
+          <div className="flex items-center justify-between">
+            <span>
+              Operações do período selecionado ({filteredFutures.length} de {futures.length} total)
+            </span>
+            <div className="flex items-center gap-2">
+              {filteredFutures.length !== futures.length && (
+                <Badge variant="outline">
+                  Filtro ativo
+                </Badge>
                 )}
-                <AddFutureButton />
-              </div>
+              <AddFutureButton />
             </div>
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {filteredFutures.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              {futures.length === 0 ? (
-                <>
-                  <p>Nenhuma ordem criada ainda</p>
-                  <p className="text-sm mt-2">Clique em "Adicionar Ordem" para começar</p>
-                </>
+          </div>
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        {filteredFutures.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground">
+            {futures.length === 0 ? (
+              <>
+              <p>Nenhuma ordem criada ainda</p>
+              <p className="text-sm mt-2">Clique em "Adicionar Ordem" para começar</p>
+              </>
               ) : (
-                <>
-                  <p>Sem operações no período selecionado</p>
-                  <p className="text-sm mt-2">
-                    Período: {dateRange.from.toLocaleDateString('pt-BR')} até {dateRange.to.toLocaleDateString('pt-BR')}
-                  </p>
-                  <p className="text-sm mt-1">
-                    Ajuste o filtro de datas ou <Button variant="link" className="p-0 h-auto" onClick={() => setDateRange({ from: subDays(getCurrentTime(), 365), to: getCurrentTime() })}>visualize o último ano</Button>
-                  </p>
-                </>
+              <>
+              <p>Sem operações no período selecionado</p>
+              <p className="text-sm mt-2">
+                Período: {dateRange.from.toLocaleDateString('pt-BR')} até {dateRange.to.toLocaleDateString('pt-BR')}
+              </p>
+              <p className="text-sm mt-1">
+                Ajuste o filtro de datas ou <Button variant="link" className="p-0 h-auto" onClick={() => setDateRange({ from: subDays(getCurrentTime(), 365), to: getCurrentTime() })}>visualize o último ano</Button>
+              </p>
+              </>
               )}
             </div>
-          ) : (
+            ) : (
             <OrderStatusTabs 
               futures={filteredFutures} 
               activeTab={activeTab} 
@@ -271,11 +274,11 @@ export default function Futures() {
             >
               {(tabFilteredFutures) => (
                 <FuturesTableEnhanced futures={tabFilteredFutures} btcCurrentPrice={btcPrice} />
-              )}
+                )}
             </OrderStatusTabs>
-          )}
-        </CardContent>
-      </Card>
-    </div>
-  );
+            )}
+          </CardContent>
+        </Card>
+      </div>
+      );
 }

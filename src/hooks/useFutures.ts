@@ -215,7 +215,7 @@ export function useFutures() {
         description: validationErrors[0],
         variant: "destructive"
       });
-      return;
+      return false;
     }
 
     try {

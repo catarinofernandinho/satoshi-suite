@@ -18,7 +18,7 @@ export interface Future {
   exit_price?: number;
   target_price?: number;
   quantity_usd: number;
-  leverage: number;
+  
   status: "OPEN" | "CLOSED" | "STOP" | "CANCELLED";
   percent_gain?: number;
   percent_fee?: number;
@@ -125,8 +125,8 @@ export function useFutures() {
       
       const total_fee_percent = fixed_fee + (daily_fee * days_open);
       const unrealized_gain = future.direction === "LONG" 
-        ? ((currentBtcPrice - future.entry_price) / future.entry_price) * 100 * future.leverage
-        : ((future.entry_price - currentBtcPrice) / future.entry_price) * 100 * future.leverage;
+        ? ((currentBtcPrice - future.entry_price) / future.entry_price) * 100
+        : ((future.entry_price - currentBtcPrice) / future.entry_price) * 100;
       
       const net_gain_percent = unrealized_gain - total_fee_percent;
       const net_pl_usd = (future.quantity_usd * net_gain_percent) / 100;
@@ -157,12 +157,20 @@ export function useFutures() {
       try {
         const { error } = await supabase
           .from('futures')
-          .insert([{
-            ...order,
+          .insert({
             user_id: user.id,
-            id: undefined, // Let Supabase generate new ID
-            isLocal: undefined
-          }]);
+            direction: order.direction,
+            entry_price: order.entry_price,
+            exit_price: order.exit_price,
+            target_price: order.target_price,
+            quantity_usd: order.quantity_usd,
+            status: order.status,
+            buy_date: order.buy_date,
+            percent_gain: order.percent_gain,
+            percent_fee: order.percent_fee,
+            fees_paid: order.fees_paid,
+            net_pl_sats: order.net_pl_sats
+          });
           
         if (error) {
           console.error('Error syncing local order:', error);
@@ -190,7 +198,7 @@ export function useFutures() {
       exit_price: futureData.exit_price,
       target_price: futureData.target_price,
       quantity_usd: futureData.quantity_usd,
-      leverage: futureData.leverage,
+      
       status: futureData.status,
       buy_date: futureData.buy_date,
       percent_gain: futureData.percent_gain,
@@ -214,8 +222,18 @@ export function useFutures() {
       const { data, error } = await supabase
         .from('futures')
         .insert({
-          ...sanitizedData,
-          user_id: user.id
+          user_id: user.id,
+          direction: sanitizedData.direction,
+          entry_price: sanitizedData.entry_price,
+          exit_price: sanitizedData.exit_price,
+          target_price: sanitizedData.target_price,
+          quantity_usd: sanitizedData.quantity_usd,
+          status: sanitizedData.status,
+          buy_date: sanitizedData.buy_date,
+          percent_gain: sanitizedData.percent_gain,
+          percent_fee: sanitizedData.percent_fee,
+          fees_paid: sanitizedData.fees_paid,
+          net_pl_sats: sanitizedData.net_pl_sats
         })
         .select()
         .single();
@@ -287,13 +305,20 @@ export function useFutures() {
           if (localOrder) {
             const { data, error } = await supabase
               .from('futures')
-              .insert([{
-                ...localOrder,
-                ...updates,
+              .insert({
                 user_id: user.id,
-                id: undefined,
-                isLocal: undefined
-              }])
+                direction: localOrder.direction,
+                entry_price: localOrder.entry_price,
+                exit_price: localOrder.exit_price || updates.exit_price,
+                target_price: localOrder.target_price || updates.target_price,
+                quantity_usd: localOrder.quantity_usd,
+                status: updates.status || localOrder.status,
+                buy_date: localOrder.buy_date,
+                percent_gain: updates.percent_gain || localOrder.percent_gain,
+                percent_fee: updates.percent_fee || localOrder.percent_fee,
+                fees_paid: updates.fees_paid || localOrder.fees_paid,
+                net_pl_sats: updates.net_pl_sats || localOrder.net_pl_sats
+              })
               .select()
               .single();
 

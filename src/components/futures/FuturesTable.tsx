@@ -97,7 +97,7 @@ export default function FuturesTable({ futures, btcCurrentPrice }: FuturesTableP
             <TableHead>Status</TableHead>
             <TableHead>Direção</TableHead>
             <TableHead>Quantidade</TableHead>
-            <TableHead>Alavancagem</TableHead>
+            
             <TableHead>Preço Entrada</TableHead>
             <TableHead>Preço Alvo</TableHead>
             <TableHead>% Ganho</TableHead>
@@ -126,7 +126,7 @@ export default function FuturesTable({ futures, btcCurrentPrice }: FuturesTableP
                     </div>
                   </TableCell>
                   <TableCell>{formatCurrency(future.quantity_usd)}</TableCell>
-                  <TableCell>{future.leverage}x</TableCell>
+                  
                   <TableCell>{formatCurrency(future.entry_price)}</TableCell>
                   <TableCell>{formatCurrency(future.target_price)}</TableCell>
                   <TableCell className={getPLColor(metrics.percent_gain)}>

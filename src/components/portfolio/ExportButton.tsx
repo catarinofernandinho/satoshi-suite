@@ -36,7 +36,7 @@ export default function ExportButton({ data, filename, type }: ExportButtonProps
         "Preço Saída": item.exit_price || "",
         "Preço Alvo": item.target_price || "",
         "Quantidade USD": item.quantity_usd,
-        "Alavancagem": item.leverage,
+        
         "Data": new Date(item.buy_date).toLocaleDateString('pt-BR')
       }));
     }

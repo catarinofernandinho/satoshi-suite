@@ -23,7 +23,6 @@ export type Database = {
           exit_price: number | null
           fees_paid: number | null
           id: string
-          leverage: number
           net_pl_sats: number | null
           percent_fee: number | null
           percent_gain: number | null
@@ -41,7 +40,6 @@ export type Database = {
           exit_price?: number | null
           fees_paid?: number | null
           id?: string
-          leverage: number
           net_pl_sats?: number | null
           percent_fee?: number | null
           percent_gain?: number | null
@@ -59,7 +57,6 @@ export type Database = {
           exit_price?: number | null
           fees_paid?: number | null
           id?: string
-          leverage?: number
           net_pl_sats?: number | null
           percent_fee?: number | null
           percent_gain?: number | null

@@ -118,9 +118,7 @@ export default function AddFutureModal({
               direction: value
             })} required>
             <SelectTrigger>
-              <ArrowUp className="inline-block mr-2 h-4 w-4 text-green-500" />
               <SelectValue placeholder="LONG/SHORT" />
-              <ArrowDown className="inline-block mr-2 h-4 w-4 text-red-500" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="LONG">

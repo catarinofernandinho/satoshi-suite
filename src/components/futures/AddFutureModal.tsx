@@ -9,6 +9,7 @@ import { Plus } from "lucide-react";
 import { useFutures, type Future } from "@/hooks/useFutures";
 import { useTimezone } from "@/contexts/TimezoneContext";
 import DatePicker from "react-datepicker";
+import { ArrowUp, ArrowDown } from "lucide-react";
 import "react-datepicker/dist/react-datepicker.css";
 import "@/styles/datepicker-dark.css";
 

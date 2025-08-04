@@ -13,6 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { subDays, format, isWithinInterval, parseISO } from "date-fns";
 import { useTimezone } from "@/contexts/TimezoneContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import AddFutureModal from "@/components/futures/AddFutureModal";
 
 export default function Futures() {
   const { futures, loading, calculateFutureMetrics } = useFutures();
@@ -216,6 +217,11 @@ export default function Futures() {
         waterfallData={waterfallData}
       />
 
+      <AddFutureModal onSuccess={() => { /* não precisa recarregar! */ }} />
+      <FuturesTableEnhanced
+        futures={futures} // <-- ESTADO SEMPRE ATUALIZADO!
+        btcCurrentPrice={btcCurrentPrice}
+      />
 
       {/* Orders Table */}
       <Card>

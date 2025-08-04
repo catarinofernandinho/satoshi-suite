@@ -21,8 +21,8 @@ export default function Futures() {
   const { getCurrentTime, convertToUserTime } = useTimezone();
   const { formatCurrency, formatNumber } = useCurrency();
   const [btcPrice, setBtcPrice] = useState(0);
-  const [priceLoading, setPriceLoading] = useState(true);
-  const { btcPrice, loading: btcLoading } = useBitcoinPrice("USD");
+  const { btcPrice, loading: btcLoading } = useBitcoinPrice("USD"); // <-- só essa linha!
+  const [priceLoading, setPriceLoading] = useState(true); 
   const [activeTab, setActiveTab] = useState("all");
   const [dateRange, setDateRange] = useState({
     from: subDays(getCurrentTime(), 30),

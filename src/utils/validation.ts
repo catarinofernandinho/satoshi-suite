@@ -16,9 +16,6 @@ export const validateFutureData = (data: Partial<Future>): string[] => {
     errors.push('Quantidade em USD deve ser maior que zero');
   }
 
-  if (!data.leverage || data.leverage < 1 || data.leverage > 125) {
-    errors.push('Alavancagem deve estar entre 1x e 125x');
-  }
 
   if (!data.buy_date) {
     errors.push('Data de compra é obrigatória');
@@ -52,7 +49,7 @@ export const sanitizeFutureData = (data: any): Future => {
     exit_price: data.exit_price ? Number(data.exit_price) : undefined,
     target_price: data.target_price ? Number(data.target_price) : undefined,
     quantity_usd: Number(data.quantity_usd),
-    leverage: Number(data.leverage),
+    
     status: data.status?.toUpperCase() as 'OPEN' | 'CLOSED' | 'STOP' | 'CANCELLED',
     buy_date: data.buy_date,
     created_at: data.created_at || '',

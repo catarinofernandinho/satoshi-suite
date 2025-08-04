@@ -18,7 +18,7 @@ export interface Future {
   exit_price?: number;
   target_price?: number;
   quantity_usd: number;
-  leverage: number;
+  
   status: "OPEN" | "CLOSED" | "STOP" | "CANCELLED";
   percent_gain?: number;
   percent_fee?: number;
@@ -125,8 +125,8 @@ export function useFutures() {
       
       const total_fee_percent = fixed_fee + (daily_fee * days_open);
       const unrealized_gain = future.direction === "LONG" 
-        ? ((currentBtcPrice - future.entry_price) / future.entry_price) * 100 * future.leverage
-        : ((future.entry_price - currentBtcPrice) / future.entry_price) * 100 * future.leverage;
+        ? ((currentBtcPrice - future.entry_price) / future.entry_price) * 100
+        : ((future.entry_price - currentBtcPrice) / future.entry_price) * 100;
       
       const net_gain_percent = unrealized_gain - total_fee_percent;
       const net_pl_usd = (future.quantity_usd * net_gain_percent) / 100;
@@ -190,7 +190,7 @@ export function useFutures() {
       exit_price: futureData.exit_price,
       target_price: futureData.target_price,
       quantity_usd: futureData.quantity_usd,
-      leverage: futureData.leverage,
+      
       status: futureData.status,
       buy_date: futureData.buy_date,
       percent_gain: futureData.percent_gain,

@@ -89,7 +89,7 @@ export default function CloseOrderModal({ order, isOpen, onClose, btcCurrentPric
   const calculateExitPrice = (order: Future, netPLSats: number, btcPrice: number): number => {
     // Estimativa do preço de saída baseado no P&L líquido
     const netPLUSD = (netPLSats / 100000000) * btcPrice;
-    const percentChange = (netPLUSD / order.quantity_usd) * 100 / order.leverage;
+    const percentChange = (netPLUSD / order.quantity_usd) * 100;
     
     if (order.direction === "LONG") {
       return order.entry_price * (1 + percentChange / 100);
@@ -119,10 +119,6 @@ export default function CloseOrderModal({ order, isOpen, onClose, btcCurrentPric
             <div>
               <span className="text-muted-foreground">Quantidade:</span>
               <div className="font-medium">${order.quantity_usd.toLocaleString()}</div>
-            </div>
-            <div>
-              <span className="text-muted-foreground">Alavancagem:</span>
-              <div className="font-medium">{order.leverage}x</div>
             </div>
             <div>
               <span className="text-muted-foreground">Preço Entrada:</span>

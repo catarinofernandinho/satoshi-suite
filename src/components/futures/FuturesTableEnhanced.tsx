@@ -13,7 +13,6 @@ import CloseOrderModal from "./CloseOrderModal";
 import { useTimezone } from "@/contexts/TimezoneContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
 
-
 interface FuturesTableEnhancedProps {
   futures: Future[];
   btcCurrentPrice: number;

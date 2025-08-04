@@ -120,8 +120,14 @@ export default function AddFutureModal({
               <SelectValue placeholder="LONG/SHORT" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="LONG">LONG (Comprado)</SelectItem>
-              <SelectItem value="SHORT">SHORT (Vendido)</SelectItem>
+              <SelectItem value="LONG">
+                <ArrowUp className="inline-block mr-2 h-4 w-4 text-green-500" />
+                LONG (Comprado)
+              </SelectItem>
+              <SelectItem value="SHORT">
+                <ArrowDown className="inline-block mr-2 h-4 w-4 text-red-500" />
+                SHORT (Vendido)
+              </SelectItem>
             </SelectContent>
           </Select>
         </div>

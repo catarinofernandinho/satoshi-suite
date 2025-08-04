@@ -20,9 +20,8 @@ export default function Futures() {
   const { futures, loading, calculateFutureMetrics } = useFutures();
   const { getCurrentTime, convertToUserTime } = useTimezone();
   const { formatCurrency, formatNumber } = useCurrency();
-  const [btcPrice, setBtcPrice] = useState(0);
-  const { btcPrice, loading: btcLoading } = useBitcoinPrice("USD"); // <-- só essa linha!
-  const [priceLoading, setPriceLoading] = useState(true); 
+  const { btcPrice, loading: btcLoading } = useBitcoinPrice("USD");
+  const [priceLoading, setPriceLoading] = useState(true); // Se precisar para outras coisas
   const [activeTab, setActiveTab] = useState("all");
   const [dateRange, setDateRange] = useState({
     from: subDays(getCurrentTime(), 30),

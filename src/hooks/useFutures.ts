@@ -79,10 +79,10 @@ export function useFutures() {
     
     try {
       const { data, error } = await supabase
-        .from('futures')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('buy_date', { ascending: false });
+      .from('futures')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('buy_date', { ascending: false });
 
       if (error) throw error;
       
@@ -125,8 +125,8 @@ export function useFutures() {
       
       const total_fee_percent = fixed_fee + (daily_fee * days_open);
       const unrealized_gain = future.direction === "LONG" 
-        ? ((currentBtcPrice - future.entry_price) / future.entry_price) * 100
-        : ((future.entry_price - currentBtcPrice) / future.entry_price) * 100;
+      ? ((currentBtcPrice - future.entry_price) / future.entry_price) * 100
+      : ((future.entry_price - currentBtcPrice) / future.entry_price) * 100;
       
       const net_gain_percent = unrealized_gain - total_fee_percent;
       const net_pl_usd = (future.quantity_usd * net_gain_percent) / 100;
@@ -156,22 +156,22 @@ export function useFutures() {
     for (const order of localOrders) {
       try {
         const { error } = await supabase
-          .from('futures')
-          .insert({
-            user_id: user.id,
-            direction: order.direction,
-            entry_price: order.entry_price,
-            exit_price: order.exit_price,
-            target_price: order.target_price,
-            quantity_usd: order.quantity_usd,
-            status: order.status,
-            buy_date: order.buy_date,
-            percent_gain: order.percent_gain,
-            percent_fee: order.percent_fee,
-            fees_paid: order.fees_paid,
-            net_pl_sats: order.net_pl_sats
-          });
-          
+        .from('futures')
+        .insert({
+          user_id: user.id,
+          direction: order.direction,
+          entry_price: order.entry_price,
+          exit_price: order.exit_price,
+          target_price: order.target_price,
+          quantity_usd: order.quantity_usd,
+          status: order.status,
+          buy_date: order.buy_date,
+          percent_gain: order.percent_gain,
+          percent_fee: order.percent_fee,
+          fees_paid: order.fees_paid,
+          net_pl_sats: order.net_pl_sats
+        });
+        
         if (error) {
           console.error('Error syncing local order:', error);
         }
@@ -220,23 +220,23 @@ export function useFutures() {
 
     try {
       const { data, error } = await supabase
-        .from('futures')
-        .insert({
-          user_id: user.id,
-          direction: sanitizedData.direction,
-          entry_price: sanitizedData.entry_price,
-          exit_price: sanitizedData.exit_price,
-          target_price: sanitizedData.target_price,
-          quantity_usd: sanitizedData.quantity_usd,
-          status: sanitizedData.status,
-          buy_date: sanitizedData.buy_date,
-          percent_gain: sanitizedData.percent_gain,
-          percent_fee: sanitizedData.percent_fee,
-          fees_paid: sanitizedData.fees_paid,
-          net_pl_sats: sanitizedData.net_pl_sats
-        })
-        .select()
-        .single();
+      .from('futures')
+      .insert({
+        user_id: user.id,
+        direction: sanitizedData.direction,
+        entry_price: sanitizedData.entry_price,
+        exit_price: sanitizedData.exit_price,
+        target_price: sanitizedData.target_price,
+        quantity_usd: sanitizedData.quantity_usd,
+        status: sanitizedData.status,
+        buy_date: sanitizedData.buy_date,
+        percent_gain: sanitizedData.percent_gain,
+        percent_fee: sanitizedData.percent_fee,
+        fees_paid: sanitizedData.fees_paid,
+        net_pl_sats: sanitizedData.net_pl_sats
+      })
+      .select()
+      .single();
 
       if (error) throw error;
 
@@ -250,18 +250,25 @@ export function useFutures() {
     } catch (error: any) {
       console.error('Error creating future:', error);
       
-      // Fallback para cache local APENAS em caso de erro de conexão
-      const localOrder = saveLocalOrder(sanitizedData as LocalOrder);
-      setFutures(prev => [localOrder, ...prev]);
-      
-      toast({
-        title: "Ordem salva offline",
-        description: "Ordem salva localmente. Será sincronizada quando a conexão for restabelecida.",
-        variant: "default"
-      });
-      
-      return localOrder;
-    }
+      // Só salva offline se for erro de conexão!
+      if (error.status === 0 || error.message?.includes("Failed to fetch")) {
+        const localOrder = saveLocalOrder(sanitizedData as LocalOrder);
+        setFutures(prev => [localOrder, ...prev]);
+        toast({
+          title: "Ordem salva offline",
+          description: "Ordem salva localmente. Será sincronizada quando a conexão for restabelecida.",
+          variant: "default"
+        });
+        return localOrder;
+      } else {
+        toast({
+          title: "Erro ao criar ordem",
+          description: error.message || error.details || JSON.stringify(error),
+          variant: "destructive"
+        });
+        return false;
+      }
+    }  
   };
 
   const updateFuture = async (id: string, updates: Partial<Future>) => {
@@ -279,18 +286,18 @@ export function useFutures() {
     try {
       if (!isLocalOrder) {
         const { data, error } = await supabase
-          .from('futures')
-          .update(updates)
-          .eq('id', id)
-          .eq('user_id', user.id)
-          .select()
-          .single();
+        .from('futures')
+        .update(updates)
+        .eq('id', id)
+        .eq('user_id', user.id)
+        .select()
+        .single();
 
         if (error) throw error;
 
         setFutures(prev => 
           prev.map(f => f.id === id ? data as Future : f)
-        );
+          );
         
         toast({
           title: "Ordem atualizada",
@@ -304,30 +311,30 @@ export function useFutures() {
           const localOrder = futures.find(f => f.id === id) as LocalOrder;
           if (localOrder) {
             const { data, error } = await supabase
-              .from('futures')
-              .insert({
-                user_id: user.id,
-                direction: localOrder.direction,
-                entry_price: localOrder.entry_price,
-                exit_price: localOrder.exit_price || updates.exit_price,
-                target_price: localOrder.target_price || updates.target_price,
-                quantity_usd: localOrder.quantity_usd,
-                status: updates.status || localOrder.status,
-                buy_date: localOrder.buy_date,
-                percent_gain: updates.percent_gain || localOrder.percent_gain,
-                percent_fee: updates.percent_fee || localOrder.percent_fee,
-                fees_paid: updates.fees_paid || localOrder.fees_paid,
-                net_pl_sats: updates.net_pl_sats || localOrder.net_pl_sats
-              })
-              .select()
-              .single();
+            .from('futures')
+            .insert({
+              user_id: user.id,
+              direction: localOrder.direction,
+              entry_price: localOrder.entry_price,
+              exit_price: localOrder.exit_price || updates.exit_price,
+              target_price: localOrder.target_price || updates.target_price,
+              quantity_usd: localOrder.quantity_usd,
+              status: updates.status || localOrder.status,
+              buy_date: localOrder.buy_date,
+              percent_gain: updates.percent_gain || localOrder.percent_gain,
+              percent_fee: updates.percent_fee || localOrder.percent_fee,
+              fees_paid: updates.fees_paid || localOrder.fees_paid,
+              net_pl_sats: updates.net_pl_sats || localOrder.net_pl_sats
+            })
+            .select()
+            .single();
 
             if (error) throw error;
 
             // Remover da lista local e adicionar versão do servidor
             setFutures(prev => 
               prev.filter(f => f.id !== id).concat([data as Future])
-            );
+              );
             
             // Limpar do cache local
             deleteLocalOrder(id);
@@ -345,7 +352,7 @@ export function useFutures() {
           if (updatedOrder) {
             setFutures(prev => 
               prev.map(f => f.id === id ? updatedOrder : f)
-            );
+              );
             
             toast({
               title: "Ordem atualizada offline",
@@ -382,10 +389,10 @@ export function useFutures() {
     try {
       if (!isLocalOrder) {
         const { error } = await supabase
-          .from('futures')
-          .delete()
-          .eq('id', id)
-          .eq('user_id', user.id);
+        .from('futures')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', user.id);
 
         if (error) throw error;
       } else {

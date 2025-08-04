@@ -12,6 +12,7 @@ import EditFutureModal from "./EditFutureModal";
 import CloseOrderModal from "./CloseOrderModal";
 import { useTimezone } from "@/contexts/TimezoneContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import FuturesTableEnhanced from "@/components/futures/FuturesTableEnhanced";
 
 interface FuturesTableEnhancedProps {
   futures: Future[];

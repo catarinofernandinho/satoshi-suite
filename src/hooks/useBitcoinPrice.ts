@@ -48,7 +48,7 @@ export function useBitcoinPrice(currency: string = 'USD') {
       
       if (apiData.bitcoin) {
         const price = currency === 'BRL' ? apiData.bitcoin.brl : apiData.bitcoin.usd;
-        const priceChange = apiData.bitcoin.usd_24h_change || 0;
+        const priceChange = currency === 'BRL' ? (apiData.bitcoin.brl_24h_change || 0) : (apiData.bitcoin.usd_24h_change || 0);
         
         // Cache the data
         localStorage.setItem(LOCALSTORAGE_KEYS.PRICE, price.toString());

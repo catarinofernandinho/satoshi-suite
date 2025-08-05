@@ -458,6 +458,29 @@ export function useFutures() {
   useEffect(() => {
     if (user) {
       fetchFutures();
+
+      // Set up realtime updates
+      const channel = supabase
+        .channel('futures_changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'futures',
+            filter: `user_id=eq.${user.id}`
+          },
+          (payload) => {
+            console.log('Realtime change detected:', payload);
+            // Refresh the data when changes occur
+            fetchFutures();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
     } else {
       setLoading(false);
     }

@@ -94,7 +94,8 @@ export default function AddFutureModal({
         fee_trade: "",
         fee_funding: "",
       });
-      setModalOpen(false);
+      if (onClose) onClose();
+      else setModalOpen(false);
       onSuccess?.();
     } catch (error) {
       console.error('Error adding future:', error);
@@ -199,7 +200,6 @@ export default function AddFutureModal({
           timeIntervals={5}
           className="h-12 w-full px-3 py-2 rounded-md border border-input bg-background text-foreground placeholder:text-muted-foreground"
           placeholderText="DD/MM/AAAA HH:mm"
-          locale="pt-BR"
         />
       </div>
     </div>
@@ -230,7 +230,6 @@ export default function AddFutureModal({
             timeIntervals={5}
             className="h-12 w-[220px] px-3 py-2 rounded-md border border-input bg-background text-foreground placeholder:text-muted-foreground"
             placeholderText="DD/MM/AAAA HH:mm"
-            locale="pt-BR"
           />
         </div>
       <div className="space-y-2">

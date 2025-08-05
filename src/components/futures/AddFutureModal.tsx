@@ -75,8 +75,6 @@ export default function AddFutureModal({
         orderData.percent_fee = orderData.fees_paid ? (orderData.fees_paid / orderData.quantity_usd) * 100 : 0;
       }
 
-      await addFuture(orderData);
-
       const result = await addFuture(orderData);
       if (result === false) {
         setLoading(false);

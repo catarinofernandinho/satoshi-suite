@@ -181,28 +181,31 @@ const FuturesTableEnhanced = memo(function FuturesTableEnhanced({
                   Direção <ArrowUpDown className="h-3 w-3" />
                 </div>
               </TableHead>
+              <TableHead className="text-muted-foreground cursor-pointer" onClick={() => handleSort("entry_price")}>
+                <div className="flex items-center gap-1">
+                  Entrada <ArrowUpDown className="h-3 w-3" />
+                </div>
+              </TableHead>
+              <TableHead className="text-muted-foreground cursor-pointer" onClick={() => handleSort("exit_price")}>
+                <div className="flex items-center gap-1">
+                  Saída <ArrowUpDown className="h-3 w-3" />
+                </div>
+              </TableHead>
+              <TableHead className="text-muted-foreground cursor-pointer" onClick={() => handleSort("target_price")}>
+                <div className="flex items-center gap-1">
+                  Alvo <ArrowUpDown className="h-3 w-3" />
+                </div>
+              </TableHead>
               <TableHead className="text-muted-foreground cursor-pointer" onClick={() => handleSort("quantity_usd")}>
                 <div className="flex items-center gap-1">
                   Quantidade <ArrowUpDown className="h-3 w-3" />
                 </div>
               </TableHead>
-              <TableHead className="text-muted-foreground cursor-pointer" onClick={() => handleSort("entry_price")}>
-                <div className="flex items-center gap-1">
-                  Preço Entrada <ArrowUpDown className="h-3 w-3" />
-                </div>
-              </TableHead>
-              <TableHead className="text-muted-foreground cursor-pointer" onClick={() => handleSort("target_price")}>
-                <div className="flex items-center gap-1">
-                  Preço Alvo <ArrowUpDown className="h-3 w-3" />
-                </div>
-              </TableHead>
-              <TableHead className="text-muted-foreground">% Ganho</TableHead>
-              <TableHead className="text-muted-foreground">% Taxa</TableHead>
-              <TableHead className="text-muted-foreground">Taxas Pagas</TableHead>
-              <TableHead className="text-muted-foreground">NET P&L</TableHead>
+              <TableHead className="text-muted-foreground">P&L %</TableHead>
+              <TableHead className="text-muted-foreground">P&L SATS</TableHead>
               <TableHead className="text-muted-foreground cursor-pointer" onClick={() => handleSort("buy_date")}>
                 <div className="flex items-center gap-1">
-                  Data <ArrowUpDown className="h-3 w-3" />
+                  Data Abertura <ArrowUpDown className="h-3 w-3" />
                 </div>
               </TableHead>
               <TableHead className="text-muted-foreground">Ações</TableHead>
@@ -211,7 +214,7 @@ const FuturesTableEnhanced = memo(function FuturesTableEnhanced({
           <TableBody>
             {currentFutures.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={11} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
                   Nenhuma ordem encontrada. Adicione sua primeira ordem para começar.
                 </TableCell>
               </TableRow>
@@ -232,16 +235,20 @@ const FuturesTableEnhanced = memo(function FuturesTableEnhanced({
                         {future.direction}
                       </div>
                     </TableCell>
-                    <TableCell className="text-foreground">{formatCurrency(future.quantity_usd)}</TableCell>
-                    <TableCell className="text-foreground">{formatCurrency(future.entry_price)}</TableCell>
-                    <TableCell className="text-foreground">{formatCurrency(future.target_price)}</TableCell>
-                    <TableCell className={getPLColor(metrics.percent_gain)}>
+                    <TableCell className="text-foreground font-mono">{formatCurrency(future.entry_price)}</TableCell>
+                    <TableCell className="text-foreground font-mono">
+                      {future.exit_price ? formatCurrency(future.exit_price) : 
+                       (future.status === 'OPEN' ? formatCurrency(btcCurrentPrice) : '-')}
+                    </TableCell>
+                    <TableCell className="text-foreground font-mono">
+                      {future.target_price ? formatCurrency(future.target_price) : '-'}
+                    </TableCell>
+                    <TableCell className="text-foreground font-mono">{formatCurrency(future.quantity_usd)}</TableCell>
+                    <TableCell className={`font-mono ${getPLColor(metrics.percent_gain)}`}>
                       {formatPercent(metrics.percent_gain)}
                     </TableCell>
-                    <TableCell className="text-foreground">{formatPercent(metrics.percent_fee)}</TableCell>
-                    <TableCell className="text-foreground">{formatCurrency(metrics.fees_paid)}</TableCell>
-                    <TableCell className={getPLColor(metrics.net_pl_sats)}>
-                      {formatCurrency(metrics.net_pl_sats, 'SATS')}
+                    <TableCell className={`font-mono ${getPLColor(metrics.net_pl_sats)}`}>
+                      {formatNumber(metrics.net_pl_sats || 0)} sats
                     </TableCell>
                     <TableCell className="text-foreground">
                       {formatDateTime(future.buy_date, 'dd/MM/yyyy HH:mm')}

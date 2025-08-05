@@ -37,6 +37,7 @@ export default function AddFutureModal({
   const [formData, setFormData] = useState({
     direction: "",
     entry_price: "",
+    exit_price: "",
     target_price: "",
     quantity_usd: "",
     buy_date: getCurrentTime(),
@@ -64,12 +65,14 @@ export default function AddFutureModal({
 
 
       if (formData.status === "CLOSED") {
-        orderData.close_date = formData.close_date ? convertToUTC(formData.close_date).toISOString() : null;
-        orderData.realized_pl = parseFloat(formData.realized_pl);
-        orderData.fee_trade = parseInt(formData.fee_trade, 10);
-        orderData.fee_funding = parseInt(formData.fee_funding, 10);
-        orderData.total_fees = orderData.fee_trade + orderData.fee_funding;
-        orderData.net_pl = orderData.realized_pl - orderData.total_fees;
+        orderData.exit_price = formData.exit_price ? parseFloat(formData.exit_price) : undefined;
+        orderData.fees_paid = (parseInt(formData.fee_trade, 10) + parseInt(formData.fee_funding, 10));
+        orderData.net_pl_sats = parseInt(formData.realized_pl, 10);
+        orderData.percent_gain = orderData.exit_price && orderData.entry_price ? 
+          (orderData.direction === "LONG" ? 
+            ((orderData.exit_price - orderData.entry_price) / orderData.entry_price) * 100 :
+            ((orderData.entry_price - orderData.exit_price) / orderData.entry_price) * 100) : 0;
+        orderData.percent_fee = orderData.fees_paid ? (orderData.fees_paid / orderData.quantity_usd) * 100 : 0;
       }
 
       await addFuture(orderData);
@@ -83,6 +86,7 @@ export default function AddFutureModal({
       setFormData({
         direction: "",
         entry_price: "",
+        exit_price: "",
         target_price: "",
         quantity_usd: "",
         buy_date: getCurrentTime(),
@@ -203,29 +207,41 @@ export default function AddFutureModal({
     </div>
 
 
-    {formData.status === "CLOSED" && (
-      <>
-      <div className="flex items-center gap-2">
-        <Label htmlFor="close_date" className="mb-0">Data de Saída:</Label>
-        <DatePicker
-          selected={formData.close_date}
-          onChange={(date: Date | null) => setFormData(f => ({ ...f, close_date: date }))}
-          dateFormat="dd/MM/yyyy HH:mm"
-          showTimeSelect
-          timeFormat="HH:mm"
-          timeIntervals={5}
-          className="h-12 w-[220px] px-3 py-2 rounded-md border border-input bg-background text-foreground placeholder:text-muted-foreground"
-          placeholderText="DD/MM/AAAA HH:mm"
-          locale="pt-BR"
-        />
-      </div>
+      {formData.status === "CLOSED" && (
+        <>
+        <div className="space-y-2">
+          <Label htmlFor="exit_price">Preço de Saída (USD)</Label>
+          <Input
+            id="exit_price"
+            type="number"
+            step="0.01"
+            placeholder="Preço de saída da posição"
+            value={formData.exit_price}
+            onChange={e => setFormData({ ...formData, exit_price: e.target.value })}
+            required
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <Label htmlFor="close_date" className="mb-0">Data de Saída:</Label>
+          <DatePicker
+            selected={formData.close_date}
+            onChange={(date: Date | null) => setFormData(f => ({ ...f, close_date: date }))}
+            dateFormat="dd/MM/yyyy HH:mm"
+            showTimeSelect
+            timeFormat="HH:mm"
+            timeIntervals={5}
+            className="h-12 w-[220px] px-3 py-2 rounded-md border border-input bg-background text-foreground placeholder:text-muted-foreground"
+            placeholderText="DD/MM/AAAA HH:mm"
+            locale="pt-BR"
+          />
+        </div>
       <div className="space-y-2">
-        <Label htmlFor="realized_pl">PL Realizado (USD)</Label>
+        <Label htmlFor="realized_pl">PL Realizado (SATS)</Label>
         <Input
           id="realized_pl"
           type="number"
-          step="0.01"
-          placeholder="Valor total ganho"
+          step="1"
+          placeholder="Satoshis ganhos/perdidos"
           value={formData.realized_pl}
           onChange={e => setFormData({ ...formData, realized_pl: e.target.value })}
           required

@@ -25,6 +25,7 @@ export interface Future {
   fees_paid?: number;
   net_pl_sats?: number;
   buy_date: string;
+  close_date?: string;
   created_at: string;
   updated_at: string;
 }
@@ -458,10 +459,10 @@ export function useFutures() {
   useEffect(() => {
     if (user) {
       fetchFutures();
-
-      // Set up realtime updates
+      
+      // Configurar realtime para atualizações automáticas
       const channel = supabase
-        .channel('futures_changes')
+        .channel('futures-changes')
         .on(
           'postgres_changes',
           {
@@ -471,9 +472,15 @@ export function useFutures() {
             filter: `user_id=eq.${user.id}`
           },
           (payload) => {
-            console.log('Realtime change detected:', payload);
-            // Refresh the data when changes occur
-            fetchFutures();
+            console.log('Futures realtime update:', payload);
+            // Atualizar estado imediatamente com base no evento
+            if (payload.eventType === 'INSERT' && payload.new) {
+              setFutures(prev => [payload.new as Future, ...prev]);
+            } else if (payload.eventType === 'UPDATE' && payload.new) {
+              setFutures(prev => prev.map(f => f.id === payload.new.id ? payload.new as Future : f));
+            } else if (payload.eventType === 'DELETE' && payload.old) {
+              setFutures(prev => prev.filter(f => f.id !== payload.old.id));
+            }
           }
         )
         .subscribe();

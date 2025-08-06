@@ -186,14 +186,9 @@ const FuturesTableEnhanced = memo(function FuturesTableEnhanced({
                   Entrada <ArrowUpDown className="h-3 w-3" />
                 </div>
               </TableHead>
-              <TableHead className="text-muted-foreground cursor-pointer" onClick={() => handleSort("exit_price")}>
-                <div className="flex items-center gap-1">
-                  Saída <ArrowUpDown className="h-3 w-3" />
-                </div>
-              </TableHead>
               <TableHead className="text-muted-foreground cursor-pointer" onClick={() => handleSort("target_price")}>
                 <div className="flex items-center gap-1">
-                  Alvo <ArrowUpDown className="h-3 w-3" />
+                  Preço Alvo <ArrowUpDown className="h-3 w-3" />
                 </div>
               </TableHead>
               <TableHead className="text-muted-foreground cursor-pointer" onClick={() => handleSort("quantity_usd")}>
@@ -201,13 +196,14 @@ const FuturesTableEnhanced = memo(function FuturesTableEnhanced({
                   Quantidade <ArrowUpDown className="h-3 w-3" />
                 </div>
               </TableHead>
-              <TableHead className="text-muted-foreground">P&L %</TableHead>
-              <TableHead className="text-muted-foreground">P&L SATS</TableHead>
+              <TableHead className="text-muted-foreground">Ganho</TableHead>
+              <TableHead className="text-muted-foreground">Taxas</TableHead>
               <TableHead className="text-muted-foreground cursor-pointer" onClick={() => handleSort("buy_date")}>
                 <div className="flex items-center gap-1">
-                  Data Abertura <ArrowUpDown className="h-3 w-3" />
+                  Data Entrada <ArrowUpDown className="h-3 w-3" />
                 </div>
               </TableHead>
+              <TableHead className="text-muted-foreground">Data Saída</TableHead>
               <TableHead className="text-muted-foreground">Ações</TableHead>
             </TableRow>
           </TableHeader>
@@ -235,24 +231,23 @@ const FuturesTableEnhanced = memo(function FuturesTableEnhanced({
                         {future.direction}
                       </div>
                     </TableCell>
-                    <TableCell className="text-foreground font-mono">{formatCurrency(future.entry_price)}</TableCell>
-                    <TableCell className="text-foreground font-mono">
-                      {future.exit_price ? formatCurrency(future.exit_price) : 
-                       (future.status === 'OPEN' ? formatCurrency(btcCurrentPrice) : '-')}
-                    </TableCell>
-                    <TableCell className="text-foreground font-mono">
-                      {future.target_price ? formatCurrency(future.target_price) : '-'}
-                    </TableCell>
-                    <TableCell className="text-foreground font-mono">{formatCurrency(future.quantity_usd)}</TableCell>
-                    <TableCell className={`font-mono ${getPLColor(metrics.percent_gain)}`}>
-                      {formatPercent(metrics.percent_gain)}
-                    </TableCell>
-                    <TableCell className={`font-mono ${getPLColor(metrics.net_pl_sats)}`}>
-                      {formatNumber(metrics.net_pl_sats || 0)} sats
-                    </TableCell>
-                    <TableCell className="text-foreground">
-                      {formatDateTime(future.buy_date, 'dd/MM/yyyy HH:mm')}
-                    </TableCell>
+                     <TableCell className="text-foreground font-mono">{formatCurrency(future.entry_price)}</TableCell>
+                     <TableCell className="text-foreground font-mono">
+                       {future.target_price ? formatCurrency(future.target_price) : '-'}
+                     </TableCell>
+                     <TableCell className="text-foreground font-mono">{formatCurrency(future.quantity_usd)}</TableCell>
+                     <TableCell className={`font-mono ${getPLColor(metrics.percent_gain)}`}>
+                       {future.status === 'OPEN' ? formatPercent(metrics.percent_gain) : '-'}
+                     </TableCell>
+                     <TableCell className="text-foreground font-mono">
+                       {future.status === 'CLOSED' ? `${formatNumber((future.fees_paid || 0))} sats` : '-'}
+                     </TableCell>
+                     <TableCell className="text-foreground">
+                       {formatDateTime(future.buy_date, 'dd/MM/yyyy HH:mm')}
+                     </TableCell>
+                     <TableCell className="text-foreground">
+                       {future.status === 'CLOSED' && future.close_date ? formatDateTime(future.close_date, 'dd/MM/yyyy HH:mm') : '-'}
+                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-1">
                         {future.status === 'OPEN' && (

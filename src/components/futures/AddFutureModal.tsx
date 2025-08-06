@@ -207,18 +207,6 @@ export default function AddFutureModal({
 
       {formData.status === "CLOSED" && (
         <>
-        <div className="space-y-2">
-          <Label htmlFor="exit_price">Preço de Saída (USD)</Label>
-          <Input
-            id="exit_price"
-            type="number"
-            step="0.01"
-            placeholder="Preço de saída da posição"
-            value={formData.exit_price}
-            onChange={e => setFormData({ ...formData, exit_price: e.target.value })}
-            required
-          />
-        </div>
         <div className="flex items-center gap-2">
           <Label htmlFor="close_date" className="mb-0">Data de Saída:</Label>
           <DatePicker

@@ -422,7 +422,8 @@ export function useFutures() {
       exit_price: closeData.exit_price,
       fees_paid: closeData.fees_paid,
       net_pl_sats: closeData.net_pl_sats,
-      ...(closeData.close_date && { updated_at: closeData.close_date })
+      close_date: closeData.close_date || new Date().toISOString(),
+      updated_at: new Date().toISOString()
     };
     
     return updateFuture(id, updates);

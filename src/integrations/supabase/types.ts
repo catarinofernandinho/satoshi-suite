@@ -17,6 +17,7 @@ export type Database = {
       futures: {
         Row: {
           buy_date: string
+          close_date: string | null
           created_at: string
           direction: string
           entry_price: number
@@ -34,6 +35,7 @@ export type Database = {
         }
         Insert: {
           buy_date?: string
+          close_date?: string | null
           created_at?: string
           direction: string
           entry_price: number
@@ -51,6 +53,7 @@ export type Database = {
         }
         Update: {
           buy_date?: string
+          close_date?: string | null
           created_at?: string
           direction?: string
           entry_price?: number

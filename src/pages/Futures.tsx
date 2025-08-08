@@ -15,7 +15,7 @@ import { useTimezone } from "@/contexts/TimezoneContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
 
 export default function Futures() {
-  const { futures, loading, calculateFutureMetrics } = useFutures();
+  const { futures, loading, calculateFutureMetrics, addFuture } = useFutures();
   const { getCurrentTime, convertToUserTime } = useTimezone();
   const { formatCurrency, formatNumber } = useCurrency();
   const [btcPrice, setBtcPrice] = useState(0);
@@ -184,7 +184,7 @@ export default function Futures() {
           </p>
         </div>
         <div className="flex gap-2">
-          <AddFutureButton />
+          <AddFutureButton addFuture={addFuture} />
         </div>
       </div>
 
@@ -232,7 +232,7 @@ export default function Futures() {
                     Filtro ativo
                   </Badge>
                 )}
-                <AddFutureButton />
+                <AddFutureButton addFuture={addFuture} />
               </div>
             </div>
           </CardDescription>

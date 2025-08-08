@@ -476,11 +476,14 @@ export function useFutures() {
             console.log('Futures realtime update:', payload);
             // Atualizar estado imediatamente com base no evento
             if (payload.eventType === 'INSERT' && payload.new) {
-              setFutures(prev => [payload.new as Future, ...prev]);
+              setFutures(prev => {
+                const exists = prev.some(f => f.id === (payload.new as any).id);
+                return exists ? prev : [payload.new as Future, ...prev];
+              });
             } else if (payload.eventType === 'UPDATE' && payload.new) {
-              setFutures(prev => prev.map(f => f.id === payload.new.id ? payload.new as Future : f));
+              setFutures(prev => prev.map(f => f.id === (payload.new as any).id ? payload.new as Future : f));
             } else if (payload.eventType === 'DELETE' && payload.old) {
-              setFutures(prev => prev.filter(f => f.id !== payload.old.id));
+              setFutures(prev => prev.filter(f => f.id !== (payload.old as any).id));
             }
           }
         )

@@ -6,9 +6,10 @@ import AddFutureModal from "./AddFutureModal";
 
 interface AddFutureButtonProps {
   onSuccess?: () => void;
+  addFuture?: (data: any) => Promise<any>;
 }
 
-export default function AddFutureButton({ onSuccess }: AddFutureButtonProps) {
+export default function AddFutureButton({ onSuccess, addFuture }: AddFutureButtonProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { requireAuth } = useAuthIntercept();
 
@@ -30,6 +31,7 @@ export default function AddFutureButton({ onSuccess }: AddFutureButtonProps) {
           setIsModalOpen(false);
           onSuccess?.();
         }}
+        addFuture={addFuture}
       />
     </>
   );

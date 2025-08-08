@@ -247,10 +247,10 @@ const FuturesTableEnhanced = memo(function FuturesTableEnhanced({
                       {future.status === 'CLOSED' && future.close_date ? formatDateTime(future.close_date, 'dd/MM/yyyy HH:mm') : '-'}
                     </TableCell>
                     <TableCell className="text-foreground font-mono">
-                      {future.status === 'CLOSED' ? formatCurrency(future.fees_paid || 0) : '-'}
+                      {future.status === 'CLOSED' ? `${formatNumber(future.fees_paid || 0)} sats` : '-'}
                     </TableCell>
-                    <TableCell className={`font-mono ${getPLColor(future.net_pl_sats)}`}>
-                      {future.status === 'CLOSED' && future.net_pl_sats ? `${formatNumber(future.net_pl_sats)} sats` : '-'}
+                    <TableCell className={`font-mono ${getPLColor((future.net_pl_sats || 0) - (future.fees_paid || 0))}`}>
+                      {future.status === 'CLOSED' ? `${formatNumber((future.net_pl_sats || 0) - (future.fees_paid || 0))} sats` : '-'}
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-1">

@@ -6,7 +6,6 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus } from "lucide-react";
-import { useFutures, type Future } from "@/hooks/useFutures";
 import { useTimezone } from "@/contexts/TimezoneContext";
 import DatePicker from "react-datepicker";
 import { ArrowUp, ArrowDown } from "lucide-react";
@@ -17,11 +16,13 @@ interface AddFutureModalProps {
   isOpen?: boolean;
   onClose?: () => void;
   onSuccess?: () => void;
+  addFuture?: (data: any) => Promise<any>;
 }
 export default function AddFutureModal({
   isOpen,
   onClose,
-  onSuccess
+  onSuccess,
+  addFuture
 }: AddFutureModalProps) {
   const [open, setOpen] = useState(false);
 
@@ -29,10 +30,7 @@ export default function AddFutureModal({
   const modalOpen = isOpen !== undefined ? isOpen : open;
   const setModalOpen = onClose !== undefined ? onClose : setOpen;
   const [loading, setLoading] = useState(false);
-  const {
-    addFuture
-  } = useFutures();
-  const { getCurrentTime, convertToUserTime, convertToUTC } = useTimezone();
+const { getCurrentTime, convertToUserTime, convertToUTC } = useTimezone();
 
   const [formData, setFormData] = useState({
     direction: "",
@@ -62,8 +60,6 @@ export default function AddFutureModal({
         status: formData.status as "OPEN" | "CLOSED"
       };
 
-
-
       if (formData.status === "CLOSED") {
         orderData.exit_price = formData.exit_price ? parseFloat(formData.exit_price) : undefined;
         orderData.fees_paid = (parseInt(formData.fee_trade, 10) + parseInt(formData.fee_funding, 10));
@@ -73,6 +69,15 @@ export default function AddFutureModal({
             ((orderData.exit_price - orderData.entry_price) / orderData.entry_price) * 100 :
             ((orderData.entry_price - orderData.exit_price) / orderData.entry_price) * 100) : 0;
         orderData.percent_fee = orderData.fees_paid ? (orderData.fees_paid / orderData.quantity_usd) * 100 : 0;
+        if (formData.close_date) {
+          orderData.close_date = convertToUTC(formData.close_date).toISOString();
+        }
+      }
+
+      if (!addFuture) {
+        console.error('addFuture prop not provided to AddFutureModal');
+        setLoading(false);
+        return;
       }
 
       const result = await addFuture(orderData);

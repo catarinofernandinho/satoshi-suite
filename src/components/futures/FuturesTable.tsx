@@ -77,6 +77,20 @@ export default function FuturesTable({ futures, btcCurrentPrice }: FuturesTableP
     return value >= 0 ? 'text-green-600' : 'text-red-600';
   };
 
+  const getGainPercent = (f: Future) => {
+    if (f.status === 'CLOSED' && f.target_price != null) {
+      return f.direction === 'LONG'
+        ? ((f.target_price - f.entry_price) / f.entry_price) * 100
+        : ((f.entry_price - f.target_price) / f.entry_price) * 100;
+    }
+    if (f.status === 'OPEN' && btcCurrentPrice > 0) {
+      return f.direction === 'LONG'
+        ? ((btcCurrentPrice - f.entry_price) / f.entry_price) * 100
+        : ((f.entry_price - btcCurrentPrice) / f.entry_price) * 100;
+    }
+    return undefined;
+  };
+
   if (futures.length === 0) {
     return (
       <Card className="p-8 text-center">
@@ -129,8 +143,8 @@ export default function FuturesTable({ futures, btcCurrentPrice }: FuturesTableP
                   
                   <TableCell>{formatCurrency(future.entry_price)}</TableCell>
                   <TableCell>{formatCurrency(future.target_price)}</TableCell>
-                  <TableCell className={getPLColor(metrics.percent_gain)}>
-                    {formatPercent(metrics.percent_gain)}
+                  <TableCell className={getPLColor(getGainPercent(future))}>
+                    {formatPercent(getGainPercent(future))}
                   </TableCell>
                   <TableCell>{formatPercent(metrics.percent_fee)}</TableCell>
                   <TableCell>{formatCurrency(metrics.fees_paid)}</TableCell>

@@ -87,6 +87,20 @@ const FuturesTableEnhanced = memo(function FuturesTableEnhanced({
     }
   }, [sortField, sortDirection]);
 
+  const getGainPercent = useCallback((f: Future) => {
+    if (f.status === 'CLOSED' && f.target_price != null) {
+      return f.direction === 'LONG'
+        ? ((f.target_price - f.entry_price) / f.entry_price) * 100
+        : ((f.entry_price - f.target_price) / f.entry_price) * 100;
+    }
+    if (f.status === 'OPEN' && btcCurrentPrice > 0) {
+      return f.direction === 'LONG'
+        ? ((btcCurrentPrice - f.entry_price) / f.entry_price) * 100
+        : ((f.entry_price - btcCurrentPrice) / f.entry_price) * 100;
+    }
+    return undefined;
+  }, [btcCurrentPrice]);
+
   // Memoized sorting to prevent unnecessary recalculations
   const sortedFutures = useMemo(() => {
     return [...futures].sort((a, b) => {
@@ -240,8 +254,8 @@ const FuturesTableEnhanced = memo(function FuturesTableEnhanced({
                     <TableCell className="text-foreground font-mono">
                       {future.target_price ? formatCurrency(future.target_price) : '-'}
                     </TableCell>
-                    <TableCell className={`font-mono ${getPLColor(metrics.percent_gain)}`}>
-                      {future.status === 'OPEN' ? formatPercent(metrics.percent_gain) : formatPercent(future.percent_gain)}
+                    <TableCell className={`font-mono ${getPLColor(getGainPercent(future))}`}>
+                      {formatPercent(getGainPercent(future))}
                     </TableCell>
                     <TableCell className="text-foreground">
                       {future.status === 'CLOSED' && future.close_date ? formatDateTime(future.close_date, 'dd/MM/yyyy HH:mm') : '-'}

@@ -184,7 +184,7 @@ export default function Futures() {
           </p>
         </div>
         <div className="flex gap-2">
-          <AddFutureButton addFuture={addFuture} />
+          <AddFutureButton addFuture={addFuture} onSuccess={() => setDateRange(prev => ({ ...prev, to: getCurrentTime() }))} />
         </div>
       </div>
 
@@ -232,7 +232,7 @@ export default function Futures() {
                     Filtro ativo
                   </Badge>
                 )}
-                <AddFutureButton addFuture={addFuture} />
+                <AddFutureButton addFuture={addFuture} onSuccess={() => setDateRange(prev => ({ ...prev, to: getCurrentTime() }))} />
               </div>
             </div>
           </CardDescription>

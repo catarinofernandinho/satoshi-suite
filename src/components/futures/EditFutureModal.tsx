@@ -16,11 +16,13 @@ interface EditFutureModalProps {
   future: Future | null;
   isOpen: boolean;
   onClose: () => void;
+  updateFuture?: (id: string, updates: Partial<Future>) => Promise<any>;
 }
 
-export default function EditFutureModal({ future, isOpen, onClose }: EditFutureModalProps) {
+export default function EditFutureModal({ future, isOpen, onClose, updateFuture: updateFutureProp }: EditFutureModalProps) {
   const [loading, setLoading] = useState(false);
   const { updateFuture } = useFutures();
+  const updateFn = updateFutureProp ?? updateFuture;
   const { toast } = useToast();
   const { getCurrentTime, convertToUserTime, convertToUTC } = useTimezone();
 
@@ -47,7 +49,7 @@ export default function EditFutureModal({ future, isOpen, onClose }: EditFutureM
         status: future.status as "OPEN" | "CLOSED",
         buy_date: new Date(future.buy_date),
         close_date: (future as any).close_date ? new Date((future as any).close_date) : null,
-        realized_pl: (future as any).realized_pl?.toString() || "",
+        realized_pl: (future as any).realized_pl?.toString() || (future.net_pl_sats != null ? future.net_pl_sats.toString() : ""),
         fee_trade: (future as any).fee_trade?.toString() || "",
         fee_funding: (future as any).fee_funding?.toString() || "",
       });
@@ -92,6 +94,11 @@ export default function EditFutureModal({ future, isOpen, onClose }: EditFutureM
         buy_date: convertToUTC(formData.buy_date).toISOString()
       };
 
+      // Manter target_price e exit_price sempre iguais quando houver um valor informado
+      if (updateData.target_price != null) {
+        updateData.exit_price = updateData.target_price;
+      }
+
       if (formData.status === "CLOSED") {
         updateData.close_date = formData.close_date ? convertToUTC(formData.close_date).toISOString() : null;
         updateData.realized_pl = parseFloat(formData.realized_pl);
@@ -101,7 +108,7 @@ export default function EditFutureModal({ future, isOpen, onClose }: EditFutureM
         updateData.net_pl = updateData.realized_pl - updateData.total_fees;
       }
 
-      await updateFuture(future.id, updateData);
+      await updateFn(future.id, updateData);
       onClose();
       toast({
         title: "Ordem atualizada",

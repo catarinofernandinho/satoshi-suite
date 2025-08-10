@@ -15,7 +15,7 @@ import { useTimezone } from "@/contexts/TimezoneContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
 
 export default function Futures() {
-  const { futures, loading, calculateFutureMetrics, addFuture } = useFutures();
+  const { futures, loading, calculateFutureMetrics, addFuture, deleteFuture, updateFuture, closeFuture } = useFutures();
   const { getCurrentTime, convertToUserTime } = useTimezone();
   const { formatCurrency, formatNumber } = useCurrency();
   const [btcPrice, setBtcPrice] = useState(0);
@@ -264,7 +264,14 @@ export default function Futures() {
               onTabChange={setActiveTab}
             >
               {(tabFilteredFutures) => (
-                <FuturesTableEnhanced futures={tabFilteredFutures} btcCurrentPrice={btcPrice} />
+                <FuturesTableEnhanced 
+                  futures={tabFilteredFutures} 
+                  btcCurrentPrice={btcPrice}
+                  calculateFutureMetrics={calculateFutureMetrics}
+                  deleteFuture={deleteFuture}
+                  closeFuture={closeFuture}
+                  updateFuture={updateFuture}
+                />
               )}
             </OrderStatusTabs>
           )}

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { RefreshCw, Copy, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { normalizeDecimalInput } from "@/utils/numberUtils";
 
 export default function CurrencyConverter() {
   const [rates, setRates] = useState({
@@ -69,37 +70,58 @@ export default function CurrencyConverter() {
     fetchRates();
   }, []);
 
+  // Limita casas decimais para valores fiat (máx 2) respeitando separador
+  const limitFiatDecimals = (val: string, currencyCode: string) => {
+    if (!val) return "";
+    const sep = currencyCode === 'BRL' ? ',' : '.';
+    const parts = val.split(sep);
+    if (parts.length === 1) return val;
+    const [intPart, decPart] = parts;
+    return `${intPart}${sep}${(decPart || '').slice(0, 2)}`;
+  };
+
   // Memoize conversion calculations for better performance
   const updateValues = useCallback((field: string, value: string) => {
-    if (!value || isNaN(parseFloat(value)) || rates.btcUsd === 0 || rates.usdBrl === 0) {
+    // Sanitize fiat inputs to max 2 decimals and normalize for parsing
+    let displayValue = value;
+    let num: number;
+
+    if (field === 'usd' || field === 'brl') {
+      displayValue = limitFiatDecimals(value, currency);
+      const normalized = normalizeDecimalInput(displayValue, currency);
+      num = parseFloat(normalized);
+    } else {
+      num = parseFloat(value);
+    }
+
+    if (!displayValue || isNaN(num) || rates.btcUsd === 0 || rates.usdBrl === 0) {
       setValues({ btc: "", sats: "", usd: "", brl: "" });
       return;
     }
 
-    const num = parseFloat(value);
     const newValues = { ...values };
 
     switch (field) {
       case 'btc':
-        newValues.btc = value;
+        newValues.btc = displayValue;
         newValues.sats = (num * 100000000).toString();
         newValues.usd = formatNumber(num * rates.btcUsd);
         newValues.brl = formatNumber(num * rates.btcUsd * rates.usdBrl);
         break;
       case 'sats':
-        newValues.sats = value;
+        newValues.sats = displayValue;
         newValues.btc = (num / 100000000).toFixed(8);
         newValues.usd = formatNumber((num / 100000000) * rates.btcUsd);
         newValues.brl = formatNumber((num / 100000000) * rates.btcUsd * rates.usdBrl);
         break;
       case 'usd':
-        newValues.usd = value;
+        newValues.usd = displayValue;
         newValues.btc = (num / rates.btcUsd).toFixed(8);
         newValues.sats = Math.floor((num / rates.btcUsd) * 100000000).toString();
         newValues.brl = formatNumber(num * rates.usdBrl);
         break;
       case 'brl':
-        newValues.brl = value;
+        newValues.brl = displayValue;
         newValues.usd = formatNumber(num / rates.usdBrl);
         newValues.btc = (num / (rates.btcUsd * rates.usdBrl)).toFixed(8);
         newValues.sats = Math.floor((num / (rates.btcUsd * rates.usdBrl)) * 100000000).toString();
@@ -107,7 +129,7 @@ export default function CurrencyConverter() {
     }
 
     setValues(newValues);
-  }, [rates.btcUsd, rates.usdBrl, formatNumber, values]);
+  }, [rates.btcUsd, rates.usdBrl, formatNumber, values, currency]);
 
   const copyToClipboard = async (field: string) => {
     const value = values[field as keyof typeof values];
@@ -140,7 +162,7 @@ export default function CurrencyConverter() {
     return (
       <div className="space-y-1 text-sm text-muted-foreground">
         <div>BTC/USD: US$ {currency === 'BRL' ? rates.btcUsd.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : rates.btcUsd.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
-        <div>USD/BRL: R$ {currency === 'BRL' ? rates.usdBrl.toLocaleString('pt-BR', { minimumFractionDigits: 4 }) : rates.usdBrl.toLocaleString('en-US', { minimumFractionDigits: 4 })}</div>
+        <div>USD/BRL: R$ {currency === 'BRL' ? rates.usdBrl.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : rates.usdBrl.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
       </div>
     );
   }, [loading, currency, rates.btcUsd, rates.usdBrl]);

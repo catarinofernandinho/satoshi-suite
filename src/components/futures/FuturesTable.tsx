@@ -78,17 +78,15 @@ export default function FuturesTable({ futures, btcCurrentPrice }: FuturesTableP
   };
 
   const getGainPercent = (f: Future) => {
-    if (f.status === 'CLOSED' && f.target_price != null) {
-      return f.direction === 'LONG'
-        ? ((f.target_price - f.entry_price) / f.entry_price) * 100
-        : ((f.entry_price - f.target_price) / f.entry_price) * 100;
-    }
-    if (f.status === 'OPEN' && btcCurrentPrice > 0) {
-      return f.direction === 'LONG'
-        ? ((btcCurrentPrice - f.entry_price) / f.entry_price) * 100
-        : ((f.entry_price - btcCurrentPrice) / f.entry_price) * 100;
-    }
-    return undefined;
+    const refPrice = f.status === 'CLOSED'
+      ? (f.exit_price ?? f.target_price)
+      : (f.target_price ?? f.exit_price);
+
+    if (refPrice == null) return undefined;
+
+    return f.direction === 'LONG'
+      ? ((refPrice - f.entry_price) / f.entry_price) * 100
+      : ((f.entry_price - refPrice) / f.entry_price) * 100;
   };
 
   if (futures.length === 0) {

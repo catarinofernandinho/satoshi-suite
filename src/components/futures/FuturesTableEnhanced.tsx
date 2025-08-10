@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Edit, Trash2, TrendingUp, TrendingDown, X, ChevronLeft, ChevronRight, ArrowUpDown } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { useFutures, type Future } from "@/hooks/useFutures";
+import { type Future } from "@/hooks/useFutures";
 import EditFutureModal from "./EditFutureModal";
 import CloseOrderModal from "./CloseOrderModal";
 import { useTimezone } from "@/contexts/TimezoneContext";
@@ -16,11 +16,24 @@ import { useCurrency } from "@/contexts/CurrencyContext";
 interface FuturesTableEnhancedProps {
   futures: Future[];
   btcCurrentPrice: number;
+  calculateFutureMetrics: (future: Future, currentBtcPrice: number) => {
+    percent_gain?: number;
+    percent_fee?: number;
+    net_pl_sats?: number;
+    fees_paid?: number;
+  };
+  deleteFuture: (id: string) => Promise<void> | any;
+  closeFuture: (id: string, closeData: { exit_price: number; fees_paid: number; net_pl_sats: number; close_date?: string; fee_trade?: number; fee_funding?: number }) => Promise<any>;
+  updateFuture: (id: string, updates: Partial<Future>) => Promise<any>;
 }
 
 const FuturesTableEnhanced = memo(function FuturesTableEnhanced({
   futures,
-  btcCurrentPrice
+  btcCurrentPrice,
+  calculateFutureMetrics,
+  deleteFuture,
+  closeFuture,
+  updateFuture
 }: FuturesTableEnhancedProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(20);
@@ -32,7 +45,6 @@ const FuturesTableEnhanced = memo(function FuturesTableEnhanced({
   const [closingOrder, setClosingOrder] = useState<Future | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  const { deleteFuture, calculateFutureMetrics } = useFutures();
   const { formatDateTime } = useTimezone();
   const { formatCurrency: formatCurrencyContext, formatNumber, currency } = useCurrency();
 
@@ -88,23 +100,17 @@ const FuturesTableEnhanced = memo(function FuturesTableEnhanced({
   }, [sortField, sortDirection]);
 
   const getGainPercent = useCallback((f: Future) => {
-    // Para ordens fechadas, usar exit_price ou target_price
-    if (f.status === 'CLOSED') {
-      const exitPrice = f.exit_price || f.target_price;
-      if (exitPrice != null) {
-        return f.direction === 'LONG'
-          ? ((exitPrice - f.entry_price) / f.entry_price) * 100
-          : ((f.entry_price - exitPrice) / f.entry_price) * 100;
-      }
-    }
-    // Para ordens abertas, usar preço atual do BTC
-    if (f.status === 'OPEN' && btcCurrentPrice > 0) {
-      return f.direction === 'LONG'
-        ? ((btcCurrentPrice - f.entry_price) / f.entry_price) * 100
-        : ((f.entry_price - btcCurrentPrice) / f.entry_price) * 100;
-    }
-    return undefined;
-  }, [btcCurrentPrice]);
+    // Usar o preço de referência adequado: para fechadas, exit/target; para abertas, target/exit
+    const refPrice = f.status === 'CLOSED'
+      ? (f.exit_price ?? f.target_price)
+      : (f.target_price ?? f.exit_price);
+
+    if (refPrice == null) return undefined;
+
+    return f.direction === 'LONG'
+      ? ((refPrice - f.entry_price) / f.entry_price) * 100
+      : ((f.entry_price - refPrice) / f.entry_price) * 100;
+  }, []);
 
   // Memoized sorting to prevent unnecessary recalculations
   const sortedFutures = useMemo(() => {
@@ -386,11 +392,11 @@ const FuturesTableEnhanced = memo(function FuturesTableEnhanced({
         </DialogContent>
       </Dialog>
 
-      {/* Edit Modal */}
       <EditFutureModal 
         future={editingOrder}
         isOpen={!!editingOrder}
         onClose={() => setEditingOrder(null)}
+        updateFuture={updateFuture}
       />
 
       {/* Close Modal */}
@@ -399,6 +405,7 @@ const FuturesTableEnhanced = memo(function FuturesTableEnhanced({
         isOpen={!!closingOrder}
         onClose={() => setClosingOrder(null)}
         btcCurrentPrice={btcCurrentPrice}
+        closeFuture={closeFuture}
       />
     </Card>
   );

@@ -156,14 +156,15 @@ export function useFutures() {
     const localOrders = getLocalOrders();
     for (const order of localOrders) {
       try {
+        const price = order.target_price ?? order.exit_price ?? null;
         const { error } = await supabase
         .from('futures')
         .insert({
           user_id: user.id,
           direction: order.direction,
           entry_price: order.entry_price,
-          exit_price: order.exit_price,
-          target_price: order.target_price,
+          exit_price: price,
+          target_price: price,
           quantity_usd: order.quantity_usd,
           status: order.status,
           buy_date: order.buy_date,
@@ -193,11 +194,12 @@ export function useFutures() {
     }
 
     // Validar e sanitizar dados
+    const unifiedPrice = futureData.target_price ?? futureData.exit_price;
     const sanitizedData = {
       direction: futureData.direction,
       entry_price: futureData.entry_price,
-      exit_price: futureData.exit_price,
-      target_price: futureData.target_price,
+      exit_price: unifiedPrice,
+      target_price: unifiedPrice,
       quantity_usd: futureData.quantity_usd,
       
       status: futureData.status,
@@ -285,10 +287,17 @@ export function useFutures() {
     const isLocalOrder = id.startsWith('local_');
     
     try {
+      const normalizedUpdates = { ...updates } as Partial<Future>;
+      if (normalizedUpdates.exit_price != null && normalizedUpdates.target_price == null) {
+        normalizedUpdates.target_price = normalizedUpdates.exit_price;
+      }
+      if (normalizedUpdates.target_price != null && normalizedUpdates.exit_price == null) {
+        normalizedUpdates.exit_price = normalizedUpdates.target_price;
+      }
       if (!isLocalOrder) {
         const { data, error } = await supabase
         .from('futures')
-        .update(updates)
+        .update(normalizedUpdates)
         .eq('id', id)
         .eq('user_id', user.id)
         .select()
@@ -311,14 +320,15 @@ export function useFutures() {
         try {
           const localOrder = futures.find(f => f.id === id) as LocalOrder;
           if (localOrder) {
+            const price = updates.exit_price ?? localOrder.exit_price ?? updates.target_price ?? localOrder.target_price;
             const { data, error } = await supabase
             .from('futures')
             .insert({
               user_id: user.id,
               direction: localOrder.direction,
               entry_price: localOrder.entry_price,
-              exit_price: localOrder.exit_price || updates.exit_price,
-              target_price: localOrder.target_price || updates.target_price,
+              exit_price: price,
+              target_price: price,
               quantity_usd: localOrder.quantity_usd,
               status: updates.status || localOrder.status,
               buy_date: localOrder.buy_date,
@@ -349,7 +359,14 @@ export function useFutures() {
           }
         } catch (syncError) {
           // Se falhar a sincronização, atualizar localmente
-          const updatedOrder = updateLocalOrder(id, updates);
+          const offlineNormalized = { ...updates } as Partial<Future>;
+          if (offlineNormalized.exit_price != null && offlineNormalized.target_price == null) {
+            offlineNormalized.target_price = offlineNormalized.exit_price;
+          }
+          if (offlineNormalized.target_price != null && offlineNormalized.exit_price == null) {
+            offlineNormalized.exit_price = offlineNormalized.target_price;
+          }
+          const updatedOrder = updateLocalOrder(id, offlineNormalized);
           if (updatedOrder) {
             setFutures(prev => 
               prev.map(f => f.id === id ? updatedOrder : f)
@@ -416,14 +433,17 @@ export function useFutures() {
     }
   };
 
-  const closeFuture = async (id: string, closeData: { exit_price: number; fees_paid: number; net_pl_sats: number; close_date?: string }) => {
+  const closeFuture = async (id: string, closeData: { exit_price: number; fees_paid: number; net_pl_sats: number; close_date?: string; fee_trade?: number; fee_funding?: number }) => {
     const updates = {
       status: 'CLOSED' as const,
       exit_price: closeData.exit_price,
+      target_price: closeData.exit_price,
       fees_paid: closeData.fees_paid,
       net_pl_sats: closeData.net_pl_sats,
       close_date: closeData.close_date || new Date().toISOString(),
-      updated_at: new Date().toISOString()
+      updated_at: new Date().toISOString(),
+      fee_trade: closeData.fee_trade,
+      fee_funding: closeData.fee_funding
     };
     
     return updateFuture(id, updates);

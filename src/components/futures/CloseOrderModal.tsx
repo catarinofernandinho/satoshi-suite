@@ -16,11 +16,13 @@ interface CloseOrderModalProps {
   isOpen: boolean;
   onClose: () => void;
   btcCurrentPrice: number;
+  closeFuture?: (id: string, closeData: { exit_price: number; fees_paid: number; net_pl_sats: number; close_date?: string; fee_trade?: number; fee_funding?: number }) => Promise<any>;
 }
 
-export default function CloseOrderModal({ order, isOpen, onClose, btcCurrentPrice }: CloseOrderModalProps) {
+export default function CloseOrderModal({ order, isOpen, onClose, btcCurrentPrice, closeFuture: closeFutureProp }: CloseOrderModalProps) {
   const [loading, setLoading] = useState(false);
-  const { closeFuture } = useFutures();
+  const { closeFuture: hookCloseFuture } = useFutures();
+  const closeFn = closeFutureProp ?? hookCloseFuture;
   const { toast } = useToast();
   const { getCurrentTime, convertToUTC } = useTimezone();
 
@@ -75,11 +77,13 @@ export default function CloseOrderModal({ order, isOpen, onClose, btcCurrentPric
     try {
       const totalFees = feeTrade + feeFunding;
       
-      await closeFuture(order.id, {
+      await closeFn(order.id, {
         exit_price: exitPrice,
         fees_paid: totalFees,
         net_pl_sats: realizedPL,
-        close_date: convertToUTC(formData.close_date).toISOString()
+        close_date: convertToUTC(formData.close_date).toISOString(),
+        fee_trade: feeTrade,
+        fee_funding: feeFunding
       });
 
       // Reset form

@@ -16,7 +16,7 @@ interface CloseOrderModalProps {
   isOpen: boolean;
   onClose: () => void;
   btcCurrentPrice: number;
-  closeFuture?: (id: string, closeData: { exit_price: number; fees_paid: number; net_pl_sats: number; close_date?: string; fee_trade?: number; fee_funding?: number }) => Promise<any>;
+  closeFuture?: (id: string, closeData: { exit_price: number; fees_paid: number; net_pl_sats: number; pl_sats: number; close_date?: string; fee_trade?: number; fee_funding?: number }) => Promise<any>;
 }
 
 export default function CloseOrderModal({ order, isOpen, onClose, btcCurrentPrice, closeFuture: closeFutureProp }: CloseOrderModalProps) {
@@ -29,9 +29,10 @@ export default function CloseOrderModal({ order, isOpen, onClose, btcCurrentPric
   const [formData, setFormData] = useState({
     close_date: getCurrentTime(),
     exit_price: "",
-    realized_pl: "",
+    pl_sats: "",
     fee_trade: "",
-    fee_funding: ""
+    fee_funding: "",
+    net_pl_sats: ""
   });
 
   // Atualizar preço de saída quando a ordem muda
@@ -49,7 +50,7 @@ export default function CloseOrderModal({ order, isOpen, onClose, btcCurrentPric
     if (!order) return;
 
     // Validação
-    if (!formData.exit_price || !formData.realized_pl || !formData.fee_trade || !formData.fee_funding) {
+    if (!formData.exit_price || !formData.pl_sats || !formData.fee_trade || !formData.fee_funding) {
       toast({
         title: "Campos obrigatórios",
         description: "Preencha todos os campos obrigatórios.",
@@ -59,11 +60,12 @@ export default function CloseOrderModal({ order, isOpen, onClose, btcCurrentPric
     }
 
     const exitPrice = parseFloat(formData.exit_price);
-    const realizedPL = parseInt(formData.realized_pl);
+    const plSats = parseInt(formData.pl_sats);
     const feeTrade = parseInt(formData.fee_trade);
     const feeFunding = parseInt(formData.fee_funding);
+    const netPlSats = parseInt(formData.net_pl_sats);
 
-    if (isNaN(exitPrice) || isNaN(realizedPL) || isNaN(feeTrade) || isNaN(feeFunding)) {
+    if (isNaN(exitPrice) || isNaN(plSats) || isNaN(feeTrade) || isNaN(feeFunding) || isNaN(netPlSats)) {
       toast({
         title: "Valores inválidos",
         description: "Os valores devem ser números válidos.",
@@ -80,7 +82,8 @@ export default function CloseOrderModal({ order, isOpen, onClose, btcCurrentPric
       await closeFn(order.id, {
         exit_price: exitPrice,
         fees_paid: totalFees,
-        net_pl_sats: realizedPL,
+        net_pl_sats: netPlSats,
+        pl_sats: plSats,
         close_date: convertToUTC(formData.close_date).toISOString(),
         fee_trade: feeTrade,
         fee_funding: feeFunding
@@ -90,9 +93,10 @@ export default function CloseOrderModal({ order, isOpen, onClose, btcCurrentPric
       setFormData({
         close_date: getCurrentTime(),
         exit_price: "",
-        realized_pl: "",
+        pl_sats: "",
         fee_trade: "",
-        fee_funding: ""
+        fee_funding: "",
+        net_pl_sats: ""
       });
       
       onClose();
@@ -162,18 +166,31 @@ export default function CloseOrderModal({ order, isOpen, onClose, btcCurrentPric
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="realized_pl">NET PL (SATS) *</Label>
+            <Label htmlFor="pl_sats">PL (SATS) *</Label>
             <Input
-              id="realized_pl"
+              id="pl_sats"
               type="number"
               step="1"
-              placeholder="Lucro líquido em satoshis"
-              value={formData.realized_pl}
-              onChange={(e) => setFormData(prev => ({ ...prev, realized_pl: e.target.value }))}
+              placeholder="Lucro bruto em satoshis"
+              value={formData.pl_sats}
+              onChange={(e) => {
+                const newPl = e.target.value;
+                setFormData(prev => {
+                  const pl = parseInt(newPl) || 0;
+                  const feeTrade = parseInt(prev.fee_trade) || 0;
+                  const feeFunding = parseInt(prev.fee_funding) || 0;
+                  const netPl = pl - feeTrade - feeFunding;
+                  return { 
+                    ...prev, 
+                    pl_sats: newPl,
+                    net_pl_sats: netPl.toString()
+                  };
+                });
+              }}
               required
             />
             <p className="text-xs text-muted-foreground">
-              NET PL em satoshis (lucro líquido final)
+              PL bruto em satoshis (antes das taxas)
             </p>
           </div>
 
@@ -185,7 +202,20 @@ export default function CloseOrderModal({ order, isOpen, onClose, btcCurrentPric
               step="1"
               placeholder="Satoshis pagos na negociação"
               value={formData.fee_trade}
-              onChange={(e) => setFormData(prev => ({ ...prev, fee_trade: e.target.value }))}
+              onChange={(e) => {
+                const newFeeTrade = e.target.value;
+                setFormData(prev => {
+                  const pl = parseInt(prev.pl_sats) || 0;
+                  const feeTrade = parseInt(newFeeTrade) || 0;
+                  const feeFunding = parseInt(prev.fee_funding) || 0;
+                  const netPl = pl - feeTrade - feeFunding;
+                  return { 
+                    ...prev, 
+                    fee_trade: newFeeTrade,
+                    net_pl_sats: netPl.toString()
+                  };
+                });
+              }}
               required
             />
           </div>
@@ -198,9 +228,38 @@ export default function CloseOrderModal({ order, isOpen, onClose, btcCurrentPric
               step="1"
               placeholder="Satoshis pagos em funding"
               value={formData.fee_funding}
-              onChange={(e) => setFormData(prev => ({ ...prev, fee_funding: e.target.value }))}
+              onChange={(e) => {
+                const newFeeFunding = e.target.value;
+                setFormData(prev => {
+                  const pl = parseInt(prev.pl_sats) || 0;
+                  const feeTrade = parseInt(prev.fee_trade) || 0;
+                  const feeFunding = parseInt(newFeeFunding) || 0;
+                  const netPl = pl - feeTrade - feeFunding;
+                  return { 
+                    ...prev, 
+                    fee_funding: newFeeFunding,
+                    net_pl_sats: netPl.toString()
+                  };
+                });
+              }}
               required
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="net_pl_sats">NET PL (SATS) *</Label>
+            <Input
+              id="net_pl_sats"
+              type="number"
+              step="1"
+              placeholder="Lucro líquido calculado automaticamente"
+              value={formData.net_pl_sats}
+              onChange={(e) => setFormData(prev => ({ ...prev, net_pl_sats: e.target.value }))}
+              required
+            />
+            <p className="text-xs text-muted-foreground">
+              NET PL calculado automaticamente: PL - Taxa Negociação - Taxa Financiamento
+            </p>
           </div>
 
           <div className="flex justify-end gap-3 pt-4">

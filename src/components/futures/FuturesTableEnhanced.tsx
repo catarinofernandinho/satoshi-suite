@@ -23,7 +23,7 @@ interface FuturesTableEnhancedProps {
     fees_paid?: number;
   };
   deleteFuture: (id: string) => Promise<void> | any;
-  closeFuture: (id: string, closeData: { exit_price: number; fees_paid: number; net_pl_sats: number; close_date?: string; fee_trade?: number; fee_funding?: number }) => Promise<any>;
+  closeFuture: (id: string, closeData: { exit_price: number; fees_paid: number; net_pl_sats: number; pl_sats: number; close_date?: string; fee_trade?: number; fee_funding?: number }) => Promise<any>;
   updateFuture: (id: string, updates: Partial<Future>) => Promise<any>;
 }
 
@@ -228,6 +228,7 @@ const FuturesTableEnhanced = memo(function FuturesTableEnhanced({
               </TableHead>
               <TableHead className="text-muted-foreground">Ganho</TableHead>
               <TableHead className="text-muted-foreground">Data Saída</TableHead>
+              <TableHead className="text-muted-foreground">PL</TableHead>
               <TableHead className="text-muted-foreground">Taxas</TableHead>
               <TableHead className="text-muted-foreground">NET PL</TableHead>
               <TableHead className="text-muted-foreground">Ações</TableHead>
@@ -236,7 +237,7 @@ const FuturesTableEnhanced = memo(function FuturesTableEnhanced({
           <TableBody>
             {currentFutures.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={11} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={12} className="text-center py-8 text-muted-foreground">
                   Nenhuma ordem encontrada. Adicione sua primeira ordem para começar.
                 </TableCell>
               </TableRow>
@@ -271,11 +272,14 @@ const FuturesTableEnhanced = memo(function FuturesTableEnhanced({
                     <TableCell className="text-foreground">
                       {future.status === 'CLOSED' && future.close_date ? formatDateTime(future.close_date, 'dd/MM/yyyy HH:mm') : '-'}
                     </TableCell>
+                    <TableCell className={`font-mono ${getPLColor((future as any).pl_sats)}`}>
+                      {future.status === 'CLOSED' ? `${Math.round((future as any).pl_sats || 0)} sats` : '-'}
+                    </TableCell>
                     <TableCell className="text-foreground font-mono">
                       {future.status === 'CLOSED' ? `${Math.round(future.fees_paid || 0)} sats` : '-'}
                     </TableCell>
-                    <TableCell className={`font-mono ${getPLColor((future.net_pl_sats || 0) - (future.fees_paid || 0))}`}>
-                      {future.status === 'CLOSED' ? `${Math.round((future.net_pl_sats || 0) - (future.fees_paid || 0))} sats` : '-'}
+                    <TableCell className={`font-mono ${getPLColor(future.net_pl_sats)}`}>
+                      {future.status === 'CLOSED' ? `${Math.round(future.net_pl_sats || 0)} sats` : '-'}
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-1">

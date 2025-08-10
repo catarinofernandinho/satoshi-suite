@@ -34,9 +34,10 @@ export default function EditFutureModal({ future, isOpen, onClose, updateFuture:
     status: "OPEN" as "OPEN" | "CLOSED",
     buy_date: getCurrentTime(),
     close_date: null as Date | null,
-    realized_pl: "",
+    pl_sats: "",
     fee_trade: "",
     fee_funding: "",
+    net_pl_sats: "",
   });
 
   useEffect(() => {
@@ -49,9 +50,10 @@ export default function EditFutureModal({ future, isOpen, onClose, updateFuture:
         status: future.status as "OPEN" | "CLOSED",
         buy_date: new Date(future.buy_date),
         close_date: (future as any).close_date ? new Date((future as any).close_date) : null,
-        realized_pl: (future as any).realized_pl?.toString() || (future.net_pl_sats != null ? future.net_pl_sats.toString() : ""),
+        pl_sats: (future as any).pl_sats?.toString() || "",
         fee_trade: (future as any).fee_trade?.toString() || "",
         fee_funding: (future as any).fee_funding?.toString() || "",
+        net_pl_sats: future.net_pl_sats?.toString() || "",
       });
     }
   }, [future]);
@@ -101,11 +103,11 @@ export default function EditFutureModal({ future, isOpen, onClose, updateFuture:
 
       if (formData.status === "CLOSED") {
         updateData.close_date = formData.close_date ? convertToUTC(formData.close_date).toISOString() : null;
-        updateData.realized_pl = parseFloat(formData.realized_pl);
+        updateData.pl_sats = parseInt(formData.pl_sats, 10);
         updateData.fee_trade = parseInt(formData.fee_trade, 10);
         updateData.fee_funding = parseInt(formData.fee_funding, 10);
-        updateData.total_fees = updateData.fee_trade + updateData.fee_funding;
-        updateData.net_pl = updateData.realized_pl - updateData.total_fees;
+        updateData.net_pl_sats = parseInt(formData.net_pl_sats, 10);
+        updateData.fees_paid = updateData.fee_trade + updateData.fee_funding;
       }
 
       await updateFn(future.id, updateData);
@@ -252,14 +254,25 @@ export default function EditFutureModal({ future, isOpen, onClose, updateFuture:
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="realized_pl">NET PL (SATS)</Label>
+                <Label htmlFor="pl_sats">PL (SATS)</Label>
                 <Input
-                  id="realized_pl"
+                  id="pl_sats"
                   type="number"
-                  step="0.01"
-                  placeholder="Lucro líquido em satoshis"
-                  value={formData.realized_pl}
-                  onChange={e => setFormData({ ...formData, realized_pl: e.target.value })}
+                  step="1"
+                  placeholder="Lucro bruto em satoshis"
+                  value={formData.pl_sats}
+                  onChange={e => {
+                    const newPl = e.target.value;
+                    const pl = parseInt(newPl) || 0;
+                    const feeTrade = parseInt(formData.fee_trade) || 0;
+                    const feeFunding = parseInt(formData.fee_funding) || 0;
+                    const netPl = pl - feeTrade - feeFunding;
+                    setFormData({ 
+                      ...formData, 
+                      pl_sats: newPl,
+                      net_pl_sats: netPl.toString()
+                    });
+                  }}
                   required
                 />
               </div>
@@ -271,7 +284,18 @@ export default function EditFutureModal({ future, isOpen, onClose, updateFuture:
                   step="1"
                   placeholder="Satoshis pagos na negociação"
                   value={formData.fee_trade}
-                  onChange={e => setFormData({ ...formData, fee_trade: e.target.value })}
+                  onChange={e => {
+                    const newFeeTrade = e.target.value;
+                    const pl = parseInt(formData.pl_sats) || 0;
+                    const feeTrade = parseInt(newFeeTrade) || 0;
+                    const feeFunding = parseInt(formData.fee_funding) || 0;
+                    const netPl = pl - feeTrade - feeFunding;
+                    setFormData({ 
+                      ...formData, 
+                      fee_trade: newFeeTrade,
+                      net_pl_sats: netPl.toString()
+                    });
+                  }}
                   required
                 />
               </div>
@@ -283,9 +307,35 @@ export default function EditFutureModal({ future, isOpen, onClose, updateFuture:
                   step="1"
                   placeholder="Satoshis pagos em funding"
                   value={formData.fee_funding}
-                  onChange={e => setFormData({ ...formData, fee_funding: e.target.value })}
+                  onChange={e => {
+                    const newFeeFunding = e.target.value;
+                    const pl = parseInt(formData.pl_sats) || 0;
+                    const feeTrade = parseInt(formData.fee_trade) || 0;
+                    const feeFunding = parseInt(newFeeFunding) || 0;
+                    const netPl = pl - feeTrade - feeFunding;
+                    setFormData({ 
+                      ...formData, 
+                      fee_funding: newFeeFunding,
+                      net_pl_sats: netPl.toString()
+                    });
+                  }}
                   required
                 />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="net_pl_sats">NET PL (SATS)</Label>
+                <Input
+                  id="net_pl_sats"
+                  type="number"
+                  step="1"
+                  placeholder="Lucro líquido calculado automaticamente"
+                  value={formData.net_pl_sats}
+                  onChange={e => setFormData({ ...formData, net_pl_sats: e.target.value })}
+                  required
+                />
+                <p className="text-xs text-muted-foreground">
+                  NET PL calculado automaticamente: PL - Taxa Negociação - Taxa Financiamento
+                </p>
               </div>
             </>
           )}

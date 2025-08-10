@@ -88,11 +88,16 @@ const FuturesTableEnhanced = memo(function FuturesTableEnhanced({
   }, [sortField, sortDirection]);
 
   const getGainPercent = useCallback((f: Future) => {
-    if (f.status === 'CLOSED' && f.target_price != null) {
-      return f.direction === 'LONG'
-        ? ((f.target_price - f.entry_price) / f.entry_price) * 100
-        : ((f.entry_price - f.target_price) / f.entry_price) * 100;
+    // Para ordens fechadas, usar exit_price ou target_price
+    if (f.status === 'CLOSED') {
+      const exitPrice = f.exit_price || f.target_price;
+      if (exitPrice != null) {
+        return f.direction === 'LONG'
+          ? ((exitPrice - f.entry_price) / f.entry_price) * 100
+          : ((f.entry_price - exitPrice) / f.entry_price) * 100;
+      }
     }
+    // Para ordens abertas, usar preço atual do BTC
     if (f.status === 'OPEN' && btcCurrentPrice > 0) {
       return f.direction === 'LONG'
         ? ((btcCurrentPrice - f.entry_price) / f.entry_price) * 100
@@ -261,10 +266,10 @@ const FuturesTableEnhanced = memo(function FuturesTableEnhanced({
                       {future.status === 'CLOSED' && future.close_date ? formatDateTime(future.close_date, 'dd/MM/yyyy HH:mm') : '-'}
                     </TableCell>
                     <TableCell className="text-foreground font-mono">
-                      {future.status === 'CLOSED' ? `${formatNumber(future.fees_paid || 0)} sats` : '-'}
+                      {future.status === 'CLOSED' ? `${Math.round(future.fees_paid || 0)} sats` : '-'}
                     </TableCell>
                     <TableCell className={`font-mono ${getPLColor((future.net_pl_sats || 0) - (future.fees_paid || 0))}`}>
-                      {future.status === 'CLOSED' ? `${formatNumber((future.net_pl_sats || 0) - (future.fees_paid || 0))} sats` : '-'}
+                      {future.status === 'CLOSED' ? `${Math.round((future.net_pl_sats || 0) - (future.fees_paid || 0))} sats` : '-'}
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-1">

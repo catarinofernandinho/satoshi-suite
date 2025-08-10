@@ -245,12 +245,12 @@ export default function EditFutureModal({ future, isOpen, onClose }: EditFutureM
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="realized_pl">PL Realizado (USD)</Label>
+                <Label htmlFor="realized_pl">NET PL (SATS)</Label>
                 <Input
                   id="realized_pl"
                   type="number"
                   step="0.01"
-                  placeholder="Valor total ganho"
+                  placeholder="Lucro líquido em satoshis"
                   value={formData.realized_pl}
                   onChange={e => setFormData({ ...formData, realized_pl: e.target.value })}
                   required

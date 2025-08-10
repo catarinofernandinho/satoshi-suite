@@ -1,17 +1,15 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { CalendarIcon, TrendingDown } from "lucide-react";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { TrendingDown } from "lucide-react";
 import { useTimezone } from "@/contexts/TimezoneContext";
-import { cn } from "@/lib/utils";
 import { useFutures, type Future } from "@/hooks/useFutures";
 import { useToast } from "@/hooks/use-toast";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import "@/styles/datepicker-dark.css";
 
 interface CloseOrderModalProps {
   order: Future | null;
@@ -28,16 +26,28 @@ export default function CloseOrderModal({ order, isOpen, onClose, btcCurrentPric
 
   const [formData, setFormData] = useState({
     close_date: getCurrentTime(),
-    net_pl_sats: "",
-    fees_paid_sats: ""
+    exit_price: "",
+    realized_pl: "",
+    fee_trade: "",
+    fee_funding: ""
   });
+
+  // Atualizar preço de saída quando a ordem muda
+  useEffect(() => {
+    if (order?.target_price) {
+      setFormData(prev => ({
+        ...prev,
+        exit_price: order.target_price.toString()
+      }));
+    }
+  }, [order]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!order) return;
 
     // Validação
-    if (!formData.net_pl_sats || !formData.fees_paid_sats) {
+    if (!formData.exit_price || !formData.realized_pl || !formData.fee_trade || !formData.fee_funding) {
       toast({
         title: "Campos obrigatórios",
         description: "Preencha todos os campos obrigatórios.",
@@ -46,10 +56,12 @@ export default function CloseOrderModal({ order, isOpen, onClose, btcCurrentPric
       return;
     }
 
-    const netPLSats = parseFloat(formData.net_pl_sats);
-    const feesSats = parseFloat(formData.fees_paid_sats);
+    const exitPrice = parseFloat(formData.exit_price);
+    const realizedPL = parseInt(formData.realized_pl);
+    const feeTrade = parseInt(formData.fee_trade);
+    const feeFunding = parseInt(formData.fee_funding);
 
-    if (isNaN(netPLSats) || isNaN(feesSats)) {
+    if (isNaN(exitPrice) || isNaN(realizedPL) || isNaN(feeTrade) || isNaN(feeFunding)) {
       toast({
         title: "Valores inválidos",
         description: "Os valores devem ser números válidos.",
@@ -61,21 +73,22 @@ export default function CloseOrderModal({ order, isOpen, onClose, btcCurrentPric
     setLoading(true);
 
     try {
-      // Calcular preço de saída baseado no P&L
-      const exitPrice = calculateExitPrice(order, netPLSats, btcCurrentPrice);
+      const totalFees = feeTrade + feeFunding;
       
       await closeFuture(order.id, {
         exit_price: exitPrice,
-        fees_paid: (feesSats / 100000000) * btcCurrentPrice, // Convert sats to USD
-        net_pl_sats: netPLSats,
+        fees_paid: totalFees,
+        net_pl_sats: realizedPL,
         close_date: convertToUTC(formData.close_date).toISOString()
       });
 
       // Reset form
       setFormData({
         close_date: getCurrentTime(),
-        net_pl_sats: "",
-        fees_paid_sats: ""
+        exit_price: "",
+        realized_pl: "",
+        fee_trade: "",
+        fee_funding: ""
       });
       
       onClose();
@@ -86,23 +99,12 @@ export default function CloseOrderModal({ order, isOpen, onClose, btcCurrentPric
     }
   };
 
-  const calculateExitPrice = (order: Future, netPLSats: number, btcPrice: number): number => {
-    // Estimativa do preço de saída baseado no P&L líquido
-    const netPLUSD = (netPLSats / 100000000) * btcPrice;
-    const percentChange = (netPLUSD / order.quantity_usd) * 100;
-    
-    if (order.direction === "LONG") {
-      return order.entry_price * (1 + percentChange / 100);
-    } else {
-      return order.entry_price * (1 - percentChange / 100);
-    }
-  };
 
   if (!order) return null;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <TrendingDown className="h-5 w-5 text-red-500" />
@@ -129,65 +131,72 @@ export default function CloseOrderModal({ order, isOpen, onClose, btcCurrentPric
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label>Data de Fechamento *</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "w-full justify-start text-left font-normal",
-                    !formData.close_date && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {formData.close_date ? (
-                    format(formData.close_date, "PPP", { locale: ptBR })
-                  ) : (
-                    <span>Selecionar data</span>
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
-                <Calendar
-                  mode="single"
-                  selected={formData.close_date}
-                  onSelect={(date) => setFormData(prev => ({ ...prev, close_date: date || getCurrentTime() }))}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
+            <Label htmlFor="close_date">Data de Saída *</Label>
+            <DatePicker
+              selected={formData.close_date}
+              onChange={(date: Date | null) => setFormData(prev => ({ ...prev, close_date: date || getCurrentTime() }))}
+              dateFormat="dd/MM/yyyy HH:mm"
+              showTimeSelect
+              timeFormat="HH:mm"
+              timeIntervals={5}
+              className="h-12 w-full px-3 py-2 rounded-md border border-input bg-background text-foreground placeholder:text-muted-foreground"
+              placeholderText="DD/MM/AAAA HH:mm"
+            />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="net_pl_sats">Valor Líquido (satoshis) *</Label>
+            <Label htmlFor="exit_price">Preço de Saída (USD) *</Label>
             <Input
-              id="net_pl_sats"
+              id="exit_price"
+              type="number"
+              step="0.01"
+              placeholder="100000.00"
+              value={formData.exit_price}
+              onChange={(e) => setFormData(prev => ({ ...prev, exit_price: e.target.value }))}
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="realized_pl">NET PL (SATS) *</Label>
+            <Input
+              id="realized_pl"
               type="number"
               step="1"
-              placeholder="0"
-              value={formData.net_pl_sats}
-              onChange={(e) => setFormData(prev => ({ ...prev, net_pl_sats: e.target.value }))}
+              placeholder="Lucro líquido em satoshis"
+              value={formData.realized_pl}
+              onChange={(e) => setFormData(prev => ({ ...prev, realized_pl: e.target.value }))}
               required
             />
             <p className="text-xs text-muted-foreground">
-              P&L líquido final em satoshis (positivo = lucro, negativo = prejuízo)
+              NET PL em satoshis (lucro líquido final)
             </p>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="fees_paid_sats">Taxa Paga (satoshis) *</Label>
+            <Label htmlFor="fee_trade">Taxa de Negociação (sats) *</Label>
             <Input
-              id="fees_paid_sats"
+              id="fee_trade"
               type="number"
               step="1"
-              placeholder="0"
-              value={formData.fees_paid_sats}
-              onChange={(e) => setFormData(prev => ({ ...prev, fees_paid_sats: e.target.value }))}
+              placeholder="Satoshis pagos na negociação"
+              value={formData.fee_trade}
+              onChange={(e) => setFormData(prev => ({ ...prev, fee_trade: e.target.value }))}
               required
             />
-            <p className="text-xs text-muted-foreground">
-              Total de taxas pagas em satoshis
-            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="fee_funding">Taxa de Financiamento (sats) *</Label>
+            <Input
+              id="fee_funding"
+              type="number"
+              step="1"
+              placeholder="Satoshis pagos em funding"
+              value={formData.fee_funding}
+              onChange={(e) => setFormData(prev => ({ ...prev, fee_funding: e.target.value }))}
+              required
+            />
           </div>
 
           <div className="flex justify-end gap-3 pt-4">

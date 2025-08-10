@@ -226,12 +226,12 @@ const { getCurrentTime, convertToUserTime, convertToUTC } = useTimezone();
           />
         </div>
       <div className="space-y-2">
-        <Label htmlFor="realized_pl">PL Realizado (SATS)</Label>
+        <Label htmlFor="realized_pl">NET PL (SATS)</Label>
         <Input
           id="realized_pl"
           type="number"
           step="1"
-          placeholder="Satoshis ganhos/perdidos"
+          placeholder="Lucro líquido em satoshis"
           value={formData.realized_pl}
           onChange={e => setFormData({ ...formData, realized_pl: e.target.value })}
           required

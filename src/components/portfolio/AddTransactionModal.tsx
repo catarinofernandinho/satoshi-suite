@@ -118,8 +118,8 @@ const useMarketPrice = () => {
     
     const updatedData = {
       ...formData,
-      pricePerCoin: Number(convertedPrice).toFixed(8),
-      price: Number(convertedPrice).toFixed(8)
+      pricePerCoin: Number(convertedPrice).toFixed(2),
+      price: Number(convertedPrice).toFixed(2)
     };
     
       // Auto-calculate total spent if quantity is filled

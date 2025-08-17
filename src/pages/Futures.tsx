@@ -130,15 +130,20 @@ export default function Futures() {
   };
   const stats = getEnhancedStats();
 
-  // Prepare monthly data for chart
+  // Prepare monthly data for chart - ONLY from CLOSED orders
   const getMonthlyData = () => {
     const monthlyMap = new Map<string, number>();
-    filteredFutures.forEach(future => {
+    
+    // Filter only CLOSED orders for monthly chart
+    const closedFutures = filteredFutures.filter(future => future.status === 'CLOSED');
+    
+    closedFutures.forEach(future => {
       const month = format(convertToUserTime(future.buy_date), 'MMM yyyy');
-      const metrics = calculateFutureMetrics(future, btcPrice);
-      const profitSats = (metrics.net_pl_sats || 0) + (metrics.fees_paid || 0) / btcPrice * 100000000;
-      monthlyMap.set(month, (monthlyMap.get(month) || 0) + profitSats);
+      // Use net_pl_sats from closed orders (real data)
+      const netProfitSats = future.net_pl_sats || 0;
+      monthlyMap.set(month, (monthlyMap.get(month) || 0) + netProfitSats);
     });
+    
     return Array.from(monthlyMap.entries()).map(([month, profit]) => ({
       month,
       profit

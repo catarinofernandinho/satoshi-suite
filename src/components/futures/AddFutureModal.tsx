@@ -62,12 +62,15 @@ const { getCurrentTime, convertToUserTime, convertToUTC } = useTimezone();
       };
 
       if (formData.status === "CLOSED") {
-        orderData.exit_price = formData.exit_price ? parseFloat(formData.exit_price) : undefined;
+        orderData.exit_price = formData.target_price ? parseFloat(formData.target_price) : undefined;
         const feeTrade = parseInt(formData.fee_trade, 10) || 0;
         const feeFunding = parseInt(formData.fee_funding, 10) || 0;
         const plBruto = parseInt(formData.realized_pl, 10) || 0;
         const netPlSats = parseInt(formData.net_pl_sats, 10) || 0;
         
+        // Salvar os campos individuais no banco
+        orderData.fee_trade = feeTrade;
+        orderData.fee_funding = feeFunding;
         orderData.fees_paid = feeTrade + feeFunding;
         orderData.pl_sats = plBruto; // PL bruto informado pelo usuário
         orderData.net_pl_sats = netPlSats; // NET PL calculado
@@ -246,10 +249,14 @@ const { getCurrentTime, convertToUserTime, convertToUTC } = useTimezone();
             type="number"
             step="0.01"
             placeholder="100000.00"
-            value={formData.exit_price}
+            value={formData.exit_price || formData.target_price}
             onChange={e => setFormData({ ...formData, exit_price: e.target.value })}
-            required
+            disabled
+            className="bg-muted"
           />
+          <p className="text-xs text-muted-foreground">
+            Valor preenchido automaticamente com o preço alvo
+          </p>
         </div>
 
         <div className="space-y-2">

@@ -30,9 +30,9 @@ export default function FuturesStatsEnhanced({ stats }: FuturesStatsEnhancedProp
       title: "Lucro total (satoshis)",
       value: formatSats(stats.totalProfitSats),
       icon: DollarSign,
-      bgColor: "bg-gradient-to-br from-primary/10 to-primary/20 border border-primary/30",
-      textColor: "text-primary",
-      iconColor: "text-primary"
+      bgColor: "bg-gradient-to-br from-success/10 to-success/20 border border-success/30",
+      textColor: "text-success",
+      iconColor: "text-success"
     },
     {
       title: "Total de taxas (satoshis)", 
@@ -87,7 +87,7 @@ export default function FuturesStatsEnhanced({ stats }: FuturesStatsEnhancedProp
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-4 mb-8">
       {statCards.map((stat, index) => {
         const IconComponent = stat.icon;
         

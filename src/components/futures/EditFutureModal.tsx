@@ -103,11 +103,19 @@ export default function EditFutureModal({ future, isOpen, onClose, updateFuture:
 
       if (formData.status === "CLOSED") {
         updateData.close_date = formData.close_date ? convertToUTC(formData.close_date).toISOString() : null;
-        updateData.pl_sats = parseInt(formData.pl_sats, 10);
-        updateData.fee_trade = parseInt(formData.fee_trade, 10);
-        updateData.fee_funding = parseInt(formData.fee_funding, 10);
-        updateData.net_pl_sats = parseInt(formData.net_pl_sats, 10);
+        updateData.exit_price = updateData.target_price;
+        updateData.pl_sats = parseInt(formData.pl_sats, 10) || 0;
+        updateData.fee_trade = parseInt(formData.fee_trade, 10) || 0;
+        updateData.fee_funding = parseInt(formData.fee_funding, 10) || 0;
+        updateData.net_pl_sats = parseInt(formData.net_pl_sats, 10) || 0;
         updateData.fees_paid = updateData.fee_trade + updateData.fee_funding;
+        
+        // Calcular percent_gain
+        updateData.percent_gain = updateData.exit_price && updateData.entry_price ? 
+          (updateData.direction === "LONG" ? 
+            ((updateData.exit_price - updateData.entry_price) / updateData.entry_price) * 100 :
+            ((updateData.entry_price - updateData.exit_price) / updateData.entry_price) * 100) : 0;
+        updateData.percent_fee = updateData.fees_paid ? (updateData.fees_paid / updateData.quantity_usd) * 100 : 0;
       }
 
       await updateFn(future.id, updateData);
@@ -236,22 +244,43 @@ export default function EditFutureModal({ future, isOpen, onClose, updateFuture:
             </div>
           </div>
 
-          {/* Campos adicionais quando status é CLOSED */}
+            {/* Campos adicionais quando status é CLOSED */}
           {formData.status === "CLOSED" && (
             <>
-              <div className="flex items-center gap-2">
-                <Label htmlFor="close_date" className="mb-0">Data de Saída:</Label>
+              <div className="space-y-2">
+                <Label htmlFor="close_date">Data de Saída *</Label>
                 <DatePicker
-                  selected={formData.close_date}
-                  onChange={(date: Date | null) => setFormData(f => ({ ...f, close_date: date }))}
+                  selected={formData.close_date ? convertToUserTime(formData.close_date) : null}
+                  onChange={(date: Date | null) => {
+                    if (date) {
+                      const utcDate = convertToUTC(date);
+                      setFormData(prev => ({ ...prev, close_date: utcDate }));
+                    }
+                  }}
                   dateFormat="dd/MM/yyyy HH:mm"
                   showTimeSelect
                   timeFormat="HH:mm"
                   timeIntervals={5}
-                  className="h-12 w-[220px] px-3 py-2 rounded-md border border-input bg-background text-foreground placeholder:text-muted-foreground"
+                  className="h-12 w-full px-3 py-2 rounded-md border border-input bg-background text-foreground placeholder:text-muted-foreground"
                   placeholderText="DD/MM/AAAA HH:mm"
-                  locale="pt-BR"
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="exit_price">Preço de Saída (USD) *</Label>
+                <Input
+                  id="exit_price"
+                  type="number"
+                  step="0.01"
+                  placeholder="100000.00"
+                  value={formData.target_price}
+                  onChange={e => setFormData({ ...formData, target_price: e.target.value })}
+                  disabled
+                  className="bg-muted"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Valor preenchido automaticamente com o preço alvo
+                </p>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="pl_sats">PL (SATS)</Label>

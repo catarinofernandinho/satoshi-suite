@@ -54,30 +54,35 @@ export default function FuturesCharts({ monthlyData, waterfallData }: FuturesCha
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
       {/* Monthly Profit Chart */}
-      <Card className="card-shadow">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            📊 Lucro Total por Mês
+      <Card className="card-shadow border-accent/20 bg-gradient-to-br from-accent/5 to-accent/10">
+        <CardHeader className="pb-6">
+          <CardTitle className="flex items-center gap-3 text-lg font-semibold">
+            <div className="p-2 rounded-lg bg-accent/20">
+              📊
+            </div>
+            Lucro Total por Mês
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={monthlyData}>
-              <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+          <ResponsiveContainer width="100%" height={320}>
+            <BarChart data={monthlyData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
               <XAxis 
                 dataKey="month" 
                 fontSize={12}
                 tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                axisLine={{ stroke: 'hsl(var(--border))' }}
               />
               <YAxis 
                 fontSize={12}
                 tick={{ fill: 'hsl(var(--muted-foreground))' }}
                 tickFormatter={(value) => formatSats(value)}
+                axisLine={{ stroke: 'hsl(var(--border))' }}
               />
               <Tooltip content={<CustomTooltip />} />
-              <Bar dataKey="profit" radius={[4, 4, 0, 0]}>
+              <Bar dataKey="profit" radius={[6, 6, 0, 0]}>
                 {monthlyData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill="#f59e0b" />
+                  <Cell key={`cell-${index}`} fill="hsl(var(--accent))" />
                 ))}
               </Bar>
             </BarChart>
@@ -86,49 +91,70 @@ export default function FuturesCharts({ monthlyData, waterfallData }: FuturesCha
       </Card>
 
       {/* Waterfall Chart */}
-      <Card className="card-shadow">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            📊 Gráfico de Lucro Líquido
+      <Card className="card-shadow border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10">
+        <CardHeader className="pb-6">
+          <CardTitle className="flex items-center gap-3 text-lg font-semibold">
+            <div className="p-2 rounded-lg bg-primary/20">
+              💰
+            </div>
+            Gráfico de Lucro Líquido
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <ResponsiveContainer width="100%" height={300}>
+          <ResponsiveContainer width="100%" height={320}>
             <BarChart data={waterfallChartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
               <XAxis 
                 dataKey="name" 
                 fontSize={12}
                 tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                axisLine={{ stroke: 'hsl(var(--border))' }}
               />
               <YAxis 
                 fontSize={12}
                 tick={{ fill: 'hsl(var(--muted-foreground))' }}
                 tickFormatter={(value) => formatSats(value)}
+                axisLine={{ stroke: 'hsl(var(--border))' }}
               />
               <Tooltip content={<CustomTooltip />} />
-              <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+              <Bar dataKey="value" radius={[6, 6, 0, 0]}>
                 {waterfallChartData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.fill} />
+                  <Cell 
+                    key={`cell-${index}`} 
+                    fill={
+                      entry.name === "Lucro Total" ? "hsl(var(--success))" :
+                      entry.name === "Taxas" ? "hsl(var(--destructive))" :
+                      "hsl(var(--primary))"
+                    } 
+                  />
                 ))}
               </Bar>
             </BarChart>
           </ResponsiveContainer>
           
-          {/* Labels on bars */}
-          <div className="flex justify-between mt-4 px-8">
-            <div className="text-center">
-              <div className="text-sm font-medium text-orange-600">
+          {/* Enhanced Labels */}
+          <div className="grid grid-cols-3 gap-4 mt-6 px-4">
+            <div className="text-center p-3 rounded-lg bg-success/10 border border-success/20">
+              <div className="text-sm font-medium text-success mb-1">
+                Lucro Total
+              </div>
+              <div className="text-lg font-bold text-success">
                 {formatSats(waterfallData.totalProfit)}
               </div>
             </div>
-            <div className="text-center">
-              <div className="text-sm font-medium text-gray-600">
+            <div className="text-center p-3 rounded-lg bg-destructive/10 border border-destructive/20">
+              <div className="text-sm font-medium text-destructive mb-1">
+                Taxas
+              </div>
+              <div className="text-lg font-bold text-destructive">
                 -{formatSats(waterfallData.totalFees)}
               </div>
             </div>
-            <div className="text-center">
-              <div className="text-sm font-medium text-orange-600">
+            <div className="text-center p-3 rounded-lg bg-primary/10 border border-primary/20">
+              <div className="text-sm font-medium text-primary mb-1">
+                Lucro Líquido
+              </div>
+              <div className="text-lg font-bold text-primary">
                 {formatSats(waterfallData.netProfit)}
               </div>
             </div>

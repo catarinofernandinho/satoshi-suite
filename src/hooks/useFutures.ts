@@ -235,6 +235,7 @@ export function useFutures() {
         quantity_usd: sanitizedData.quantity_usd,
         status: sanitizedData.status,
         buy_date: sanitizedData.buy_date,
+        close_date: sanitizedData.status === 'CLOSED' ? (sanitizedData as any).close_date : null,
         percent_gain: sanitizedData.percent_gain,
         percent_fee: sanitizedData.percent_fee,
         fees_paid: sanitizedData.fees_paid,

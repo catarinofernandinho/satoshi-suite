@@ -9,12 +9,11 @@
 export const formatFiatValue = (value: string | number, locale: string = 'en-US'): string => {
   if (!value || value === "") return "";
   
-  const numValue = typeof value === "string" ? parseFloat(value) : value;
+  const numValue = typeof value === "string" ? parseFloat(value.replace(',', '.')) : value;
   if (isNaN(numValue)) return "";
   
-  // Round down to 2 decimal places
-  const rounded = Math.floor(numValue * 100) / 100;
-  return rounded.toString();
+  // Simply return the raw value as string without formatting
+  return value.toString();
 };
 
 /**
@@ -51,13 +50,13 @@ export const calculateInterlinkedValues = (
   totalSpent: string,
   quantity: string,
   pricePerCoin: string,
-  quantityUnit: "BTC" | "SATS"
+  quantityUnit: "BTC" | "SATS",
+  currency: string = 'USD'
 ): { totalSpent: string; quantity: string; pricePerCoin: string } => {
-  // Normaliza vírgula para ponto antes do parseFloat
-  const normalize = (val: string) => val.replace(',', '.');
-  const totalSpentNum = parseFloat(normalize(totalSpent)) || 0;
-  const quantityNum = parseFloat(normalize(quantity)) || 0;
-  const pricePerCoinNum = parseFloat(normalize(pricePerCoin)) || 0;
+  // Use the normalize function based on currency
+  const totalSpentNum = parseFloat(normalizeDecimalInput(totalSpent, currency)) || 0;
+  const quantityNum = parseFloat(normalizeDecimalInput(quantity, currency)) || 0;
+  const pricePerCoinNum = parseFloat(normalizeDecimalInput(pricePerCoin, currency)) || 0;
   
   // Convert SATS to BTC for calculations
   let quantityInBtc = quantityNum;
@@ -72,32 +71,32 @@ export const calculateInterlinkedValues = (
     // If quantity is filled, calculate price per coin
     if (quantityInBtc > 0) {
       const calculatedPrice = totalSpentNum / quantityInBtc;
-      result.pricePerCoin = calculatedPrice > 0 ? calculatedPrice.toString() : "";
+      result.pricePerCoin = calculatedPrice > 0 ? calculatedPrice.toFixed(2) : "";
     }
   } else if (changedField === 'quantity') {
     // If total spent is filled, calculate price per coin
-    if (totalSpentNum > 0) {
+    if (totalSpentNum > 0 && quantityInBtc > 0) {
       const calculatedPrice = totalSpentNum / quantityInBtc;
-      result.pricePerCoin = calculatedPrice > 0 ? calculatedPrice.toString() : "";
+      result.pricePerCoin = calculatedPrice > 0 ? calculatedPrice.toFixed(2) : "";
     }
     // If price per coin is filled, calculate total spent
-    else if (pricePerCoinNum > 0) {
+    else if (pricePerCoinNum > 0 && quantityInBtc > 0) {
       const calculatedTotal = quantityInBtc * pricePerCoinNum;
-      result.totalSpent = calculatedTotal > 0 ? calculatedTotal.toString() : "";
+      result.totalSpent = calculatedTotal > 0 ? calculatedTotal.toFixed(2) : "";
     }
   } else if (changedField === 'pricePerCoin') {
     // If quantity is filled, calculate total spent
-    if (quantityInBtc > 0) {
+    if (quantityInBtc > 0 && pricePerCoinNum > 0) {
       const calculatedTotal = quantityInBtc * pricePerCoinNum;
-      result.totalSpent = calculatedTotal > 0 ? calculatedTotal.toString() : "";
+      result.totalSpent = calculatedTotal > 0 ? calculatedTotal.toFixed(2) : "";
     }
-    // If total spent is filled, calculate quantity
-    else if (totalSpentNum > 0) {
+    // If total spent is filled, calculate quantity - prevent division by zero
+    else if (totalSpentNum > 0 && pricePerCoinNum > 0) {
       const calculatedQuantity = totalSpentNum / pricePerCoinNum;
       if (calculatedQuantity > 0) {
         const finalQuantity = quantityUnit === "SATS" 
           ? Math.floor(calculatedQuantity * 100000000).toString()
-          : calculatedQuantity.toString();
+          : calculatedQuantity.toFixed(8);
         result.quantity = finalQuantity;
       }
     }

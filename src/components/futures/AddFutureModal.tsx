@@ -44,6 +44,7 @@ const { getCurrentTime, convertToUserTime, convertToUTC } = useTimezone();
     realized_pl: "",
     fee_trade: "",
     fee_funding: "",
+    net_pl_sats: "",
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -65,10 +66,11 @@ const { getCurrentTime, convertToUserTime, convertToUTC } = useTimezone();
         const feeTrade = parseInt(formData.fee_trade, 10) || 0;
         const feeFunding = parseInt(formData.fee_funding, 10) || 0;
         const plBruto = parseInt(formData.realized_pl, 10) || 0;
+        const netPlSats = parseInt(formData.net_pl_sats, 10) || 0;
         
         orderData.fees_paid = feeTrade + feeFunding;
         orderData.pl_sats = plBruto; // PL bruto informado pelo usuário
-        orderData.net_pl_sats = plBruto - orderData.fees_paid; // NET PL calculado
+        orderData.net_pl_sats = netPlSats; // NET PL calculado
         orderData.percent_gain = orderData.exit_price && orderData.entry_price ? 
           (orderData.direction === "LONG" ? 
             ((orderData.exit_price - orderData.entry_price) / orderData.entry_price) * 100 :
@@ -103,6 +105,7 @@ const { getCurrentTime, convertToUserTime, convertToUTC } = useTimezone();
         realized_pl: "",
         fee_trade: "",
         fee_funding: "",
+        net_pl_sats: "",
       });
       if (onClose) onClose();
       else setModalOpen(false);
@@ -217,56 +220,137 @@ const { getCurrentTime, convertToUserTime, convertToUTC } = useTimezone();
 
       {formData.status === "CLOSED" && (
         <>
-        <div className="flex items-center gap-2">
-          <Label htmlFor="close_date" className="mb-0">Data de Saída:</Label>
+        <div className="space-y-2">
+          <Label htmlFor="close_date">Data de Saída *</Label>
           <DatePicker
-            selected={formData.close_date}
-            onChange={(date: Date | null) => setFormData(f => ({ ...f, close_date: date }))}
+            selected={formData.close_date ? convertToUserTime(formData.close_date.toISOString()) : null}
+            onChange={(date: Date | null) => {
+              if (date) {
+                const utcDate = convertToUTC(date);
+                setFormData(prev => ({ ...prev, close_date: utcDate }));
+              }
+            }}
             dateFormat="dd/MM/yyyy HH:mm"
             showTimeSelect
             timeFormat="HH:mm"
             timeIntervals={5}
-            className="h-12 w-[220px] px-3 py-2 rounded-md border border-input bg-background text-foreground placeholder:text-muted-foreground"
+            className="h-12 w-full px-3 py-2 rounded-md border border-input bg-background text-foreground placeholder:text-muted-foreground"
             placeholderText="DD/MM/AAAA HH:mm"
           />
         </div>
-      <div className="space-y-2">
-        <Label htmlFor="realized_pl">PL Bruto (SATS)</Label>
-        <Input
-          id="realized_pl"
-          type="number"
-          step="1"
-          placeholder="Lucro bruto em satoshis"
-          value={formData.realized_pl}
-          onChange={e => setFormData({ ...formData, realized_pl: e.target.value })}
-          required
-        />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="fee_trade">Taxa de Negociação (sats)</Label>
-        <Input
-          id="fee_trade"
-          type="number"
-          step="1"
-          placeholder="Satoshis pagos na negociação"
-          value={formData.fee_trade}
-          onChange={e => setFormData({ ...formData, fee_trade: e.target.value })}
-          required
-        />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="fee_funding">Taxa de Financiamento (sats)</Label>
-        <Input
-          id="fee_funding"
-          type="number"
-          step="1"
-          placeholder="Satoshis pagos em funding"
-          value={formData.fee_funding}
-          onChange={e => setFormData({ ...formData, fee_funding: e.target.value })}
-          required
-        />
-      </div>
-      </>
+
+        <div className="space-y-2">
+          <Label htmlFor="exit_price">Preço de Saída (USD) *</Label>
+          <Input
+            id="exit_price"
+            type="number"
+            step="0.01"
+            placeholder="100000.00"
+            value={formData.exit_price}
+            onChange={e => setFormData({ ...formData, exit_price: e.target.value })}
+            required
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="realized_pl">PL Bruto (SATS) *</Label>
+          <Input
+            id="realized_pl"
+            type="number"
+            step="1"
+            placeholder="Lucro bruto em satoshis"
+            value={formData.realized_pl}
+            onChange={e => {
+              const newPl = e.target.value;
+              setFormData(prev => {
+                const pl = parseInt(newPl) || 0;
+                const feeTrade = parseInt(prev.fee_trade) || 0;
+                const feeFunding = parseInt(prev.fee_funding) || 0;
+                const netPl = pl - feeTrade - feeFunding;
+                return {
+                  ...prev,
+                  realized_pl: newPl,
+                  net_pl_sats: netPl.toString()
+                };
+              });
+            }}
+            required
+          />
+          <p className="text-xs text-muted-foreground">
+            PL bruto em satoshis (antes das taxas)
+          </p>
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="fee_trade">Taxa de Negociação (sats) *</Label>
+          <Input
+            id="fee_trade"
+            type="number"
+            step="1"
+            placeholder="Satoshis pagos na negociação"
+            value={formData.fee_trade}
+            onChange={e => {
+              const newFeeTrade = e.target.value;
+              setFormData(prev => {
+                const pl = parseInt(prev.realized_pl) || 0;
+                const feeTrade = parseInt(newFeeTrade) || 0;
+                const feeFunding = parseInt(prev.fee_funding) || 0;
+                const netPl = pl - feeTrade - feeFunding;
+                return {
+                  ...prev,
+                  fee_trade: newFeeTrade,
+                  net_pl_sats: netPl.toString()
+                };
+              });
+            }}
+            required
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="fee_funding">Taxa de Financiamento (sats) *</Label>
+          <Input
+            id="fee_funding"
+            type="number"
+            step="1"
+            placeholder="Satoshis pagos em funding"
+            value={formData.fee_funding}
+            onChange={e => {
+              const newFeeFunding = e.target.value;
+              setFormData(prev => {
+                const pl = parseInt(prev.realized_pl) || 0;
+                const feeTrade = parseInt(prev.fee_trade) || 0;
+                const feeFunding = parseInt(newFeeFunding) || 0;
+                const netPl = pl - feeTrade - feeFunding;
+                return {
+                  ...prev,
+                  fee_funding: newFeeFunding,
+                  net_pl_sats: netPl.toString()
+                };
+              });
+            }}
+            required
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="net_pl_sats">NET PL (SATS) *</Label>
+          <Input
+            id="net_pl_sats"
+            type="number"
+            step="1"
+            placeholder="Lucro líquido calculado automaticamente"
+            value={formData.net_pl_sats}
+            onChange={e => setFormData({ ...formData, net_pl_sats: e.target.value })}
+            required
+            disabled
+            className="bg-muted"
+          />
+          <p className="text-xs text-muted-foreground">
+            NET PL calculado automaticamente: PL - Taxa Negociação - Taxa Financiamento
+          </p>
+        </div>
+        </>
       )}
 
 

@@ -7,7 +7,6 @@ interface FuturesStatsEnhancedProps {
     totalProfitSats: number;
     totalFeesSats: number;
     netProfitSats: number;
-    averageReturn: number;
     totalOrders: number;
     winningOrders: number;
     losingOrders: number;
@@ -31,75 +30,79 @@ export default function FuturesStatsEnhanced({ stats }: FuturesStatsEnhancedProp
       title: "Lucro total (satoshis)",
       value: formatSats(stats.totalProfitSats),
       icon: DollarSign,
-      bgColor: "bg-gradient-to-br from-orange-500 to-orange-600",
-      textColor: "text-white"
+      bgColor: "bg-gradient-to-br from-primary/10 to-primary/20 border border-primary/30",
+      textColor: "text-primary",
+      iconColor: "text-primary"
     },
     {
       title: "Total de taxas (satoshis)", 
       value: formatSats(stats.totalFeesSats),
       icon: BarChart3,
-      bgColor: "bg-gradient-to-br from-gray-500 to-gray-600",
-      textColor: "text-white"
+      bgColor: "bg-gradient-to-br from-bitcoin/10 to-bitcoin/20 border border-bitcoin/30",
+      textColor: "text-bitcoin",
+      iconColor: "text-bitcoin"
     },
     {
       title: "Lucro líquido (satoshis)",
       value: formatSats(stats.netProfitSats),
-      icon: TrendingUp,
-      bgColor: "bg-gradient-to-br from-orange-500 to-orange-600",
-      textColor: "text-white"
-    },
-    {
-      title: "Rentabilidade média",
-      value: formatPercent(stats.averageReturn),
-      icon: Percent,
-      bgColor: "bg-gradient-to-br from-cyan-500 to-cyan-600",
-      textColor: "text-white"
+      icon: stats.netProfitSats >= 0 ? TrendingUp : TrendingDown,
+      bgColor: stats.netProfitSats >= 0 
+        ? "bg-gradient-to-br from-success/10 to-success/20 border border-success/30"
+        : "bg-gradient-to-br from-destructive/10 to-destructive/20 border border-destructive/30",
+      textColor: stats.netProfitSats >= 0 ? "text-success" : "text-destructive",
+      iconColor: stats.netProfitSats >= 0 ? "text-success" : "text-destructive"
     },
     {
       title: "Total de Ordens",
       value: stats.totalOrders.toString(),
       icon: Target,
-      bgColor: "bg-gradient-to-br from-gray-800 to-gray-900",
-      textColor: "text-white"
+      bgColor: "bg-gradient-to-br from-secondary/10 to-secondary/20 border border-secondary/30",
+      textColor: "text-secondary-foreground",
+      iconColor: "text-secondary-foreground"
     },
     {
       title: "Ganhos",
       value: stats.winningOrders.toString(),
       icon: Trophy,
-      bgColor: "bg-gradient-to-br from-green-500 to-green-600",
-      textColor: "text-white"
+      bgColor: "bg-gradient-to-br from-success/10 to-success/20 border border-success/30",
+      textColor: "text-success",
+      iconColor: "text-success"
     },
     {
       title: "Perdas",
       value: stats.losingOrders.toString(),
       icon: AlertTriangle,
-      bgColor: "bg-gradient-to-br from-red-500 to-red-600",
-      textColor: "text-white"
+      bgColor: "bg-gradient-to-br from-destructive/10 to-destructive/20 border border-destructive/30",
+      textColor: "text-destructive",
+      iconColor: "text-destructive"
     },
     {
       title: "Aproveitamento",
       value: formatPercent(stats.winRate),
-      icon: TrendingUp,
-      bgColor: "bg-gradient-to-br from-cyan-500 to-cyan-600",
-      textColor: "text-white"
+      icon: Percent,
+      bgColor: "bg-gradient-to-br from-accent/10 to-accent/20 border border-accent/30",
+      textColor: "text-accent-foreground",
+      iconColor: "text-accent-foreground"
     }
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
       {statCards.map((stat, index) => {
         const IconComponent = stat.icon;
         
         return (
-          <Card key={index} className={`border-0 ${stat.bgColor} card-shadow hover:scale-105 transition-transform duration-200`}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <Card key={index} className={`${stat.bgColor} hover:scale-[1.02] transition-all duration-300 shadow-sm hover:shadow-md`}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
               <CardTitle className={`text-sm font-medium ${stat.textColor}`}>
                 {stat.title}
               </CardTitle>
-              <IconComponent className={`h-4 w-4 ${stat.textColor} opacity-80`} />
+              <div className="p-2 rounded-lg bg-background/10">
+                <IconComponent className={`h-5 w-5 ${stat.iconColor}`} />
+              </div>
             </CardHeader>
-            <CardContent>
-              <div className={`text-2xl font-bold ${stat.textColor}`}>
+            <CardContent className="pb-4">
+              <div className={`text-2xl font-bold ${stat.textColor} tracking-tight`}>
                 {stat.value}
               </div>
             </CardContent>

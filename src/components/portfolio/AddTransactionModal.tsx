@@ -85,7 +85,8 @@ export default function AddTransactionModal({
       changedField === 'totalSpent' ? newValue : formData.totalSpent,
       changedField === 'quantity' ? newValue : formData.quantity,
       changedField === 'pricePerCoin' ? newValue : formData.pricePerCoin,
-      quantityUnit
+      quantityUnit,
+      formData.market
       );
     
     setFormData(prev => ({
@@ -202,12 +203,15 @@ return <Dialog open={isOpen} onOpenChange={handleClose}>
                 value={formData.totalSpent} 
                 onChange={e => {
                   const value = e.target.value;
+                  
+                  // Only allow valid input based on currency
                   if (validateDecimalInput(value, formData.market)) {
-                    const formattedValue = formatFiatValue(value);
-                    setFormData(prev => ({ ...prev, totalSpent: formattedValue }));
-                    const normalizedValue = normalizeDecimalInput(formattedValue, formData.market);
+                    setFormData(prev => ({ ...prev, totalSpent: value }));
+                    
+                    // Only calculate if the value is valid
+                    const normalizedValue = normalizeDecimalInput(value, formData.market);
                     if (normalizedValue && !isNaN(parseFloat(normalizedValue))) {
-                      handleFieldChange('totalSpent', formattedValue);
+                      handleFieldChange('totalSpent', value);
                     }
                   }
                 }}
@@ -282,12 +286,15 @@ return <Dialog open={isOpen} onOpenChange={handleClose}>
               value={formData.pricePerCoin} 
               onChange={e => {
                 const value = e.target.value;
+                
+                // Only allow valid input based on currency
                 if (validateDecimalInput(value, formData.market)) {
-                  const formattedValue = formatFiatValue(value);
-                  setFormData(prev => ({ ...prev, pricePerCoin: formattedValue }));
-                  const normalizedValue = normalizeDecimalInput(formattedValue, formData.market);
+                  setFormData(prev => ({ ...prev, pricePerCoin: value }));
+                  
+                  // Only calculate if the value is valid
+                  const normalizedValue = normalizeDecimalInput(value, formData.market);
                   if (normalizedValue && !isNaN(parseFloat(normalizedValue))) {
-                    handleFieldChange('pricePerCoin', formattedValue);
+                    handleFieldChange('pricePerCoin', value);
                   }
                 }
               }}

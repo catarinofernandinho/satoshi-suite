@@ -36,7 +36,7 @@ export default function Futures() {
   const [priceLoading, setPriceLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("all");
   const [dateRange, setDateRange] = useState({
-    from: subDays(getCurrentTime(), 30),
+    from: subDays(getCurrentTime(), 365 * 5), // Default to "Tempo Todo" (5 years)
     to: getCurrentTime()
   });
   const fetchBitcoinPrice = async () => {
@@ -75,9 +75,12 @@ export default function Futures() {
     });
   });
 
-  // Calculate enhanced stats
+  // Calculate enhanced stats - ONLY for CLOSED orders
   const getEnhancedStats = () => {
-    if (btcPrice === 0) {
+    // Filter only CLOSED orders for statistics
+    const closedFutures = filteredFutures.filter(future => future.status === 'CLOSED');
+    
+    if (btcPrice === 0 || closedFutures.length === 0) {
       return {
         totalProfitSats: 0,
         totalFeesSats: 0,
@@ -89,33 +92,40 @@ export default function Futures() {
         winRate: 0
       };
     }
-    let totalProfitSats = 0;
+    
+    let totalProfitSats = 0; // Gross profit (pl_sats)
     let totalFeesSats = 0;
+    let totalNetProfitSats = 0;
     let totalReturnPercent = 0;
     let winningOrders = 0;
     let losingOrders = 0;
-    filteredFutures.forEach(future => {
-      const metrics = calculateFutureMetrics(future, btcPrice);
-      const profitSats = metrics.net_pl_sats || 0;
-      const feesSats = (metrics.fees_paid || 0) / btcPrice * 100000000;
-      totalProfitSats += profitSats + feesSats; // Gross profit
+    
+    closedFutures.forEach(future => {
+      const grossProfitSats = future.pl_sats || 0;
+      const feesSats = future.fees_paid || 0;
+      const netProfitSats = future.net_pl_sats || 0;
+      
+      totalProfitSats += grossProfitSats;
       totalFeesSats += feesSats;
-      totalReturnPercent += metrics.percent_gain || 0;
-      if (profitSats > 0) {
+      totalNetProfitSats += netProfitSats;
+      totalReturnPercent += future.percent_gain || 0;
+      
+      if (netProfitSats > 0) {
         winningOrders++;
-      } else if (profitSats < 0) {
+      } else if (netProfitSats < 0) {
         losingOrders++;
       }
     });
+    
     return {
       totalProfitSats,
       totalFeesSats,
-      netProfitSats: totalProfitSats - totalFeesSats,
-      averageReturn: filteredFutures.length > 0 ? totalReturnPercent / filteredFutures.length : 0,
-      totalOrders: filteredFutures.length,
+      netProfitSats: totalNetProfitSats,
+      averageReturn: closedFutures.length > 0 ? totalReturnPercent / closedFutures.length : 0,
+      totalOrders: closedFutures.length,
       winningOrders,
       losingOrders,
-      winRate: filteredFutures.length > 0 ? winningOrders / filteredFutures.length * 100 : 0
+      winRate: closedFutures.length > 0 ? winningOrders / closedFutures.length * 100 : 0
     };
   };
   const stats = getEnhancedStats();
@@ -218,9 +228,7 @@ export default function Futures() {
                 Operações do período selecionado ({filteredFutures.length} de {futures.length} total)
               </span>
               <div className="flex items-center gap-2">
-                {filteredFutures.length !== futures.length && <Badge variant="outline">
-                    Filtro ativo
-                  </Badge>}
+                <DateRangeFilterAdvanced dateRange={dateRange} onDateRangeChange={setDateRange} />
                 <div className="flex items-center gap-2">
                   <AddFutureButton addFuture={addFuture} onSuccess={() => setDateRange(prev => ({
                     ...prev,

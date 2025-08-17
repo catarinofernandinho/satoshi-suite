@@ -16,17 +16,14 @@ interface DateRangeFilterAdvancedProps {
 }
 
 export default function DateRangeFilterAdvanced({ dateRange, onDateRangeChange }: DateRangeFilterAdvancedProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [preset, setPreset] = useState<string>("custom");
 
   const handlePresetChange = (value: string) => {
-    setPreset(value);
     const now = new Date();
     
     switch (value) {
       case "all":
         onDateRangeChange({ 
-          from: new Date(2020, 0, 1), // January 1, 2020
+          from: subDays(now, 365 * 5), // 5 anos atrás
           to: now 
         });
         break;
@@ -42,18 +39,12 @@ export default function DateRangeFilterAdvanced({ dateRange, onDateRangeChange }
           to: now 
         });
         break;
-      case "custom":
-        // Auto-open date picker when custom is selected
-        setIsOpen(true);
+      case "90days":
+        onDateRangeChange({ 
+          from: subDays(now, 90), 
+          to: now 
+        });
         break;
-    }
-  };
-
-  const handleSelect = (range: { from?: Date; to?: Date } | undefined) => {
-    if (range?.from && range?.to) {
-      onDateRangeChange({ from: range.from, to: range.to });
-      setPreset("custom");
-      setIsOpen(false);
     }
   };
 
@@ -61,7 +52,8 @@ export default function DateRangeFilterAdvanced({ dateRange, onDateRangeChange }
     const now = new Date();
     const sevenDaysAgo = subDays(now, 7);
     const thirtyDaysAgo = subDays(now, 30);
-    const allTimeStart = new Date(2020, 0, 1);
+    const ninetyDaysAgo = subDays(now, 90);
+    const fiveYearsAgo = subDays(now, 365 * 5);
     
     const daysDiff = Math.ceil((dateRange.to.getTime() - dateRange.from.getTime()) / (1000 * 60 * 60 * 24));
     
@@ -69,10 +61,12 @@ export default function DateRangeFilterAdvanced({ dateRange, onDateRangeChange }
       return "7days";
     } else if (Math.abs(dateRange.from.getTime() - thirtyDaysAgo.getTime()) < 86400000 && daysDiff <= 32) {
       return "30days";
-    } else if (dateRange.from.getTime() <= allTimeStart.getTime() + 86400000) {
+    } else if (Math.abs(dateRange.from.getTime() - ninetyDaysAgo.getTime()) < 86400000 && daysDiff <= 92) {
+      return "90days";
+    } else if (Math.abs(dateRange.from.getTime() - fiveYearsAgo.getTime()) < 86400000 * 30) {
       return "all";
     }
-    return "custom";
+    return "all"; // Default to "all" instead of "custom"
   };
 
   const currentPreset = getPresetFromRange();
@@ -84,49 +78,12 @@ export default function DateRangeFilterAdvanced({ dateRange, onDateRangeChange }
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all">Todo o tempo</SelectItem>
           <SelectItem value="7days">7 dias</SelectItem>
           <SelectItem value="30days">30 dias</SelectItem>
-          <SelectItem value="custom">Personalizado</SelectItem>
+          <SelectItem value="90days">90 dias</SelectItem>
+          <SelectItem value="all">Tempo Todo</SelectItem>
         </SelectContent>
       </Select>
-
-      <Popover open={isOpen} onOpenChange={setIsOpen}>
-        <PopoverTrigger asChild>
-          <Button
-            variant="outline"
-            className={cn(
-              "w-[280px] justify-start text-left font-normal",
-              !dateRange && "text-muted-foreground"
-            )}
-          >
-            <CalendarIcon className="mr-2 h-4 w-4" />
-            {dateRange?.from ? (
-              dateRange.to ? (
-                <>
-                  {format(dateRange.from, "dd/MM/yyyy")} →{" "}
-                  {format(dateRange.to, "dd/MM/yyyy")}
-                </>
-              ) : (
-                format(dateRange.from, "dd/MM/yyyy")
-              )
-            ) : (
-              <span>Selecionar período</span>
-            )}
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-auto p-0" align="start">
-          <Calendar
-            initialFocus
-            mode="range"
-            defaultMonth={dateRange?.from}
-            selected={{ from: dateRange.from, to: dateRange.to }}
-            onSelect={handleSelect}
-            numberOfMonths={2}
-            className="pointer-events-auto"
-          />
-        </PopoverContent>
-      </Popover>
     </div>
   );
 }

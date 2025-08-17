@@ -39,7 +39,7 @@ export default function AddTransactionModal({
   const [isLoading, setIsLoading] = useState(false);
   const [quantityUnit, setQuantityUnit] = useState<"BTC" | "SATS">("BTC");
   const [transferType, setTransferType] = useState<"entrada" | "saida">("entrada");
-  const { getPortfolioStats, transactions } = useTransactions();
+  const { transactions } = useTransactions();
   const { getCurrentTime, convertToUserTime, convertToUTC } = useTimezone();
   const { exchangeRate } = useCurrency();
   
@@ -113,22 +113,23 @@ const setMaxQuantity = () => {
 
 const useMarketPrice = () => {
   if (btcCurrentPrice) {
-      // Convert price based on selected market currency
-    const convertedPrice = formData.market === 'BRL' ? btcCurrentPrice * exchangeRate : btcCurrentPrice;
+    // btcCurrentPrice is already in the user's preferred currency from the API
+    // No conversion needed - use the price directly
+    const marketPrice = btcCurrentPrice;
     
     const updatedData = {
       ...formData,
-      pricePerCoin: Number(convertedPrice).toFixed(2),
-      price: Number(convertedPrice).toFixed(2)
+      pricePerCoin: Number(marketPrice).toFixed(2),
+      price: Number(marketPrice).toFixed(2)
     };
     
-      // Auto-calculate total spent if quantity is filled
+    // Auto-calculate total spent if quantity is filled
     if (formData.quantity) {
       let quantityInBtc = parseFloat(formData.quantity);
       if (quantityUnit === "SATS") {
         quantityInBtc = quantityInBtc / 100000000;
       }
-      updatedData.totalSpent = (quantityInBtc * convertedPrice).toString();
+      updatedData.totalSpent = (quantityInBtc * marketPrice).toFixed(2);
     }
     
     setFormData(updatedData);

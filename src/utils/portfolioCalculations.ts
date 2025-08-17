@@ -15,44 +15,37 @@ export interface TransactionGP {
   color: string;
 }
 
-// Memoized portfolio calculations
+// Refactored portfolio calculations based on actual displayed transactions
 export const calculatePortfolioStats = (
   transactions: Transaction[],
   btcCurrentPrice: number,
   userCurrency: string,
   exchangeRate: number
-  ): PortfolioMetrics => {
+): PortfolioMetrics => {
   let totalBtc = 0;
-  let totalCost = 0;
-  let totalRevenue = 0;
+  let totalCost = 0; // Sum of cost column for Buy transactions only
+  let totalRevenue = 0; // Sum of revenue column for Sell transactions only
+  let totalGainLoss = 0; // Direct sum of GP column values
   
-  transactions.forEach(t => {
+  // Calculate totals EXACTLY like what is displayed in the table
+  transactions.forEach((t) => {
     if (t.type === 'Comprar') {
-      totalBtc += Math.abs(t.quantity);
-      // Custo da transação já na moeda correta!
-      const totalCostWithFees = t.total_spent + (t.fees || 0);
-
-      // Corrige conversão: só converte se vier de USD
-      if (t.market === userCurrency) {
-        totalCost += totalCostWithFees;
-      } else if (t.market === 'USD' && userCurrency === 'BRL') {
-        totalCost += totalCostWithFees * exchangeRate;
-      } else if (t.market === 'BRL' && userCurrency === 'USD') {
-        totalCost += totalCostWithFees / exchangeRate;
-      } else {
-        totalCost += totalCostWithFees;
-      }
+      // Add to BTC holdings
+      totalBtc += t.quantity;
+      
+      // Add to total cost (exactly like Cost column: total_spent + fees)
+      const transactionCost = (t.total_spent || 0) + (t.fees || 0);
+      const convertedCost = convertToUserCurrency(transactionCost, t.market, userCurrency, exchangeRate);
+      totalCost += convertedCost;
+      
     } else if (t.type === 'Vender') {
-      totalBtc -= Math.abs(t.quantity);
-      if (t.market === userCurrency) {
-        totalRevenue += t.total_spent;
-      } else if (t.market === 'USD' && userCurrency === 'BRL') {
-        totalRevenue += t.total_spent * exchangeRate;
-      } else if (t.market === 'BRL' && userCurrency === 'USD') {
-        totalRevenue += t.total_spent / exchangeRate;
-      } else {
-        totalRevenue += t.total_spent;
-      }
+      // Subtract from BTC holdings
+      totalBtc -= t.quantity;
+      
+      // Add to revenue (exactly like Revenue column: total_spent)
+      const convertedRevenue = convertToUserCurrency(t.total_spent, t.market, userCurrency, exchangeRate);
+      totalRevenue += convertedRevenue;
+      
     } else if (t.type === 'Transferência') {
       if (t.transfer_type === 'entrada') {
         totalBtc += t.quantity;
@@ -60,26 +53,35 @@ export const calculatePortfolioStats = (
         totalBtc -= t.quantity;
       }
     }
+    
+    // Calculate GP for this transaction (exactly like GP column)
+    const gpResult = calculateTransactionGP(t, btcCurrentPrice, userCurrency, exchangeRate);
+    totalGainLoss += gpResult.value;
   });
   
+  // Ensure totalBtc doesn't go negative
   if (totalBtc < 0) totalBtc = 0;
-  // Se o totalBtc for menor que 1 satoshi, considere zero!
   if (Math.abs(totalBtc) < 0.00000001) totalBtc = 0;
 
-  // Calcular valor atual convertendo preço BTC para moeda do usuário
- const btcPriceInUserCurrency = btcCurrentPrice;
-  const currentValue = totalBtc * btcPriceInUserCurrency;
+  // Current value of all BTC holdings at current price
+  const currentValue = totalBtc * btcCurrentPrice;
+  
+  // Net cost = total cost - total revenue
   const netCost = totalCost - totalRevenue;
-  const gainLoss = currentValue - netCost;
+  
+  // Use the calculated totalGainLoss directly (sum of GP column)
+  const gainLoss = totalGainLoss;
+  
+  // Average buy price = net cost / total BTC (liquid average cost)
   const avgBuyPrice = totalBtc > 0 ? netCost / totalBtc : 0;
   
   return {
     totalBtc,
-    totalCost,
+    totalCost, // Cost of open positions only
     totalRevenue,
     netCost,
     currentValue,
-    gainLoss,
+    gainLoss, // Direct sum from GP column
     avgBuyPrice
   };
 };

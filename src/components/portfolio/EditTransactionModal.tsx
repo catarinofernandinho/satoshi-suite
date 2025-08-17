@@ -41,7 +41,7 @@ export default function EditTransactionModal({
   const [isLoading, setIsLoading] = useState(false);
   const [quantityUnit, setQuantityUnit] = useState<"BTC" | "SATS">("BTC");
   const [transferType, setTransferType] = useState<"entrada" | "saida">("entrada");
-  const { getPortfolioStats, transactions } = useTransactions();
+  const { transactions } = useTransactions();
   const { getCurrentTime, convertToUserTime, convertToUTC } = useTimezone();
   const { exchangeRate } = useCurrency();
   

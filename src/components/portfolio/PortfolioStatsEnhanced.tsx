@@ -28,6 +28,12 @@ const PortfolioStatsEnhanced = memo(function PortfolioStatsEnhanced({
 }: PortfolioStatsEnhancedProps) {
   const { formatNumber, formatCurrency } = useCurrency();
   
+  // Create a safe formatting function that doesn't double-convert
+  const formatSafeValue = (amount: number) => {
+    // Values from calculatePortfolioStats are already in correct currency, just format
+    return formatCurrency(amount, true); // skipConversion = true
+  };
+  
   // Use imported utility function for formatting
 
   // Calculate net liquid average cost
@@ -75,7 +81,7 @@ Custo líquido médio = (Custo total - Receitas totais) / Ativos.
         <CardContent className="pt-4">
           <div className="text-xs text-muted-foreground mb-1">Valor dos Ativos</div>
           <div className="text-lg font-bold text-foreground">
-            {formatCurrency(totalValue)}
+            {formatSafeValue(totalValue)}
           </div>
         </CardContent>
       </Card>
@@ -93,7 +99,7 @@ Custo líquido médio = (Custo total - Receitas totais) / Ativos.
         <CardContent className="pt-4">
           <div className="text-xs text-muted-foreground mb-1">Custo Total</div>
           <div className="text-lg font-bold text-foreground">
-            {formatCurrency(totalCost)}
+            {formatSafeValue(totalCost)}
           </div>
         </CardContent>
       </Card>
@@ -114,7 +120,7 @@ Custo líquido médio = (Custo total - Receitas totais) / Ativos.
             </TooltipProvider>
           </div>
           <div className="text-lg font-bold text-foreground">
-            {formatCurrency(totalBtc > 0 ? liquidAverageCost : 0)}
+            {formatSafeValue(totalBtc > 0 ? liquidAverageCost : 0)}
           </div>
         </CardContent>
       </Card>
@@ -125,7 +131,7 @@ Custo líquido médio = (Custo total - Receitas totais) / Ativos.
           <div className={`text-lg font-bold ${
             totalGainLoss >= 0 ? "text-success" : "text-destructive"
           }`}>
-          {formatCurrency(totalGainLoss)}
+          {formatSafeValue(totalGainLoss)}
         </div>
       </CardContent>
     </Card>

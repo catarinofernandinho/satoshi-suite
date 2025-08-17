@@ -24,6 +24,7 @@ export interface Future {
   percent_fee?: number;
   fees_paid?: number;
   net_pl_sats?: number;
+  pl_sats?: number;
   buy_date: string;
   close_date?: string;
   created_at: string;
@@ -204,10 +205,11 @@ export function useFutures() {
       
       status: futureData.status,
       buy_date: futureData.buy_date,
-      percent_gain: futureData.percent_gain,
-      percent_fee: futureData.percent_fee,
-      fees_paid: futureData.fees_paid,
-      net_pl_sats: futureData.net_pl_sats
+        percent_gain: futureData.percent_gain,
+        percent_fee: futureData.percent_fee,
+        fees_paid: futureData.fees_paid,
+        net_pl_sats: futureData.net_pl_sats,
+        pl_sats: (futureData as any).pl_sats || 0
     };
     
     const validationErrors = validateFutureData(sanitizedData);
@@ -236,7 +238,8 @@ export function useFutures() {
         percent_gain: sanitizedData.percent_gain,
         percent_fee: sanitizedData.percent_fee,
         fees_paid: sanitizedData.fees_paid,
-        net_pl_sats: sanitizedData.net_pl_sats
+        net_pl_sats: sanitizedData.net_pl_sats,
+        pl_sats: (sanitizedData as any).pl_sats
       })
       .select()
       .single();
@@ -255,7 +258,13 @@ export function useFutures() {
       
       // Só salva offline se for erro de conexão!
       if (error.status === 0 || error.message?.includes("Failed to fetch")) {
-        const localOrder = saveLocalOrder(sanitizedData as LocalOrder);
+        const localOrderData = {
+          ...sanitizedData,
+          id: `local_${Date.now()}`,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        } as LocalOrder;
+        const localOrder = saveLocalOrder(localOrderData);
         setFutures(prev => [localOrder, ...prev]);
         toast({
           title: "Ordem salva offline",
@@ -274,7 +283,7 @@ export function useFutures() {
     }  
   };
 
-  const updateFuture = async (id: string, updates: Partial<Future>) => {
+  const updateFuture = async (id: string, updates: Partial<Future & { pl_sats?: number }>) => {
     if (!user) {
       toast({
         title: "Erro de autenticação",
@@ -333,9 +342,10 @@ export function useFutures() {
               status: updates.status || localOrder.status,
               buy_date: localOrder.buy_date,
               percent_gain: updates.percent_gain || localOrder.percent_gain,
-              percent_fee: updates.percent_fee || localOrder.percent_fee,
-              fees_paid: updates.fees_paid || localOrder.fees_paid,
-              net_pl_sats: updates.net_pl_sats || localOrder.net_pl_sats
+          percent_fee: updates.percent_fee || localOrder.percent_fee,
+          fees_paid: updates.fees_paid || localOrder.fees_paid,
+          net_pl_sats: updates.net_pl_sats || localOrder.net_pl_sats,
+          pl_sats: updates.pl_sats || (localOrder as any).pl_sats
             })
             .select()
             .single();
@@ -433,13 +443,14 @@ export function useFutures() {
     }
   };
 
-  const closeFuture = async (id: string, closeData: { exit_price: number; fees_paid: number; net_pl_sats: number; close_date?: string; fee_trade?: number; fee_funding?: number }) => {
+  const closeFuture = async (id: string, closeData: { exit_price: number; fees_paid: number; net_pl_sats: number; pl_sats?: number; close_date?: string; fee_trade?: number; fee_funding?: number }) => {
     const updates = {
       status: 'CLOSED' as const,
       exit_price: closeData.exit_price,
       target_price: closeData.exit_price,
       fees_paid: closeData.fees_paid,
       net_pl_sats: closeData.net_pl_sats,
+      pl_sats: closeData.pl_sats,
       close_date: closeData.close_date || new Date().toISOString(),
       updated_at: new Date().toISOString(),
       fee_trade: closeData.fee_trade,

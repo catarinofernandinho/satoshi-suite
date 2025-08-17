@@ -203,10 +203,11 @@ return <Dialog open={isOpen} onOpenChange={handleClose}>
                 onChange={e => {
                   const value = e.target.value;
                   if (validateDecimalInput(value, formData.market)) {
-                    setFormData(prev => ({ ...prev, totalSpent: value }));
-                    const normalizedValue = normalizeDecimalInput(value, formData.market);
+                    const formattedValue = formatFiatValue(value);
+                    setFormData(prev => ({ ...prev, totalSpent: formattedValue }));
+                    const normalizedValue = normalizeDecimalInput(formattedValue, formData.market);
                     if (normalizedValue && !isNaN(parseFloat(normalizedValue))) {
-                      handleFieldChange('totalSpent', value);
+                      handleFieldChange('totalSpent', formattedValue);
                     }
                   }
                 }}
@@ -282,10 +283,11 @@ return <Dialog open={isOpen} onOpenChange={handleClose}>
               onChange={e => {
                 const value = e.target.value;
                 if (validateDecimalInput(value, formData.market)) {
-                  setFormData(prev => ({ ...prev, pricePerCoin: value }));
-                  const normalizedValue = normalizeDecimalInput(value, formData.market);
+                  const formattedValue = formatFiatValue(value);
+                  setFormData(prev => ({ ...prev, pricePerCoin: formattedValue }));
+                  const normalizedValue = normalizeDecimalInput(formattedValue, formData.market);
                   if (normalizedValue && !isNaN(parseFloat(normalizedValue))) {
-                    handleFieldChange('pricePerCoin', value);
+                    handleFieldChange('pricePerCoin', formattedValue);
                   }
                 }
               }}

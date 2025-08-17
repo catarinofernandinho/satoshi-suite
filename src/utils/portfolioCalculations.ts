@@ -29,15 +29,17 @@ export const calculatePortfolioStats = (
   transactions.forEach(t => {
     if (t.type === 'Comprar') {
       totalBtc += Math.abs(t.quantity);
+      // Include fees in total cost
+      const totalCostWithFees = t.total_spent + (t.fees || 0);
       // Convert transaction cost to user's currency if needed
       if (t.market === userCurrency) {
-        totalCost += t.total_spent;
+        totalCost += totalCostWithFees;
       } else if (t.market === 'BRL' && userCurrency === 'USD') {
-        totalCost += t.total_spent / exchangeRate;
+        totalCost += totalCostWithFees / exchangeRate;
       } else if (t.market === 'USD' && userCurrency === 'BRL') {
-        totalCost += t.total_spent * exchangeRate;
+        totalCost += totalCostWithFees * exchangeRate;
       } else {
-        totalCost += t.total_spent;
+        totalCost += totalCostWithFees;
       }
     } else if (t.type === 'Vender') {
       totalBtc -= Math.abs(t.quantity);
@@ -112,8 +114,9 @@ export const calculateTransactionGP = (
   ): TransactionGP => {
   if (transaction.type === "Comprar") {
     const currentValue = transaction.quantity * btcCurrentPrice;
+    const totalCostWithFees = (transaction.total_spent || 0) + (transaction.fees || 0);
     const convertedTotalSpent = convertToUserCurrency(
-      transaction.total_spent,
+      totalCostWithFees,
       transaction.market,
       userCurrency,
       exchangeRate

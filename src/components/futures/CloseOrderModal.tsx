@@ -141,16 +141,31 @@ export default function CloseOrderModal({
               <span className="text-muted-foreground">Preço Entrada:</span>
               <div className="font-medium">${order.entry_price.toLocaleString()}</div>
             </div>
+            <div>
+              <span className="text-muted-foreground">Data de Entrada:</span>
+              <div className="font-medium">{new Date(order.buy_date).toLocaleDateString('pt-BR')} {new Date(order.buy_date).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</div>
+            </div>
           </div>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="close_date">Data de Saída *</Label>
-            <DatePicker selected={formData.close_date} onChange={(date: Date | null) => setFormData(prev => ({
-            ...prev,
-            close_date: date || getCurrentTime()
-          }))} dateFormat="dd/MM/yyyy HH:mm" showTimeSelect timeFormat="HH:mm" timeIntervals={5} className="h-12 w-full px-3 py-2 rounded-md border border-input bg-background text-foreground placeholder:text-muted-foreground" placeholderText="DD/MM/AAAA HH:mm" />
+            <DatePicker 
+              selected={formData.close_date} 
+              onChange={(date: Date | null) => setFormData(prev => ({
+                ...prev,
+                close_date: date || getCurrentTime()
+              }))} 
+              dateFormat="dd/MM/yyyy HH:mm" 
+              showTimeSelect 
+              timeFormat="HH:mm" 
+              timeIntervals={5} 
+              className="h-12 w-full px-3 py-2 rounded-md border border-input bg-background text-foreground placeholder:text-muted-foreground" 
+              placeholderText="DD/MM/AAAA HH:mm"
+              shouldCloseOnSelect={false}
+              showPopperArrow={false}
+            />
           </div>
 
           <div className="space-y-2">

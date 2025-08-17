@@ -5,14 +5,15 @@ import { Button } from "@/components/ui/button";
 import { useFutures } from "@/hooks/useFutures";
 import FuturesStatsEnhanced from "@/components/futures/FuturesStatsEnhanced";
 import FuturesCharts from "@/components/futures/FuturesCharts";
-import FuturesTableEnhanced from "@/components/futures/FuturesTableEnhanced";
+import FuturesTableAdvanced from "@/components/futures/FuturesTableAdvanced";
 import AddFutureButton from "@/components/futures/AddFutureButton";
-import DateRangeFilter from "@/components/futures/DateRangeFilter";
+import DateRangeFilterAdvanced from "@/components/futures/DateRangeFilterAdvanced";
 import OrderStatusTabs from "@/components/futures/OrderStatusTabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { subDays, format, isWithinInterval, parseISO } from "date-fns";
 import { useTimezone } from "@/contexts/TimezoneContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { UserCheck } from "lucide-react";
 export default function Futures() {
   const {
     futures,
@@ -176,7 +177,9 @@ export default function Futures() {
   return <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        
+        <div className="flex items-center gap-4">
+          <DateRangeFilterAdvanced dateRange={dateRange} onDateRangeChange={setDateRange} />
+        </div>
         <div className="flex gap-2">
           <AddFutureButton addFuture={addFuture} onSuccess={() => setDateRange(prev => ({
           ...prev,
@@ -184,9 +187,6 @@ export default function Futures() {
         }))} />
         </div>
       </div>
-
-      {/* Date Range Filter */}
-      <DateRangeFilter dateRange={dateRange} onDateRangeChange={setDateRange} />
 
       {/* Current BTC Price */}
       <Card className="bg-gradient-card border-bitcoin/20">
@@ -221,10 +221,12 @@ export default function Futures() {
                 {filteredFutures.length !== futures.length && <Badge variant="outline">
                     Filtro ativo
                   </Badge>}
-                <AddFutureButton addFuture={addFuture} onSuccess={() => setDateRange(prev => ({
-                ...prev,
-                to: getCurrentTime()
-              }))} />
+                <div className="flex items-center gap-2">
+                  <AddFutureButton addFuture={addFuture} onSuccess={() => setDateRange(prev => ({
+                    ...prev,
+                    to: getCurrentTime()
+                  }))} />
+                </div>
               </div>
             </div>
           </CardDescription>
@@ -247,7 +249,7 @@ export default function Futures() {
                   </p>
                 </>}
             </div> : <OrderStatusTabs futures={filteredFutures} activeTab={activeTab} onTabChange={setActiveTab}>
-              {tabFilteredFutures => <FuturesTableEnhanced futures={tabFilteredFutures} btcCurrentPrice={btcPrice} calculateFutureMetrics={calculateFutureMetrics} deleteFuture={deleteFuture} closeFuture={closeFuture} updateFuture={updateFuture} />}
+              {tabFilteredFutures => <FuturesTableAdvanced futures={tabFilteredFutures} btcCurrentPrice={btcPrice} calculateFutureMetrics={calculateFutureMetrics} deleteFuture={deleteFuture} closeFuture={closeFuture} updateFuture={updateFuture} />}
             </OrderStatusTabs>}
         </CardContent>
       </Card>

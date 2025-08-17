@@ -14,10 +14,7 @@ export const formatFiatValue = (value: string | number, locale: string = 'en-US'
   
   // Round down to 2 decimal places
   const rounded = Math.floor(numValue * 100) / 100;
-  return rounded.toLocaleString(locale, {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  });
+  return rounded.toString();
 };
 
 /**

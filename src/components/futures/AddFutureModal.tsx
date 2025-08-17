@@ -62,8 +62,13 @@ const { getCurrentTime, convertToUserTime, convertToUTC } = useTimezone();
 
       if (formData.status === "CLOSED") {
         orderData.exit_price = formData.exit_price ? parseFloat(formData.exit_price) : undefined;
-        orderData.fees_paid = (parseInt(formData.fee_trade, 10) + parseInt(formData.fee_funding, 10));
-        orderData.net_pl_sats = parseInt(formData.realized_pl, 10);
+        const feeTrade = parseInt(formData.fee_trade, 10) || 0;
+        const feeFunding = parseInt(formData.fee_funding, 10) || 0;
+        const plBruto = parseInt(formData.realized_pl, 10) || 0;
+        
+        orderData.fees_paid = feeTrade + feeFunding;
+        orderData.pl_sats = plBruto; // PL bruto informado pelo usuário
+        orderData.net_pl_sats = plBruto - orderData.fees_paid; // NET PL calculado
         orderData.percent_gain = orderData.exit_price && orderData.entry_price ? 
           (orderData.direction === "LONG" ? 
             ((orderData.exit_price - orderData.entry_price) / orderData.entry_price) * 100 :
@@ -226,12 +231,12 @@ const { getCurrentTime, convertToUserTime, convertToUTC } = useTimezone();
           />
         </div>
       <div className="space-y-2">
-        <Label htmlFor="realized_pl">NET PL (SATS)</Label>
+        <Label htmlFor="realized_pl">PL Bruto (SATS)</Label>
         <Input
           id="realized_pl"
           type="number"
           step="1"
-          placeholder="Lucro líquido em satoshis"
+          placeholder="Lucro bruto em satoshis"
           value={formData.realized_pl}
           onChange={e => setFormData({ ...formData, realized_pl: e.target.value })}
           required

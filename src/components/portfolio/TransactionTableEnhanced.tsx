@@ -224,10 +224,10 @@ const TransactionTableEnhanced = memo(function TransactionTableEnhanced({
                     </TableCell>
                      <TableCell className="text-foreground">
                        {formatCurrency(transaction.fees || 0, currency, transaction.market)}
-                    </TableCell>
+                     </TableCell>
                      <TableCell className="text-foreground">
-                       {transaction.type === "Comprar" ? formatCurrency(transaction.total_spent, currency, transaction.market) : "-"}
-                    </TableCell>
+                       {transaction.type === "Comprar" ? formatCurrency((transaction.total_spent || 0) + (transaction.fees || 0), currency, transaction.market) : "-"}
+                     </TableCell>
                      <TableCell className="text-foreground">
                        {transaction.type === "Vender" ? formatCurrency(transaction.total_spent, currency, transaction.market) : "-"}
                     </TableCell>

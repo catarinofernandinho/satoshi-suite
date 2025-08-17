@@ -14,8 +14,9 @@ interface FuturesChartsProps {
 }
 
 export default function FuturesCharts({ monthlyData, waterfallData }: FuturesChartsProps) {
+  // Força uso de formato USD na página de futuros (não usa configuração de moeda do usuário)
   const formatSats = (value: number) => {
-    return new Intl.NumberFormat('pt-BR').format(Math.round(value));
+    return new Intl.NumberFormat('en-US').format(Math.round(value));
   };
 
   const waterfallChartData = [

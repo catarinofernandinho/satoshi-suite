@@ -12,7 +12,6 @@ import OrderStatusTabs from "@/components/futures/OrderStatusTabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { subDays, format, isWithinInterval, parseISO } from "date-fns";
 import { useTimezone } from "@/contexts/TimezoneContext";
-import { useCurrency } from "@/contexts/CurrencyContext";
 import { UserCheck } from "lucide-react";
 export default function Futures() {
   const {

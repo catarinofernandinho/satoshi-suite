@@ -1,6 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrendingUp, TrendingDown, DollarSign, Target, BarChart3, Trophy, AlertTriangle, Percent } from "lucide-react";
-import { useCurrency } from "@/contexts/CurrencyContext";
 
 interface FuturesStatsEnhancedProps {
   stats: {
@@ -15,14 +14,13 @@ interface FuturesStatsEnhancedProps {
 }
 
 export default function FuturesStatsEnhanced({ stats }: FuturesStatsEnhancedProps) {
-  const { currency, formatNumber } = useCurrency();
-  
+  // Força uso de USD na página de futuros (não usa configuração de moeda do usuário)
   const formatSats = (value: number) => {
-    return new Intl.NumberFormat(currency === 'BRL' ? 'pt-BR' : 'en-US').format(Math.round(value));
+    return new Intl.NumberFormat('en-US').format(Math.round(value));
   };
 
   const formatPercent = (value: number) => {
-    return `${formatNumber(value)}%`;
+    return `${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%`;
   };
 
   const statCards = [

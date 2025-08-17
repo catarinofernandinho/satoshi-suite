@@ -9,7 +9,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import EditFutureModal from "./EditFutureModal";
 import CloseOrderModal from "./CloseOrderModal";
 import { useTimezone } from "@/contexts/TimezoneContext";
-import { useCurrency } from "@/contexts/CurrencyContext";
+
 
 interface FuturesTableProps {
   futures: Future[];
@@ -19,7 +19,6 @@ interface FuturesTableProps {
 export default function FuturesTable({ futures, btcCurrentPrice }: FuturesTableProps) {
   const { deleteFuture, calculateFutureMetrics } = useFutures();
   const { formatDateTime } = useTimezone();
-  const { formatCurrency: formatCurrencyContext, formatNumber, currency } = useCurrency();
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [editingOrder, setEditingOrder] = useState<Future | null>(null);
   const [closingOrder, setClosingOrder] = useState<Future | null>(null);
@@ -35,14 +34,15 @@ export default function FuturesTable({ futures, btcCurrentPrice }: FuturesTableP
     }
   };
 
+  // Força uso de USD na página de futuros (não usa configuração de moeda do usuário)
   const formatCurrency = (value: number | undefined, currencyType: 'USD' | 'SATS' = 'USD') => {
     if (value === undefined || value === null) return '-';
     
     if (currencyType === 'USD') {
-      return formatCurrencyContext(value);
+      return `$${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     }
     
-    return new Intl.NumberFormat(currency === 'BRL' ? 'pt-BR' : 'en-US', {
+    return new Intl.NumberFormat('en-US', {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
     }).format(value) + ' sats';
@@ -50,7 +50,7 @@ export default function FuturesTable({ futures, btcCurrentPrice }: FuturesTableP
 
   const formatPercent = (value: number | undefined) => {
     if (value === undefined || value === null) return '-';
-    const formatted = formatNumber(value);
+    const formatted = value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     return `${value >= 0 ? '+' : ''}${formatted}%`;
   };
 

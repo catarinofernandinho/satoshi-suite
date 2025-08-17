@@ -113,26 +113,19 @@ const setMaxQuantity = () => {
 
 const useMarketPrice = () => {
   if (btcCurrentPrice) {
-    // btcCurrentPrice is already in the user's preferred currency from the API
-    // No conversion needed - use the price directly
-    const marketPrice = btcCurrentPrice;
+    // Convert price based on selected market currency and exchange rate
+    const convertedPrice = formData.market === 'BRL' ? btcCurrentPrice * exchangeRate : btcCurrentPrice;
+    const priceString = convertedPrice.toFixed(2);
     
-    const updatedData = {
-      ...formData,
-      pricePerCoin: Number(marketPrice).toFixed(2),
-      price: Number(marketPrice).toFixed(2)
-    };
+    // Update price field and trigger automatic calculation
+    setFormData(prev => ({
+      ...prev,
+      pricePerCoin: priceString,
+      price: priceString
+    }));
     
-    // Auto-calculate total spent if quantity is filled
-    if (formData.quantity) {
-      let quantityInBtc = parseFloat(formData.quantity);
-      if (quantityUnit === "SATS") {
-        quantityInBtc = quantityInBtc / 100000000;
-      }
-      updatedData.totalSpent = (quantityInBtc * marketPrice).toFixed(2);
-    }
-    
-    setFormData(updatedData);
+    // Trigger automatic calculation - this is the key fix!
+    handleFieldChange('pricePerCoin', priceString);
   }
 };
 const handleSubmit = async (e: React.FormEvent) => {

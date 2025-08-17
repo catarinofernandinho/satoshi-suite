@@ -33,14 +33,16 @@ export const calculatePortfolioStats = (
       const totalCostWithFees = t.total_spent + (t.fees || 0);
       // Convert transaction cost to user's currency if needed
       if (t.market === userCurrency) {
+  // Valor já está na moeda do usuário, só soma
         totalCost += totalCostWithFees;
-      } else if (t.market === 'BRL' && userCurrency === 'USD') {
-        // Corrigir conversão: BRL para USD
-        totalCost += totalCostWithFees / exchangeRate;
       } else if (t.market === 'USD' && userCurrency === 'BRL') {
-        // Corrigir conversão: USD para BRL
+  // Converter de USD para BRL
         totalCost += totalCostWithFees * exchangeRate;
+      } else if (t.market === 'BRL' && userCurrency === 'USD') {
+  // Converter de BRL para USD
+        totalCost += totalCostWithFees / exchangeRate;
       } else {
+  // Mercado e moeda do usuário são diferentes e não são USD/BRL - soma direto
         totalCost += totalCostWithFees;
       }
     } else if (t.type === 'Vender') {

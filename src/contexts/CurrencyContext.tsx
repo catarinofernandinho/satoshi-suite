@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useUserSettings } from '@/hooks/useUserSettings';
 import { useAuth } from '@/hooks/useAuth';
+import { bitcoinPriceApi } from '@/lib/apiClient';
+import { errorHandler } from '@/lib/errorHandler';
 
 interface CurrencyContextType {
   currency: 'USD' | 'BRL';
@@ -28,11 +30,14 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
 
   const fetchExchangeRate = async () => {
     try {
-      const response = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
-      const data = await response.json();
-      setExchangeRate(data.rates.BRL || 5.5); // Fallback rate
+      const rate = await bitcoinPriceApi.fetchExchangeRate();
+      setExchangeRate(rate);
     } catch (error) {
-      console.error('Failed to fetch exchange rate:', error);
+      errorHandler.log({
+        code: 'EXCHANGE_RATE_FETCH_FAILED',
+        message: 'Failed to fetch USD/BRL exchange rate',
+        severity: 'low'
+      });
       setExchangeRate(5.5); // Fallback rate
     }
   };
@@ -52,7 +57,12 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
         try {
           await updateSettings({ preferred_currency: newCurrency });
         } catch (error) {
-          console.error('Error updating currency:', error);
+          errorHandler.log({
+            code: 'CURRENCY_UPDATE_FAILED',
+            message: 'Failed to update currency preference',
+            severity: 'low',
+            context: { newCurrency, error }
+          });
         } finally {
           setLoading(false);
         }

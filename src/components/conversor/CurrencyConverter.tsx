@@ -1,136 +1,186 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, memo } from "react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { RefreshCw, Copy, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useCurrency } from "@/contexts/CurrencyContext";
-import { normalizeDecimalInput } from "@/utils/numberUtils";
+import { useBitcoinPrice } from "@/hooks/useBitcoinPrice";
+import { errorHandler } from "@/lib/errorHandler";
+import { bitcoinPriceApi } from "@/lib/apiClient";
 
-export default function CurrencyConverter() {
-  const [rates, setRates] = useState({
-    btcUsd: 0,
-    usdBrl: 0
-  });
+function CurrencyConverter() {
+  const { currency } = useCurrency();
+  const { btcPrice: btcUsdPrice, loading: btcLoading, refetch: refetchBtc } = useBitcoinPrice(currency);
+  const [usdBrlRate, setUsdBrlRate] = useState(0);
   const [values, setValues] = useState({
     btc: "",
     sats: "",
     usd: "",
     brl: ""
   });
-  const [loading, setLoading] = useState(true);
+  const [brlLoading, setBrlLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const { toast } = useToast();
-  const { formatNumber, currency } = useCurrency();
+  
+  const loading = btcLoading || brlLoading;
+  const rates = useMemo(() => ({
+    btcUsd: btcUsdPrice,
+    usdBrl: usdBrlRate
+  }), [btcUsdPrice, usdBrlRate]);
 
-  // Memoize fetch function to prevent unnecessary re-renders
-  const fetchRates = useCallback(async () => {
-    setLoading(true);
-    try {
-      // Fetch BTC/USD and USD/BRL rates in parallel
-      const [btcResponse, brlResponse] = await Promise.all([
-        fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd', {
-          signal: AbortSignal.timeout(10000) // 10s timeout
-        }),
-        fetch('https://api.exchangerate-api.com/v4/latest/USD', {
-          signal: AbortSignal.timeout(10000) // 10s timeout
-        })
-      ]);
-
-      if (!btcResponse.ok || !brlResponse.ok) {
-        throw new Error('Network response was not ok');
-      }
-
-      const [btcData, brlData] = await Promise.all([
-        btcResponse.json(),
-        brlResponse.json()
-      ]);
-
-      const newRates = {
-        btcUsd: btcData.bitcoin?.usd || 0,
-        usdBrl: brlData.rates?.BRL || 0
-      };
-
-      setRates(newRates);
-      setLastUpdated(new Date());
-    } catch (error) {
-      console.error('Failed to fetch rates:', error);
-      toast({
-        title: "Erro ao buscar cotações",
-        description: "Não foi possível atualizar as cotações. Tente novamente.",
-        variant: "destructive"
+  // Format value according to currency preference - exact replica of HTML logic
+  const formatValue = useCallback((value: number, decimals: number) => {
+    if (currency === 'BRL') {
+      // Brazilian formatting: 1.000.000,00
+      let numStr = value.toFixed(decimals);
+      let parts = numStr.split('.');
+      let intPart = parts[0];
+      let decPart = parts.length > 1 ? parts[1] : '';
+      
+      // Add thousand separators to integer part
+      intPart = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+      
+      // Return formatted number with comma for decimals
+      return intPart + (decPart ? ',' + decPart : '');
+    } else {
+      // US formatting for USD preference
+      return value.toLocaleString('en-US', { 
+        minimumFractionDigits: decimals, 
+        maximumFractionDigits: decimals 
       });
-    } finally {
-      setLoading(false);
     }
-  }, [toast]);
+  }, [currency]);
 
-  useEffect(() => {
-    fetchRates();
+  // Parse input value - handle both comma and dot as decimal separator for BRL
+  const parseInputValue = useCallback((value: string) => {
+    if (!value) return 0;
+    
+    if (currency === 'BRL') {
+      // Remove thousand separators (dots) and replace comma with dot for parsing
+      const cleanValue = value.replace(/\./g, '').replace(',', '.');
+      return parseFloat(cleanValue) || 0;
+    } else {
+      // For USD, standard parsing
+      return parseFloat(value.replace(/,/g, '')) || 0;
+    }
+  }, [currency]);
+
+  // Clear all inputs
+  const clearInputs = useCallback(() => {
+    setValues({ btc: "", sats: "", usd: "", brl: "" });
   }, []);
 
-  // Limita casas decimais para valores fiat (máx 2) respeitando separador
-  const limitFiatDecimals = (val: string, currencyCode: string) => {
-    if (!val) return "";
-    const sep = currencyCode === 'BRL' ? ',' : '.';
-    const parts = val.split(sep);
-    if (parts.length === 1) return val;
-    const [intPart, decPart] = parts;
-    return `${intPart}${sep}${(decPart || '').slice(0, 2)}`;
-  };
-
-  // Memoize conversion calculations for better performance
-  const updateValues = useCallback((field: string, value: string) => {
-    // Sanitize fiat inputs to max 2 decimals and normalize for parsing
-    let displayValue = value;
-    let num: number;
-
-    if (field === 'usd' || field === 'brl') {
-      displayValue = limitFiatDecimals(value, currency);
-      const normalized = normalizeDecimalInput(displayValue, currency);
-      num = parseFloat(normalized);
-    } else {
-      num = parseFloat(value);
-    }
-
-    if (!displayValue || isNaN(num) || rates.btcUsd === 0 || rates.usdBrl === 0) {
-      setValues({ btc: "", sats: "", usd: "", brl: "" });
+  // Handle input changes - exact replica of HTML logic
+  const handleInput = useCallback((source: string, inputValue: string) => {
+    // Check if rates are available
+    if (rates.btcUsd <= 0 || rates.usdBrl <= 0) {
       return;
     }
 
-    const newValues = { ...values };
+    const numValue = parseInputValue(inputValue);
+    
+    if (!inputValue || isNaN(numValue)) {
+      clearInputs();
+      return;
+    }
 
-    switch (field) {
+    let btcValue: number;
+    
+    // Convert to BTC first - exact HTML logic
+    switch (source) {
       case 'btc':
-        newValues.btc = displayValue;
-        newValues.sats = (num * 100000000).toString();
-        newValues.usd = formatNumber(num * rates.btcUsd);
-        newValues.brl = formatNumber(num * rates.btcUsd * rates.usdBrl);
+        btcValue = numValue;
         break;
       case 'sats':
-        newValues.sats = displayValue;
-        newValues.btc = (num / 100000000).toFixed(8);
-        newValues.usd = formatNumber((num / 100000000) * rates.btcUsd);
-        newValues.brl = formatNumber((num / 100000000) * rates.btcUsd * rates.usdBrl);
+        btcValue = numValue / 100000000;
         break;
       case 'usd':
-        newValues.usd = displayValue;
-        newValues.btc = (num / rates.btcUsd).toFixed(8);
-        newValues.sats = Math.floor((num / rates.btcUsd) * 100000000).toString();
-        newValues.brl = formatNumber(num * rates.usdBrl);
+        btcValue = numValue / rates.btcUsd;
         break;
       case 'brl':
-        newValues.brl = displayValue;
-        newValues.usd = formatNumber(num / rates.usdBrl);
-        newValues.btc = (num / (rates.btcUsd * rates.usdBrl)).toFixed(8);
-        newValues.sats = Math.floor((num / (rates.btcUsd * rates.usdBrl)) * 100000000).toString();
+        btcValue = numValue / (rates.btcUsd * rates.usdBrl);
         break;
+      default:
+        return;
+    }
+
+    // Convert BTC to all currencies
+    const satoshiValue = btcValue * 100000000;
+    const usdValue = btcValue * rates.btcUsd;
+    const brlValue = btcValue * rates.btcUsd * rates.usdBrl;
+
+    // Update all fields except the source field
+    const newValues = { ...values };
+    
+    if (source !== 'btc') {
+      newValues.btc = formatValue(btcValue, 8);
+    } else {
+      newValues.btc = inputValue; // Keep original input
+    }
+    
+    if (source !== 'sats') {
+      newValues.sats = formatValue(satoshiValue, 0);
+    } else {
+      newValues.sats = inputValue; // Keep original input
+    }
+    
+    if (source !== 'usd') {
+      newValues.usd = formatValue(usdValue, 2);
+    } else {
+      newValues.usd = inputValue; // Keep original input
+    }
+    
+    if (source !== 'brl') {
+      newValues.brl = formatValue(brlValue, 2);
+    } else {
+      newValues.brl = inputValue; // Keep original input
     }
 
     setValues(newValues);
-  }, [rates.btcUsd, rates.usdBrl, formatNumber, values, currency]);
+  }, [rates.btcUsd, rates.usdBrl, parseInputValue, formatValue, values, clearInputs]);
 
+  // Fetch USD/BRL rate function using optimized API client
+  const fetchBrlRate = useCallback(async () => {
+    setBrlLoading(true);
+    try {
+      const rate = await bitcoinPriceApi.fetchExchangeRate('USD', 'BRL');
+      setUsdBrlRate(rate);
+      setLastUpdated(new Date());
+
+      // Recalculate conversions if any field has value
+      if (values.btc) handleInput('btc', values.btc);
+      else if (values.sats) handleInput('sats', values.sats);
+      else if (values.usd) handleInput('usd', values.usd);
+      else if (values.brl) handleInput('brl', values.brl);
+      
+    } catch (error) {
+      errorHandler.log({
+        code: 'BRL_RATE_FETCH_FAILED',
+        message: 'Failed to fetch USD/BRL rate',
+        severity: 'low'
+      });
+      toast({
+        title: "Erro ao buscar cotação BRL",
+        description: "Não foi possível atualizar a cotação BRL. Tente novamente.",
+        variant: "destructive"
+      });
+    } finally {
+      setBrlLoading(false);
+    }
+  }, [toast, values, handleInput]);
+
+  // Combined refresh function
+  const refreshRates = useCallback(async () => {
+    await Promise.all([refetchBtc(), fetchBrlRate()]);
+  }, [refetchBtc, fetchBrlRate]);
+
+  useEffect(() => {
+    fetchBrlRate();
+  }, [fetchBrlRate]);
+
+  // Copy to clipboard with enhanced feedback
   const copyToClipboard = async (field: string) => {
     const value = values[field as keyof typeof values];
     if (!value) return;
@@ -138,7 +188,7 @@ export default function CurrencyConverter() {
     try {
       await navigator.clipboard.writeText(value);
       setCopiedField(field);
-      setTimeout(() => setCopiedField(null), 2000);
+      setTimeout(() => setCopiedField(null), 1500);
       
       toast({
         title: "Valor copiado!",
@@ -153,7 +203,7 @@ export default function CurrencyConverter() {
     }
   };
 
-  // Memoize rate display to prevent unnecessary re-renders
+  // Rate display with proper formatting
   const rateDisplay = useMemo(() => {
     if (loading) {
       return <div className="text-muted-foreground">Buscando cotações atualizadas...</div>;
@@ -161,11 +211,28 @@ export default function CurrencyConverter() {
     
     return (
       <div className="space-y-1 text-sm text-muted-foreground">
-        <div>BTC/USD: US$ {currency === 'BRL' ? rates.btcUsd.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : rates.btcUsd.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
-        <div>USD/BRL: R$ {currency === 'BRL' ? rates.usdBrl.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : rates.usdBrl.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+        <div>BTC/USD: US$ {formatValue(rates.btcUsd, 2)}</div>
+        <div>USD/BRL: R$ {formatValue(rates.usdBrl, 2)}</div>
       </div>
     );
-  }, [loading, currency, rates.btcUsd, rates.usdBrl]);
+  }, [loading, rates.btcUsd, rates.usdBrl, formatValue]);
+
+  // Get placeholders based on currency preference
+  const getPlaceholder = (type: 'btc' | 'sats' | 'fiat') => {
+    if (currency === 'BRL') {
+      switch (type) {
+        case 'btc': return "0,00000000";
+        case 'sats': return "0";
+        case 'fiat': return "0,00";
+      }
+    } else {
+      switch (type) {
+        case 'btc': return "0.00000000";
+        case 'sats': return "0";
+        case 'fiat': return "0.00";
+      }
+    }
+  };
 
   return (
     <>
@@ -181,9 +248,9 @@ export default function CurrencyConverter() {
           <div className="relative">
             <Input
               type="text"
-              placeholder={currency === 'BRL' ? "0,00000000" : "0.00000000"}
+              placeholder={getPlaceholder('btc')}
               value={values.btc}
-              onChange={(e) => updateValues('btc', e.target.value)}
+              onChange={(e) => handleInput('btc', e.target.value)}
               className="pr-20"
             />
             <button
@@ -199,9 +266,9 @@ export default function CurrencyConverter() {
           <div className="relative">
             <Input
               type="text"
-              placeholder="0"
+              placeholder={getPlaceholder('sats')}
               value={values.sats}
-              onChange={(e) => updateValues('sats', e.target.value)}
+              onChange={(e) => handleInput('sats', e.target.value)}
               className="pr-20"
             />
             <button
@@ -217,9 +284,9 @@ export default function CurrencyConverter() {
           <div className="relative">
             <Input
               type="text"
-              placeholder={currency === 'BRL' ? "0,00" : "0.00"}
+              placeholder={getPlaceholder('fiat')}
               value={values.usd}
-              onChange={(e) => updateValues('usd', e.target.value)}
+              onChange={(e) => handleInput('usd', e.target.value)}
               className="pr-20"
             />
             <button
@@ -235,9 +302,9 @@ export default function CurrencyConverter() {
           <div className="relative">
             <Input
               type="text"
-              placeholder={currency === 'BRL' ? "0,00" : "0.00"}
+              placeholder={getPlaceholder('fiat')}
               value={values.brl}
-              onChange={(e) => updateValues('brl', e.target.value)}
+              onChange={(e) => handleInput('brl', e.target.value)}
               className="pr-20"
             />
             <button
@@ -251,7 +318,7 @@ export default function CurrencyConverter() {
         </div>
 
         <Button 
-          onClick={fetchRates} 
+          onClick={refreshRates} 
           disabled={loading}
           variant="outline" 
           className="w-full mt-6 gap-2"
@@ -283,9 +350,9 @@ export default function CurrencyConverter() {
           <div className="relative">
             <Input
               type="text"
-              placeholder={currency === 'BRL' ? "0,00000000" : "0.00000000"}
+              placeholder={getPlaceholder('btc')}
               value={values.btc}
-              onChange={(e) => updateValues('btc', e.target.value)}
+              onChange={(e) => handleInput('btc', e.target.value)}
               className="pr-20"
             />
             <button
@@ -301,9 +368,9 @@ export default function CurrencyConverter() {
           <div className="relative">
             <Input
               type="text"
-              placeholder="0"
+              placeholder={getPlaceholder('sats')}
               value={values.sats}
-              onChange={(e) => updateValues('sats', e.target.value)}
+              onChange={(e) => handleInput('sats', e.target.value)}
               className="pr-20"
             />
             <button
@@ -319,9 +386,9 @@ export default function CurrencyConverter() {
           <div className="relative">
             <Input
               type="text"
-              placeholder={currency === 'BRL' ? "0,00" : "0.00"}
+              placeholder={getPlaceholder('fiat')}
               value={values.usd}
-              onChange={(e) => updateValues('usd', e.target.value)}
+              onChange={(e) => handleInput('usd', e.target.value)}
               className="pr-20"
             />
             <button
@@ -337,9 +404,9 @@ export default function CurrencyConverter() {
           <div className="relative">
             <Input
               type="text"
-              placeholder={currency === 'BRL' ? "0,00" : "0.00"}
+              placeholder={getPlaceholder('fiat')}
               value={values.brl}
-              onChange={(e) => updateValues('brl', e.target.value)}
+              onChange={(e) => handleInput('brl', e.target.value)}
               className="pr-20"
             />
             <button
@@ -353,7 +420,7 @@ export default function CurrencyConverter() {
         </div>
 
         <Button 
-          onClick={fetchRates} 
+          onClick={refreshRates} 
           disabled={loading}
           variant="outline" 
           className="w-full mt-6 gap-2"
@@ -375,3 +442,5 @@ export default function CurrencyConverter() {
     </>
   );
 }
+
+export default memo(CurrencyConverter);

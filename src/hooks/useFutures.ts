@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { validateFutureData, validateUserContext, sanitizeFutureData } from '@/utils/validation';
+import { errorHandler } from '@/lib/errorHandler';
 
 // Cache local para ordens
 const CACHE_KEY = 'futures_orders_cache';
@@ -101,7 +102,12 @@ export function useFutures() {
       }
       
     } catch (error: any) {
-      console.error('Error fetching futures:', error);
+      errorHandler.log({
+        code: 'FUTURES_FETCH_FAILED',
+        message: 'Failed to fetch futures data',
+        severity: 'medium',
+        context: { error: error.message }
+      });
       
       // Em caso de erro, carrega apenas do cache local
       const localOrders = getLocalOrders();
@@ -176,10 +182,18 @@ export function useFutures() {
         });
         
         if (error) {
-          console.error('Error syncing local order:', error);
+          errorHandler.log({
+            code: 'LOCAL_ORDER_SYNC_FAILED',
+            message: 'Failed to sync local order to backend',
+            severity: 'low'
+          });
         }
       } catch (error) {
-        console.error('Error syncing local order:', error);
+        errorHandler.log({
+          code: 'LOCAL_ORDER_SYNC_ERROR',
+          message: 'Error during local order sync',
+          severity: 'low'
+        });
       }
     }
   };
@@ -257,7 +271,12 @@ export function useFutures() {
       
       return data;
     } catch (error: any) {
-      console.error('Error creating future:', error);
+      errorHandler.log({
+        code: 'FUTURE_CREATE_FAILED',
+        message: 'Failed to create future order',
+        severity: 'high',
+        context: { error: error.message }
+      });
       
       // Só salva offline se for erro de conexão!
       if (error.status === 0 || error.message?.includes("Failed to fetch")) {
@@ -395,7 +414,12 @@ export function useFutures() {
         }
       }
     } catch (error: any) {
-      console.error('Error updating future:', error);
+      errorHandler.log({
+        code: 'FUTURE_UPDATE_FAILED',
+        message: 'Failed to update future order',
+        severity: 'medium',
+        context: { error: error.message, futureId: id }
+      });
       toast({
         title: "Erro ao atualizar ordem",
         description: error.message,
@@ -436,7 +460,12 @@ export function useFutures() {
         description: "Ordem excluída com sucesso!"
       });
     } catch (error: any) {
-      console.error('Error deleting future:', error);
+      errorHandler.log({
+        code: 'FUTURE_DELETE_FAILED',
+        message: 'Failed to delete future order',
+        severity: 'medium',
+        context: { error: error.message, futureId: id }
+      });
       toast({
         title: "Erro ao remover ordem",
         description: error.message,
@@ -507,7 +536,6 @@ export function useFutures() {
             filter: `user_id=eq.${user.id}`
           },
           (payload) => {
-            console.log('Futures realtime update:', payload);
             // Atualizar estado imediatamente com base no evento
             if (payload.eventType === 'INSERT' && payload.new) {
               setFutures(prev => {

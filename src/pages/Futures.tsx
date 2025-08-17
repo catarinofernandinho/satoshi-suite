@@ -7,11 +7,13 @@ import FuturesStatsEnhanced from "@/components/futures/FuturesStatsEnhanced";
 import FuturesCharts from "@/components/futures/FuturesCharts";
 import FuturesTableAdvanced from "@/components/futures/FuturesTableAdvanced";
 import AddFutureButton from "@/components/futures/AddFutureButton";
+import ImportLNMarketsButton from "@/components/futures/ImportLNMarketsButton";
 import DateRangeFilterAdvanced from "@/components/futures/DateRangeFilterAdvanced";
 import OrderStatusTabs from "@/components/futures/OrderStatusTabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { subDays, format, isWithinInterval, parseISO } from "date-fns";
 import { useTimezone } from "@/contexts/TimezoneContext";
+import { useBitcoinPrice } from "@/hooks/useBitcoinPrice";
 import { UserCheck } from "lucide-react";
 export default function Futures() {
   const {
@@ -37,39 +39,12 @@ export default function Futures() {
   const formatNumber = (value: number) => {
     return value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   };
-  const [btcPrice, setBtcPrice] = useState(0);
-  const [priceLoading, setPriceLoading] = useState(true);
+  const { btcPrice, btcPriceChange, loading: priceLoading } = useBitcoinPrice('USD');
   const [activeTab, setActiveTab] = useState("all");
   const [dateRange, setDateRange] = useState({
     from: subDays(getCurrentTime(), 365 * 5), // Default to "Tempo Todo" (5 years)
     to: getCurrentTime()
   });
-  const fetchBitcoinPrice = async () => {
-    try {
-      const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd');
-      const data = await response.json();
-      const price = data.bitcoin?.usd || 0;
-      setBtcPrice(price);
-
-      // Store last known price in localStorage
-      if (price > 0) {
-        localStorage.setItem('lastBtcPrice', price.toString());
-      }
-    } catch (error) {
-      console.error('Failed to fetch Bitcoin price:', error);
-      // Try to use last known price from localStorage
-      const lastPrice = localStorage.getItem('lastBtcPrice');
-      if (lastPrice) {
-        setBtcPrice(parseFloat(lastPrice));
-      }
-    } finally {
-      setPriceLoading(false);
-    }
-  };
-  useEffect(() => {
-    fetchBitcoinPrice();
-    // Only fetch on page load, no intervals
-  }, []);
 
   // Filter futures by date range
   const filteredFutures = futures.filter(future => {
@@ -205,6 +180,10 @@ export default function Futures() {
           ...prev,
           to: getCurrentTime()
         }))} />
+          <ImportLNMarketsButton addFuture={addFuture} onSuccess={() => setDateRange(prev => ({
+            ...prev,
+            to: getCurrentTime()
+          }))} />
         </div>
       </div>
 
@@ -241,6 +220,10 @@ export default function Futures() {
                 <DateRangeFilterAdvanced dateRange={dateRange} onDateRangeChange={setDateRange} />
                 <div className="flex items-center gap-2">
                   <AddFutureButton addFuture={addFuture} onSuccess={() => setDateRange(prev => ({
+                    ...prev,
+                    to: getCurrentTime()
+                  }))} />
+                  <ImportLNMarketsButton addFuture={addFuture} onSuccess={() => setDateRange(prev => ({
                     ...prev,
                     to: getCurrentTime()
                   }))} />

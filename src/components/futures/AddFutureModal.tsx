@@ -9,6 +9,7 @@ import { Plus } from "lucide-react";
 import { useTimezone } from "@/contexts/TimezoneContext";
 import DatePicker from "react-datepicker";
 import { ArrowUp, ArrowDown } from "lucide-react";
+import { errorHandler } from "@/lib/errorHandler";
 import "react-datepicker/dist/react-datepicker.css";
 import "@/styles/datepicker-dark.css";
 
@@ -106,7 +107,11 @@ const [dateError, setDateError] = useState<string | null>(null);
 
 
       if (!addFuture) {
-        console.error('addFuture prop not provided to AddFutureModal');
+        errorHandler.log({
+          code: 'MISSING_PROP',
+          message: 'addFuture prop not provided to AddFutureModal',
+          severity: 'high'
+        });
         setLoading(false);
         return;
       }
@@ -135,7 +140,12 @@ const [dateError, setDateError] = useState<string | null>(null);
       else setModalOpen(false);
       onSuccess?.();
     } catch (error) {
-      console.error('Error adding future:', error);
+      errorHandler.log({
+        code: 'FUTURE_ADD_FAILED',
+        message: error instanceof Error ? error.message : 'Failed to add future',
+        severity: 'medium',
+        context: { formData }
+      });
     } finally {
       setLoading(false);
     }

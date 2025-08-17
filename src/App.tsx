@@ -8,6 +8,7 @@ import { AuthInterceptProvider } from "@/contexts/AuthInterceptContext";
 import { ThemeProvider } from "@/components/settings/ThemeProvider";
 import { CurrencyProvider } from "@/contexts/CurrencyContext";
 import { TimezoneProvider } from "@/contexts/TimezoneContext";
+import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import AppLayout from "@/components/layout/AppLayout";
 import AuthPage from "@/components/auth/AuthPage";
 import Portfolio from "./pages/Portfolio";
@@ -22,39 +23,41 @@ import ProtectedRoute from "./components/auth/ProtectedRoute";
 const queryClient = new QueryClient();
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <ThemeProvider>
-      <AuthProvider>
-        <AuthInterceptProvider>
-          <CurrencyProvider>
-            <TimezoneProvider>
-              <TooltipProvider>
-                <Toaster />
-                <Sonner />
-                <BrowserRouter>
-                  <Routes>
-                    <Route path="/auth" element={<AuthPage />} />
-                    <Route path="/*" element={<AppLayout />}>
-                      <Route index element={<Portfolio />} />
-                      <Route path="futures" element={<Futures />} />
-                      <Route path="charts" element={<Charts />} />
-                      <Route path="conversor" element={<Conversor />} />
-                      <Route path="profile" element={
-                        <ProtectedRoute>
-                          <Profile />
-                        </ProtectedRoute>
-                      } />
-                    </Route>
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                </BrowserRouter>
-              </TooltipProvider>
-            </TimezoneProvider>
-          </CurrencyProvider>
-        </AuthInterceptProvider>
-      </AuthProvider>
-    </ThemeProvider>
-  </QueryClientProvider>
+  <ErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider>
+        <AuthProvider>
+          <AuthInterceptProvider>
+            <CurrencyProvider>
+              <TimezoneProvider>
+                <TooltipProvider>
+                  <Toaster />
+                  <Sonner />
+                  <BrowserRouter>
+                    <Routes>
+                      <Route path="/auth" element={<AuthPage />} />
+                      <Route path="/*" element={<AppLayout />}>
+                        <Route index element={<Portfolio />} />
+                        <Route path="futures" element={<Futures />} />
+                        <Route path="charts" element={<Charts />} />
+                        <Route path="conversor" element={<Conversor />} />
+                        <Route path="profile" element={
+                          <ProtectedRoute>
+                            <Profile />
+                          </ProtectedRoute>
+                        } />
+                      </Route>
+                      <Route path="*" element={<NotFound />} />
+                    </Routes>
+                  </BrowserRouter>
+                </TooltipProvider>
+              </TimezoneProvider>
+            </CurrencyProvider>
+          </AuthInterceptProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
+  </ErrorBoundary>
 );
 
 export default App;

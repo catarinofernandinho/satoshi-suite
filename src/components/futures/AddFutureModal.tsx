@@ -61,28 +61,22 @@ const { getCurrentTime, convertToUserTime, convertToUTC } = useTimezone();
         status: formData.status as "OPEN" | "CLOSED"
       };
 
+      // Para ordens fechadas, adicionar todos os campos necessários
       if (formData.status === "CLOSED") {
         orderData.exit_price = formData.target_price ? parseFloat(formData.target_price) : undefined;
-        const feeTrade = parseInt(formData.fee_trade, 10) || 0;
-        const feeFunding = parseInt(formData.fee_funding, 10) || 0;
-        const plBruto = parseInt(formData.realized_pl, 10) || 0;
-        const netPlSats = parseInt(formData.net_pl_sats, 10) || 0;
-        
-        // Salvar os campos individuais no banco
-        orderData.fee_trade = feeTrade;
-        orderData.fee_funding = feeFunding;
-        orderData.fees_paid = feeTrade + feeFunding;
-        orderData.pl_sats = plBruto; // PL bruto informado pelo usuário
-        orderData.net_pl_sats = netPlSats; // NET PL calculado
+        orderData.close_date = formData.close_date ? convertToUTC(formData.close_date).toISOString() : convertToUTC(getCurrentTime()).toISOString();
+        orderData.pl_sats = parseInt(formData.realized_pl, 10) || 0;
+        orderData.fee_trade = parseInt(formData.fee_trade, 10) || 0;
+        orderData.fee_funding = parseInt(formData.fee_funding, 10) || 0;
+        orderData.net_pl_sats = parseInt(formData.net_pl_sats, 10) || 0;
+        orderData.fees_paid = orderData.fee_trade + orderData.fee_funding;
         orderData.percent_gain = orderData.exit_price && orderData.entry_price ? 
           (orderData.direction === "LONG" ? 
             ((orderData.exit_price - orderData.entry_price) / orderData.entry_price) * 100 :
             ((orderData.entry_price - orderData.exit_price) / orderData.entry_price) * 100) : 0;
         orderData.percent_fee = orderData.fees_paid ? (orderData.fees_paid / orderData.quantity_usd) * 100 : 0;
-        if (formData.close_date) {
-          orderData.close_date = convertToUTC(formData.close_date).toISOString();
-        }
       }
+
 
       if (!addFuture) {
         console.error('addFuture prop not provided to AddFutureModal');

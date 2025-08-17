@@ -28,10 +28,16 @@ export default function Futures() {
     getCurrentTime,
     convertToUserTime
   } = useTimezone();
-  const {
-    formatCurrency,
-    formatNumber
-  } = useCurrency();
+  // Força uso de USD na página de futuros (não usa configuração de moeda do usuário)
+  const formatCurrency = (value: number, showCurrency = false) => {
+    return showCurrency 
+      ? `US$ ${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+      : `$${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  };
+  
+  const formatNumber = (value: number) => {
+    return value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  };
   const [btcPrice, setBtcPrice] = useState(0);
   const [priceLoading, setPriceLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("all");

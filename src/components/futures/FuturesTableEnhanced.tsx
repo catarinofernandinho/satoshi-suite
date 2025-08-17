@@ -46,26 +46,26 @@ const FuturesTableEnhanced = memo(function FuturesTableEnhanced({
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const { formatDateTime } = useTimezone();
-  const { formatCurrency: formatCurrencyContext, formatNumber, currency } = useCurrency();
-
+  
+  // Força uso de USD na página de futuros (não usa configuração de moeda do usuário)
   const formatCurrency = useCallback((value: number | undefined, currencyType: 'USD' | 'SATS' = 'USD') => {
     if (value === undefined || value === null) return '-';
     
     if (currencyType === 'USD') {
-      return formatCurrencyContext(value);
+      return `$${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     }
     
-    return new Intl.NumberFormat(currency === 'BRL' ? 'pt-BR' : 'en-US', {
+    return new Intl.NumberFormat('en-US', {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
     }).format(value) + ' sats';
-  }, [formatCurrencyContext, currency]);
+  }, []);
 
   const formatPercent = useCallback((value: number | undefined) => {
     if (value === undefined || value === null) return '-';
-    const formatted = formatNumber(value);
+    const formatted = value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     return `${value >= 0 ? '+' : ''}${formatted}%`;
-  }, [formatNumber]);
+  }, []);
 
   const getStatusBadge = useCallback((status: string) => {
     const variants = {

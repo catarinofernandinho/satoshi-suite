@@ -35,8 +35,10 @@ export const calculatePortfolioStats = (
       if (t.market === userCurrency) {
         totalCost += totalCostWithFees;
       } else if (t.market === 'BRL' && userCurrency === 'USD') {
+        // Corrigir conversão: BRL para USD
         totalCost += totalCostWithFees / exchangeRate;
       } else if (t.market === 'USD' && userCurrency === 'BRL') {
+        // Corrigir conversão: USD para BRL
         totalCost += totalCostWithFees * exchangeRate;
       } else {
         totalCost += totalCostWithFees;
@@ -47,8 +49,10 @@ export const calculatePortfolioStats = (
       if (t.market === userCurrency) {
         totalRevenue += t.total_spent;
       } else if (t.market === 'BRL' && userCurrency === 'USD') {
+        // Corrigir conversão: BRL para USD
         totalRevenue += t.total_spent / exchangeRate;
       } else if (t.market === 'USD' && userCurrency === 'BRL') {
+        // Corrigir conversão: USD para BRL
         totalRevenue += t.total_spent * exchangeRate;
       } else {
         totalRevenue += t.total_spent;
@@ -66,7 +70,9 @@ export const calculatePortfolioStats = (
   // Se o totalBtc for menor que 1 satoshi, considere zero!
   if (Math.abs(totalBtc) < 0.00000001) totalBtc = 0;
 
-  const currentValue = totalBtc * btcCurrentPrice;
+  // Calcular valor atual convertendo preço BTC para moeda do usuário
+  const btcPriceInUserCurrency = userCurrency === 'USD' ? btcCurrentPrice : btcCurrentPrice * exchangeRate;
+  const currentValue = totalBtc * btcPriceInUserCurrency;
   const netCost = totalCost - totalRevenue;
   const gainLoss = currentValue - netCost;
   const avgBuyPrice = totalBtc > 0 ? netCost / totalBtc : 0;
@@ -146,7 +152,7 @@ export const calculateTransactionGP = (
     };
   }
   
-  // For transfers, show value in USD/BRL
+  // For transfers, show value in USD (then convert to user currency)
   const transferValue = transaction.quantity * btcCurrentPrice;
   return {
     value: transferValue,

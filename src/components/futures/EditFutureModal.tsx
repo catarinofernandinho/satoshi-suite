@@ -26,6 +26,8 @@ export default function EditFutureModal({ future, isOpen, onClose, updateFuture:
   const { toast } = useToast();
   const { getCurrentTime, convertToUserTime, convertToUTC } = useTimezone();
 
+  const [dateError, setDateError] = useState<string | null>(null);
+
   const [formData, setFormData] = useState({
     direction: "LONG" as "LONG" | "SHORT",
     entry_price: "",
@@ -39,6 +41,26 @@ export default function EditFutureModal({ future, isOpen, onClose, updateFuture:
     fee_funding: "",
     net_pl_sats: "",
   });
+
+  const validateDates = (next: { status?: string; buy_date?: Date; close_date?: Date | null }) => {
+    const status = (next.status ?? formData.status) as "OPEN" | "CLOSED";
+    const buy = next.buy_date ?? formData.buy_date;
+    const close = next.close_date ?? formData.close_date;
+    if (status === "CLOSED") {
+      if (!close) {
+        setDateError("Defina a data de saída para ordens fechadas.");
+        return false;
+      }
+      const buyUTC = convertToUTC(buy).getTime();
+      const closeUTC = convertToUTC(close).getTime();
+      if (buyUTC >= closeUTC) {
+        setDateError("Data de entrada deve ser anterior à data de saída.");
+        return false;
+      }
+    }
+    setDateError(null);
+    return true;
+  };
 
   useEffect(() => {
     if (future) {
@@ -55,12 +77,19 @@ export default function EditFutureModal({ future, isOpen, onClose, updateFuture:
         fee_funding: (future as any).fee_funding?.toString() || "",
         net_pl_sats: future.net_pl_sats?.toString() || "",
       });
+      // Run initial validation for CLOSED orders
+      validateDates({});
     }
   }, [future]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!future) return;
+
+    // Validate dates before submit
+    if (!validateDates({})) {
+      return;
+    }
 
     // Validation
     if (!formData.entry_price || !formData.quantity_usd) {
@@ -165,7 +194,10 @@ export default function EditFutureModal({ future, isOpen, onClose, updateFuture:
             {/* Status */}
             <div className="space-y-2">
               <Label htmlFor="status">Status *</Label>
-              <Select value={formData.status} onValueChange={value => setFormData({...formData, status: value as "OPEN" | "CLOSED"})}>
+              <Select value={formData.status} onValueChange={value => {
+                setFormData({...formData, status: value as "OPEN" | "CLOSED"});
+                validateDates({ status: value as any });
+              }}>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecionar status" />
                 </SelectTrigger>
@@ -231,13 +263,14 @@ export default function EditFutureModal({ future, isOpen, onClose, updateFuture:
                       ...prev,
                       buy_date: utcDate 
                     }));
+                    validateDates({ buy_date: utcDate });
                   }
                 }}
                 dateFormat="dd/MM/yyyy HH:mm"
                 showTimeSelect
                 timeFormat="HH:mm"
                 timeIntervals={5}
-                className="h-12 w-full px-3 py-2 rounded-md border border-input bg-background text-foreground placeholder:text-muted-foreground"
+                className={`h-12 w-full px-3 py-2 rounded-md border ${dateError ? 'border-destructive' : 'border-input'} bg-background text-foreground placeholder:text-muted-foreground`}
                 placeholderText="DD/MM/AAAA HH:mm"
                 locale="pt-BR"
               />
@@ -255,15 +288,19 @@ export default function EditFutureModal({ future, isOpen, onClose, updateFuture:
                     if (date) {
                       const utcDate = convertToUTC(date);
                       setFormData(prev => ({ ...prev, close_date: utcDate }));
+                      validateDates({ close_date: utcDate });
                     }
                   }}
                   dateFormat="dd/MM/yyyy HH:mm"
                   showTimeSelect
                   timeFormat="HH:mm"
                   timeIntervals={5}
-                  className="h-12 w-full px-3 py-2 rounded-md border border-input bg-background text-foreground placeholder:text-muted-foreground"
+                  className={`h-12 w-full px-3 py-2 rounded-md border ${dateError ? 'border-destructive' : 'border-input'} bg-background text-foreground placeholder:text-muted-foreground`}
                   placeholderText="DD/MM/AAAA HH:mm"
                 />
+                {dateError && (
+                  <p className="text-sm text-destructive">{dateError}</p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -375,7 +412,7 @@ export default function EditFutureModal({ future, isOpen, onClose, updateFuture:
               <X className="h-4 w-4 mr-2" />
               Cancelar
             </Button>
-            <Button type="submit" disabled={loading}>
+            <Button type="submit" disabled={loading || !!dateError}>
               <Save className="h-4 w-4 mr-2" />
               {loading ? "Salvando..." : "Salvar Alterações"}
             </Button>

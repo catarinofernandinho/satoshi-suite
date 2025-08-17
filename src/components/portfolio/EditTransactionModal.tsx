@@ -16,6 +16,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import "@/styles/datepicker-dark.css";
 import { calculateInterlinkedValues, formatFiatValue, validateDecimalInput, normalizeDecimalInput, getInputPlaceholder } from "@/utils/numberUtils";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { useBitcoinPrice } from "@/hooks/useBitcoinPrice";
 
 interface EditTransactionModalProps {
   isOpen: boolean;
@@ -59,6 +60,13 @@ export default function EditTransactionModal({
     date: getCurrentTime().toISOString(), // Use user's timezone current time
     transferType: "entrada"
   });
+
+  const { btcPrice: modalBtcPrice, loading: priceLoading, refetch: refetchPrice } = useBitcoinPrice(formData.market);
+
+  // Trigger price refetch when currency changes to ensure we have the correct price
+  useEffect(() => {
+    refetchPrice();
+  }, [formData.market, refetchPrice]);
 
   // Load transaction data when modal opens
   useEffect(() => {
@@ -136,19 +144,15 @@ const setMaxQuantity = () => {
 };
 
 const useMarketPrice = () => {
-  if (btcCurrentPrice) {
-    // Convert price based on selected market currency and exchange rate
-    const convertedPrice = formData.market === 'BRL' ? btcCurrentPrice * exchangeRate : btcCurrentPrice;
-    const priceString = convertedPrice.toFixed(2);
-    
-    // Update price field and trigger automatic calculation
+  // Always prioritize modalBtcPrice as it's specifically fetched for the current currency
+  const price = modalBtcPrice && modalBtcPrice > 0 ? modalBtcPrice : btcCurrentPrice;
+  if (price && price > 0) {
+    const priceString = Number(price).toFixed(2);
     setFormData(prev => ({
       ...prev,
       pricePerCoin: priceString,
       price: priceString
     }));
-    
-    // Trigger automatic calculation - this is the key fix!
     handleFieldChange('pricePerCoin', priceString);
   }
 };

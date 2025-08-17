@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +16,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import "@/styles/datepicker-dark.css";
 import { calculateInterlinkedValues, formatFiatValue, validateDecimalInput, normalizeDecimalInput, getInputPlaceholder } from "@/utils/numberUtils";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { useBitcoinPrice } from "@/hooks/useBitcoinPrice";
 interface AddTransactionModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -42,7 +43,6 @@ export default function AddTransactionModal({
   const { transactions } = useTransactions();
   const { getCurrentTime, convertToUserTime, convertToUTC } = useTimezone();
   const { exchangeRate } = useCurrency();
-  
   // Use provided BTC balance
   const availableBtc = propAvailableBtc || 0;
   
@@ -57,6 +57,12 @@ export default function AddTransactionModal({
     date: getCurrentTime().toISOString(), // Use user's timezone current time
     transferType: "entrada"
   });
+  const { btcPrice: modalBtcPrice, loading: priceLoading, refetch: refetchPrice } = useBitcoinPrice(formData.market);
+
+  // Trigger price refetch when currency changes to ensure we have the correct price
+  useEffect(() => {
+    refetchPrice();
+  }, [formData.market, refetchPrice]);
   const resetForm = () => {
     setFormData({
       price: "",
@@ -112,19 +118,15 @@ const setMaxQuantity = () => {
 };
 
 const useMarketPrice = () => {
-  if (btcCurrentPrice) {
-    // Convert price based on selected market currency and exchange rate
-    const convertedPrice = formData.market === 'BRL' ? btcCurrentPrice * exchangeRate : btcCurrentPrice;
-    const priceString = convertedPrice.toFixed(2);
-    
-    // Update price field and trigger automatic calculation
+  // Always prioritize modalBtcPrice as it's specifically fetched for the current currency
+  const price = modalBtcPrice && modalBtcPrice > 0 ? modalBtcPrice : btcCurrentPrice;
+  if (price && price > 0) {
+    const priceString = Number(price).toFixed(2);
     setFormData(prev => ({
       ...prev,
       pricePerCoin: priceString,
       price: priceString
     }));
-    
-    // Trigger automatic calculation - this is the key fix!
     handleFieldChange('pricePerCoin', priceString);
   }
 };

@@ -46,9 +46,36 @@ const { getCurrentTime, convertToUserTime, convertToUTC } = useTimezone();
     fee_funding: "",
     net_pl_sats: "",
   });
+const [dateError, setDateError] = useState<string | null>(null);
+
+  const validateDates = (next: { status?: string; buy_date?: Date; close_date?: Date | null }) => {
+    const status = (next.status ?? formData.status) as "OPEN" | "CLOSED";
+    const buy = next.buy_date ?? formData.buy_date;
+    const close = next.close_date ?? formData.close_date;
+    if (status === "CLOSED") {
+      if (!close) {
+        setDateError("Defina a data de saída para ordens fechadas.");
+        return false;
+      }
+      const buyUTC = convertToUTC(buy).getTime();
+      const closeUTC = convertToUTC(close).getTime();
+      if (buyUTC >= closeUTC) {
+        setDateError("Data de entrada deve ser anterior à data de saída.");
+        return false;
+      }
+    }
+    setDateError(null);
+    return true;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validate dates before submit
+    if (!validateDates({})) {
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -172,10 +199,13 @@ const { getCurrentTime, convertToUserTime, convertToUTC } = useTimezone();
 
         <div className="space-y-2">
           <Label htmlFor="status">Status</Label>
-          <Select value={formData.status} onValueChange={value => setFormData({
-            ...formData,
-            status: value
-          })} required>
+          <Select value={formData.status} onValueChange={value => {
+            setFormData({
+              ...formData,
+              status: value
+            });
+            validateDates({ status: value as any });
+          }} required>
           <SelectTrigger>
             <SelectValue placeholder="Selecionar status" />
           </SelectTrigger>
@@ -202,13 +232,14 @@ const { getCurrentTime, convertToUserTime, convertToUTC } = useTimezone();
                 ...prev,
                 buy_date: utcDate 
               }));
+              validateDates({ buy_date: utcDate });
             }
           }}
           dateFormat="dd/MM/yyyy HH:mm"
           showTimeSelect
           timeFormat="HH:mm"
           timeIntervals={5}
-          className="h-12 w-full px-3 py-2 rounded-md border border-input bg-background text-foreground placeholder:text-muted-foreground"
+          className={`h-12 w-full px-3 py-2 rounded-md border ${dateError ? 'border-destructive' : 'border-input'} bg-background text-foreground placeholder:text-muted-foreground`}
           placeholderText="DD/MM/AAAA HH:mm"
         />
       </div>
@@ -225,15 +256,19 @@ const { getCurrentTime, convertToUserTime, convertToUTC } = useTimezone();
               if (date) {
                 const utcDate = convertToUTC(date);
                 setFormData(prev => ({ ...prev, close_date: utcDate }));
+                validateDates({ close_date: utcDate });
               }
             }}
             dateFormat="dd/MM/yyyy HH:mm"
             showTimeSelect
             timeFormat="HH:mm"
             timeIntervals={5}
-            className="h-12 w-full px-3 py-2 rounded-md border border-input bg-background text-foreground placeholder:text-muted-foreground"
+            className={`h-12 w-full px-3 py-2 rounded-md border ${dateError ? 'border-destructive' : 'border-input'} bg-background text-foreground placeholder:text-muted-foreground`}
             placeholderText="DD/MM/AAAA HH:mm"
           />
+          {dateError && (
+            <p className="text-sm text-destructive">{dateError}</p>
+          )}
         </div>
 
         <div className="space-y-2">
@@ -360,7 +395,7 @@ const { getCurrentTime, convertToUserTime, convertToUTC } = useTimezone();
       <Button type="button" variant="outline" onClick={() => setModalOpen(false)}>
         Cancelar
       </Button>
-      <Button type="submit" disabled={loading}>
+      <Button type="submit" disabled={loading || !!dateError}>
         {loading ? "Salvando..." : "Salvar Ordem"}
       </Button>
     </div>

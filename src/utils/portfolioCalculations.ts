@@ -67,7 +67,7 @@ export const calculatePortfolioStats = (
   if (Math.abs(totalBtc) < 0.00000001) totalBtc = 0;
 
   // Calcular valor atual convertendo preço BTC para moeda do usuário
-  const btcPriceInUserCurrency = userCurrency === 'USD' ? btcCurrentPrice : btcCurrentPrice * exchangeRate;
+ const btcPriceInUserCurrency = btcCurrentPrice;
   const currentValue = totalBtc * btcPriceInUserCurrency;
   const netCost = totalCost - totalRevenue;
   const gainLoss = currentValue - netCost;

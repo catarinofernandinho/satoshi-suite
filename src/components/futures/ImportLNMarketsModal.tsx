@@ -22,60 +22,105 @@ interface LNMarketsCSVRow {
   margin?: string;
   quantity?: string;
   closed?: string;
-  cancelled?: string;
+  canceled?: string; // Fixed: American spelling used in CSV
   creationTs?: string;
   openingFee?: string;
   closingFee?: string;
-  fundingFee?: string;
+  sumFundingFees?: string; // Fixed: correct field name from CSV
   pl?: string;
   [key: string]: any;
 }
 
 function csvRowToFuture(row: LNMarketsCSVRow): Omit<Future, 'id' | 'created_at' | 'updated_at'> | null {
   try {
-    // Only process closed orders (not cancelled or open)
-    if (row.closed !== "true" || row.cancelled === "true") {
+    console.log("Processing CSV row:", row);
+    
+    // Only process closed orders (not cancelled or open) - Fixed field names
+    const isClosed = row.closed === "true";
+    const isCanceled = row.canceled === "true";
+    
+    console.log(`Order status - closed: ${row.closed}, canceled: ${row.canceled}, isClosed: ${isClosed}, isCanceled: ${isCanceled}`);
+    
+    if (!isClosed || isCanceled) {
+      console.log("Skipping: order not closed or is canceled");
       return null;
     }
 
-    const entryPrice = Number(row.entryPrice || row.price);
-    const exitPrice = Number(row.exitPrice || row.takeprofit);
-    const margin = Number(row.margin || row.quantity || 0);
+    // Use correct field names from CSV
+    const entryPrice = Number(row.entryPrice);
+    const exitPrice = Number(row.exitPrice);
+    const quantity = Number(row.quantity); // Fixed: use quantity instead of margin
+    const margin = Number(row.margin);
     const openingFee = Number(row.openingFee || 0);
     const closingFee = Number(row.closingFee || 0);
-    const fundingFee = Number(row.fundingFee || 0);
+    const fundingFees = Number(row.sumFundingFees || 0);
     const pl = Number(row.pl || 0);
     
-    // Skip if essential data is missing
-    if (!entryPrice || !exitPrice || !margin) {
+    console.log(`Parsed values - entryPrice: ${entryPrice}, exitPrice: ${exitPrice}, quantity: ${quantity}, margin: ${margin}, pl: ${pl}`);
+    
+    // Skip if essential data is missing or invalid
+    if (!entryPrice || isNaN(entryPrice) || 
+        !exitPrice || isNaN(exitPrice) || 
+        !quantity || isNaN(quantity) || quantity <= 0) {
+      console.log("Skipping: missing or invalid essential data");
       return null;
     }
 
-    const totalFees = openingFee + closingFee + fundingFee;
-    const percentGain = ((exitPrice - entryPrice) / entryPrice) * 100;
+    const totalFees = openingFee + closingFee + fundingFees;
+    const percentGain = row.side === "b" 
+      ? ((exitPrice - entryPrice) / entryPrice) * 100
+      : ((entryPrice - exitPrice) / entryPrice) * 100;
     
-    if (row.side === "s") {
-      // For short positions, invert the gain calculation
-      const shortPercentGain = ((entryPrice - exitPrice) / entryPrice) * 100;
+    // Parse creation date - handle both timestamp and date string
+    let buyDate: string;
+    if (row.creationTs) {
+      // Check if it's a timestamp (number) or date string
+      const timestamp = Number(row.creationTs);
+      if (!isNaN(timestamp)) {
+        buyDate = new Date(timestamp).toISOString();
+      } else {
+        buyDate = new Date(row.creationTs).toISOString();
+      }
+    } else {
+      buyDate = new Date().toISOString();
     }
 
-    return {
-      direction: row.side === "b" ? "LONG" : "SHORT",
+    // Parse close date from closedTs
+    let closeDate: string;
+    if (row.closedTs) {
+      // Check if it's a timestamp (number) or date string
+      const closeTimestamp = Number(row.closedTs);
+      if (!isNaN(closeTimestamp)) {
+        closeDate = new Date(closeTimestamp).toISOString();
+      } else {
+        closeDate = new Date(row.closedTs).toISOString();
+      }
+    } else {
+      closeDate = new Date().toISOString();
+    }
+
+    const convertedOrder = {
+      direction: (row.side === "b" ? "LONG" : "SHORT") as "LONG" | "SHORT",
       entry_price: entryPrice,
       exit_price: exitPrice,
-      target_price: exitPrice,
-      quantity_usd: margin,
-      status: "CLOSED",
-      buy_date: row.creationTs ? new Date(Number(row.creationTs)).toISOString() : new Date().toISOString(),
-      close_date: new Date().toISOString(),
-      percent_gain: row.side === "b" ? percentGain : ((entryPrice - exitPrice) / entryPrice) * 100,
-      percent_fee: (totalFees / margin) * 100,
+      target_price: Number(row.takeprofit) || exitPrice, // Use takeprofit from CSV
+      quantity_usd: quantity, // Fixed: use quantity instead of margin
+      status: "CLOSED" as const,
+      buy_date: buyDate,
+      close_date: closeDate, // Fixed: use closedTs from CSV
+      percent_gain: percentGain,
+      percent_fee: (totalFees / quantity) * 100, // Use quantity for percentage calculation
       fees_paid: totalFees,
-      net_pl_sats: pl,
-      pl_sats: pl + totalFees // Gross PL
+      fee_trade: openingFee + closingFee, // Fixed: separate trading fees for modal
+      fee_funding: fundingFees, // Fixed: separate funding fees for modal
+      net_pl_sats: pl - totalFees, // Fixed: NET PL = PL - fees
+      pl_sats: pl // Fixed: PL comes directly from CSV
     };
+    
+    console.log("Successfully converted order:", convertedOrder);
+    return convertedOrder;
   } catch (error) {
-    console.error("Error converting CSV row:", error);
+    console.error("Error converting CSV row:", error, row);
     return null;
   }
 }

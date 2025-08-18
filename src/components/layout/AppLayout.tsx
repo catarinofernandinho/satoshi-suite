@@ -21,6 +21,7 @@ import { useUserSettings } from "@/hooks/useUserSettings";
 import UserSettingsModal from "@/components/settings/UserSettingsModal";
 import AuthModal from "@/components/auth/AuthModal";
 import UserDropdown from "@/components/auth/UserDropdown";
+import MobileBottomNav from "./MobileBottomNav";
 
 export default function AppLayout() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -113,24 +114,21 @@ export default function AppLayout() {
             </nav>
 
             {/* Actions */}
-            <div className="flex items-center gap-3">
-              {/* Settings */}
+            <div className="flex items-center gap-2">
+              {/* Settings and Profile Icons for Mobile */}
               <UserSettingsModal />
-
+              
               {/* Auth Section */}
               {user ? (
-                <div className="hidden sm:flex items-center gap-2">
-                  <UserDropdown />
-                </div>
+                <UserDropdown />
               ) : (
                 <Button 
                   onClick={() => setIsAuthModalOpen(true)}
                   variant="ghost" 
-                  size="sm"
-                  className="hidden sm:flex text-muted-foreground hover:text-foreground"
+                  size="icon"
+                  className="text-muted-foreground hover:text-foreground"
                 >
-                  <LogIn className="mr-2 h-4 w-4" />
-                  Entrar
+                  <LogIn className="h-4 w-4" />
                 </Button>
               )}
 
@@ -207,9 +205,12 @@ export default function AppLayout() {
       />
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-8 pb-20 md:pb-8">
         <Outlet />
       </main>
+
+      {/* Mobile Bottom Navigation */}
+      <MobileBottomNav />
     </div>
   );
 }

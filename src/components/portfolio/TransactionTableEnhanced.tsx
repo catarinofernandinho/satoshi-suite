@@ -10,6 +10,8 @@ import { Transaction } from "@/hooks/useTransactions";
 import { useAuthIntercept } from "@/contexts/AuthInterceptContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { convertToUserCurrency, calculateTransactionGP } from "@/utils/portfolioCalculations";
+import { useIsMobile } from "@/hooks/use-mobile";
+import TransactionMobileCard from "./TransactionMobileCard";
 interface TransactionTableEnhancedProps {
   transactions: Transaction[];
   currency: string;
@@ -32,6 +34,8 @@ const TransactionTableEnhanced = memo(function TransactionTableEnhanced({
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [transactionToDelete, setTransactionToDelete] = useState<string | null>(null);
+  const isMobile = useIsMobile();
+  
   const {
     requireAuth
   } = useAuthIntercept();
@@ -165,93 +169,117 @@ const TransactionTableEnhanced = memo(function TransactionTableEnhanced({
         </div>
       </div>
       
-      <div className="overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow className="border-border hover:bg-muted/20">
-              <TableHead className="text-muted-foreground cursor-pointer" onClick={() => handleSort("type")}>
-                <div className="flex items-center gap-1">
-                  Tipo <ArrowUpDown className="h-3 w-3" />
-                </div>
-              </TableHead>
-              <TableHead className="text-muted-foreground cursor-pointer" onClick={() => handleSort("price_per_coin")}>
-                <div className="flex items-center gap-1">
-                  Preço <ArrowUpDown className="h-3 w-3" />
-                </div>
-              </TableHead>
-              <TableHead className="text-muted-foreground cursor-pointer" onClick={() => handleSort("quantity")}>
-                <div className="flex items-center gap-1">
-                  Quantidade <ArrowUpDown className="h-3 w-3" />
-                </div>
-              </TableHead>
-              <TableHead className="text-muted-foreground cursor-pointer" onClick={() => handleSort("date")}>
-                <div className="flex items-center gap-1">
-                  Data Hora <ArrowUpDown className="h-3 w-3" />
-                </div>
-              </TableHead>
-              <TableHead className="text-muted-foreground">Taxas</TableHead>
-              <TableHead className="text-muted-foreground">Custo</TableHead>
-              <TableHead className="text-muted-foreground">Receita</TableHead>
-              <TableHead className="text-muted-foreground">GP</TableHead>
-              <TableHead className="text-muted-foreground">Notas</TableHead>
-              <TableHead className="text-muted-foreground">Ações</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {currentTransactions.length === 0 ? <TableRow>
-                <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
-                  Nenhuma transação encontrada. Clique em "Adicionar Transação" para começar.
-                </TableCell>
-              </TableRow> : currentTransactions.map(transaction => {
-            const gp = calculateTransactionGP(transaction, btcCurrentPrice, currency, exchangeRate);
-            return <TableRow key={transaction.id} className="border-border hover:bg-muted/10 transition-colors">
-                    <TableCell>
-                      <Badge variant="outline" className={getTypeColor(transaction.type)}>
-                        {transaction.type}
-                      </Badge>
-                    </TableCell>
-                     <TableCell className="text-foreground">
-                       {transaction.type === "Transferência" ? "-" : formatCurrency(transaction.price_per_coin, currency, transaction.market)}
-                    </TableCell>
-                    <TableCell className="text-foreground">
-                      <div className={`flex items-center gap-1 ${transaction.type === "Vender" || transaction.type === "Transferência" && transaction.transfer_type === "saida" ? "text-destructive" : "text-success"}`}>
-                        {transaction.type === "Vender" || transaction.type === "Transferência" && transaction.transfer_type === "saida" ? "-" : "+"}
-                        {transaction.quantity.toFixed(8)}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-foreground">
-                      {formatDate(transaction.date)}
-                    </TableCell>
-                     <TableCell className="text-foreground">
-                       {formatCurrency(transaction.fees || 0, currency, transaction.market)}
-                     </TableCell>
-                     <TableCell className="text-foreground">
-                       {transaction.type === "Comprar" ? formatCurrency((transaction.total_spent || 0) + (transaction.fees || 0), currency, transaction.market) : "-"}
-                     </TableCell>
-                     <TableCell className="text-foreground">
-                       {transaction.type === "Vender" ? formatCurrency(transaction.total_spent, currency, transaction.market) : "-"}
-                    </TableCell>
-                    <TableCell className={transaction.type === "Vender" ? "text-foreground" : gp.color}>
-                      {transaction.type === "Vender" ? "-" : transaction.type === "Transferência" ? formatCurrency(gp.value, currency) : formatCurrency(gp.value, currency)}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground max-w-32 truncate">
-                      {transaction.notes || "-"}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
-                        <Button variant="ghost" size="sm" onClick={() => onEditTransaction(transaction.id)} className="text-muted-foreground hover:text-foreground" aria-label={`Editar transação ${transaction.id}`}>
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="sm" onClick={() => confirmDelete(transaction.id)} className="text-muted-foreground hover:text-destructive" aria-label={`Deletar transação ${transaction.id}`}>
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>;
-          })}
-          </TableBody>
-        </Table>
-      </div>
+      {isMobile ? (
+        /* Mobile Cards View */
+        <div className="p-4 space-y-4">
+          {currentTransactions.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              Nenhuma transação encontrada. Clique em "Adicionar Transação" para começar.
+            </div>
+          ) : (
+            currentTransactions.map(transaction => (
+              <TransactionMobileCard
+                key={transaction.id}
+                transaction={transaction}
+                currency={currency}
+                btcCurrentPrice={btcCurrentPrice}
+                exchangeRate={exchangeRate}
+                onEdit={(tx) => onEditTransaction(tx.id)}
+                onDelete={confirmDelete}
+              />
+            ))
+          )}
+        </div>
+      ) : (
+        /* Desktop Table View */
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow className="border-border hover:bg-muted/20">
+                <TableHead className="text-muted-foreground cursor-pointer" onClick={() => handleSort("type")}>
+                  <div className="flex items-center gap-1">
+                    Tipo <ArrowUpDown className="h-3 w-3" />
+                  </div>
+                </TableHead>
+                <TableHead className="text-muted-foreground cursor-pointer" onClick={() => handleSort("price_per_coin")}>
+                  <div className="flex items-center gap-1">
+                    Preço <ArrowUpDown className="h-3 w-3" />
+                  </div>
+                </TableHead>
+                <TableHead className="text-muted-foreground cursor-pointer" onClick={() => handleSort("quantity")}>
+                  <div className="flex items-center gap-1">
+                    Quantidade <ArrowUpDown className="h-3 w-3" />
+                  </div>
+                </TableHead>
+                <TableHead className="text-muted-foreground cursor-pointer" onClick={() => handleSort("date")}>
+                  <div className="flex items-center gap-1">
+                    Data Hora <ArrowUpDown className="h-3 w-3" />
+                  </div>
+                </TableHead>
+                <TableHead className="text-muted-foreground">Taxas</TableHead>
+                <TableHead className="text-muted-foreground">Custo</TableHead>
+                <TableHead className="text-muted-foreground">Receita</TableHead>
+                <TableHead className="text-muted-foreground">GP</TableHead>
+                <TableHead className="text-muted-foreground">Notas</TableHead>
+                <TableHead className="text-muted-foreground">Ações</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {currentTransactions.length === 0 ? <TableRow>
+                  <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
+                    Nenhuma transação encontrada. Clique em "Adicionar Transação" para começar.
+                  </TableCell>
+                </TableRow> : currentTransactions.map(transaction => {
+              const gp = calculateTransactionGP(transaction, btcCurrentPrice, currency, exchangeRate);
+              return <TableRow key={transaction.id} className="border-border hover:bg-muted/10 transition-colors">
+                      <TableCell>
+                        <Badge variant="outline" className={getTypeColor(transaction.type)}>
+                          {transaction.type}
+                        </Badge>
+                      </TableCell>
+                       <TableCell className="text-foreground">
+                         {transaction.type === "Transferência" ? "-" : formatCurrency(transaction.price_per_coin, currency, transaction.market)}
+                      </TableCell>
+                      <TableCell className="text-foreground">
+                        <div className={`flex items-center gap-1 ${transaction.type === "Vender" || transaction.type === "Transferência" && transaction.transfer_type === "saida" ? "text-destructive" : "text-success"}`}>
+                          {transaction.type === "Vender" || transaction.type === "Transferência" && transaction.transfer_type === "saida" ? "-" : "+"}
+                          {transaction.quantity.toFixed(8)}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-foreground">
+                        {formatDate(transaction.date)}
+                      </TableCell>
+                       <TableCell className="text-foreground">
+                         {formatCurrency(transaction.fees || 0, currency, transaction.market)}
+                       </TableCell>
+                       <TableCell className="text-foreground">
+                         {transaction.type === "Comprar" ? formatCurrency((transaction.total_spent || 0) + (transaction.fees || 0), currency, transaction.market) : "-"}
+                       </TableCell>
+                       <TableCell className="text-foreground">
+                         {transaction.type === "Vender" ? formatCurrency(transaction.total_spent, currency, transaction.market) : "-"}
+                      </TableCell>
+                      <TableCell className={transaction.type === "Vender" ? "text-foreground" : gp.color}>
+                        {transaction.type === "Vender" ? "-" : transaction.type === "Transferência" ? formatCurrency(gp.value, currency) : formatCurrency(gp.value, currency)}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground max-w-32 truncate">
+                        {transaction.notes || "-"}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1">
+                          <Button variant="ghost" size="sm" onClick={() => onEditTransaction(transaction.id)} className="text-muted-foreground hover:text-foreground" aria-label={`Editar transação ${transaction.id}`}>
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="sm" onClick={() => confirmDelete(transaction.id)} className="text-muted-foreground hover:text-destructive" aria-label={`Deletar transação ${transaction.id}`}>
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>;
+            })}
+            </TableBody>
+          </Table>
+        </div>
+      )}
 
       {/* Pagination and Items Per Page Selector */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 border-t border-border">

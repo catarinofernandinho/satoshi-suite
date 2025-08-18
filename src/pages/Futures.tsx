@@ -6,14 +6,18 @@ import { useFutures } from "@/hooks/useFutures";
 import FuturesStatsEnhanced from "@/components/futures/FuturesStatsEnhanced";
 import FuturesCharts from "@/components/futures/FuturesCharts";
 import FuturesTableAdvanced from "@/components/futures/FuturesTableAdvanced";
+import FuturesMobileCard from "@/components/futures/FuturesMobileCard";
 import AddFutureButton from "@/components/futures/AddFutureButton";
 import ImportLNMarketsButton from "@/components/futures/ImportLNMarketsButton";
 import DateRangeFilterAdvanced from "@/components/futures/DateRangeFilterAdvanced";
 import OrderStatusTabs from "@/components/futures/OrderStatusTabs";
+import EditFutureModal from "@/components/futures/EditFutureModal";
+import CloseOrderModal from "@/components/futures/CloseOrderModal";
 import { Skeleton } from "@/components/ui/skeleton";
 import { subDays, format, isWithinInterval, parseISO } from "date-fns";
 import { useTimezone } from "@/contexts/TimezoneContext";
 import { useBitcoinPrice } from "@/hooks/useBitcoinPrice";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { UserCheck } from "lucide-react";
 export default function Futures() {
   const {
@@ -45,6 +49,9 @@ export default function Futures() {
     from: subDays(getCurrentTime(), 365 * 5), // Default to "Tempo Todo" (5 years)
     to: getCurrentTime()
   });
+  const [editingOrder, setEditingOrder] = useState<any>(null);
+  const [closingOrder, setClosingOrder] = useState<any>(null);
+  const isMobile = useIsMobile();
 
   // Filter futures by date range
   const filteredFutures = futures.filter(future => {
@@ -171,19 +178,30 @@ export default function Futures() {
   }
   return <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div className="flex items-center gap-4">
-          <DateRangeFilterAdvanced dateRange={dateRange} onDateRangeChange={setDateRange} />
-        </div>
-        <div className="flex gap-2">
-          <AddFutureButton addFuture={addFuture} onSuccess={() => setDateRange(prev => ({
-          ...prev,
-          to: getCurrentTime()
-        }))} />
-          <ImportLNMarketsButton addFuture={addFuture} onSuccess={() => setDateRange(prev => ({
-            ...prev,
-            to: getCurrentTime()
-          }))} />
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col lg:flex-row gap-3 lg:items-center lg:justify-between">
+          {/* Mobile: Stacked | Desktop/Tablet: All in same line */}
+          <div className="flex flex-col sm:flex-row gap-3 lg:gap-4">
+            <AddFutureButton 
+              addFuture={addFuture} 
+              onSuccess={() => setDateRange(prev => ({
+                ...prev,
+                to: getCurrentTime()
+              }))} 
+            />
+            <ImportLNMarketsButton 
+              addFuture={addFuture} 
+              onSuccess={() => setDateRange(prev => ({
+                ...prev,
+                to: getCurrentTime()
+              }))} 
+            />
+          </div>
+          
+          {/* Filter - Separate on mobile, same line on desktop/tablet */}
+          <div className="w-full sm:w-auto lg:w-80">
+            <DateRangeFilterAdvanced dateRange={dateRange} onDateRangeChange={setDateRange} />
+          </div>
         </div>
       </div>
 
@@ -212,13 +230,28 @@ export default function Futures() {
         <CardHeader>
           <CardTitle>Ordens</CardTitle>
           <CardDescription>
-            <div className="flex items-center justify-between">
-              <span>
+            <div className="flex flex-col gap-4">
+              <span className="text-sm text-center sm:text-left">
                 Operações do período selecionado ({filteredFutures.length} de {futures.length} total)
               </span>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-col items-center gap-3 sm:hidden">
+                <div className="flex justify-between items-center w-full max-w-md gap-3">
+                  <AddFutureButton addFuture={addFuture} onSuccess={() => setDateRange(prev => ({
+                    ...prev,
+                    to: getCurrentTime()
+                  }))} />
+                  <ImportLNMarketsButton addFuture={addFuture} onSuccess={() => setDateRange(prev => ({
+                    ...prev,
+                    to: getCurrentTime()
+                  }))} />
+                </div>
+                <div className="w-full max-w-sm">
+                  <DateRangeFilterAdvanced dateRange={dateRange} onDateRangeChange={setDateRange} />
+                </div>
+              </div>
+              <div className="hidden sm:flex sm:items-center justify-between">
                 <DateRangeFilterAdvanced dateRange={dateRange} onDateRangeChange={setDateRange} />
-                <div className="flex items-center gap-2">
+                <div className="flex gap-2">
                   <AddFutureButton addFuture={addFuture} onSuccess={() => setDateRange(prev => ({
                     ...prev,
                     to: getCurrentTime()
@@ -250,9 +283,55 @@ export default function Futures() {
                   </p>
                 </>}
             </div> : <OrderStatusTabs futures={filteredFutures} activeTab={activeTab} onTabChange={setActiveTab}>
-              {tabFilteredFutures => <FuturesTableAdvanced futures={tabFilteredFutures} btcCurrentPrice={btcPrice} calculateFutureMetrics={calculateFutureMetrics} deleteFuture={deleteFuture} closeFuture={closeFuture} updateFuture={updateFuture} />}
+              {tabFilteredFutures => 
+                isMobile ? (
+                  <div className="space-y-3 mt-4">
+                    {tabFilteredFutures.map((future) => (
+                      <FuturesMobileCard
+                        key={future.id}
+                        future={future}
+                        btcCurrentPrice={btcPrice}
+                        calculateFutureMetrics={calculateFutureMetrics}
+                        onEdit={setEditingOrder}
+                        onClose={setClosingOrder}
+                        onDelete={deleteFuture}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <FuturesTableAdvanced 
+                    futures={tabFilteredFutures} 
+                    btcCurrentPrice={btcPrice} 
+                    calculateFutureMetrics={calculateFutureMetrics} 
+                    deleteFuture={deleteFuture} 
+                    closeFuture={closeFuture} 
+                    updateFuture={updateFuture} 
+                  />
+                )
+              }
             </OrderStatusTabs>}
         </CardContent>
       </Card>
+
+      {/* Edit Future Modal */}
+      {editingOrder && (
+        <EditFutureModal
+          future={editingOrder}
+          isOpen={!!editingOrder}
+          onClose={() => setEditingOrder(null)}
+          updateFuture={updateFuture}
+        />
+      )}
+
+      {/* Close Order Modal */}
+      {closingOrder && (
+        <CloseOrderModal
+          order={closingOrder}
+          isOpen={!!closingOrder}
+          onClose={() => setClosingOrder(null)}
+          btcCurrentPrice={btcPrice}
+          closeFuture={closeFuture}
+        />
+      )}
     </div>;
 }
